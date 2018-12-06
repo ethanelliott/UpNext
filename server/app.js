@@ -139,7 +139,8 @@ try {
             token: null,
             userid: null,
             playlistid: null,
-            playlist: []
+            playlist: [],
+            currenttrack: null
         })
         return res.json({
             id: db.party.find({code: partyCode})[0]._id
@@ -234,7 +235,8 @@ try {
         io.on('connection', (client) => {
             console.log("CONNECTED:", client.id)
             client.on('start-player-loop', (data) => {
-                let authToken = db.party.find({_id: data.id})[0].token
+                let party = db.party.find({_id: data.id})[0]
+                let authToken = party.token
                 let thisEventLoopID = null
                 for (let i = 0; i < currentPartyEventLoop.length; i++) {
                     if (currentPartyEventLoop[i].id === data.id) {
@@ -253,6 +255,21 @@ try {
                                 }
                             })
                                 .then(function(response) {
+                                    if (party.currenttrack === null || party.currenttrack !== response.data.item.id) {
+                                        console.log('current: ', party.currenttrack, 'playing:', response.data.item.id)
+                                        party.currenttrack = response.data.item.id
+                                        let playlist = party.playlist
+                                        let removeid = null
+                                        for (let i = 0; i < playlist.length; i++) {
+                                            if (playlist[i].id === party.currenttrack) {
+                                                removeid = i
+                                                break
+                                            }
+                                        }
+                                        playlist.splice(removeid, 1)
+                                        db.party.update({_id: data.id}, {playlist: playlist})
+                                        updatePlaylistInSpotify(data.id, (r) => {})
+                                    }
                                     let thisEventLoopDataID = null
                                     for (let i = 0; i < currentPartyEventLoopData.length; i++) {
                                         if (currentPartyEventLoopData[i].id === data.id) {
@@ -339,6 +356,14 @@ try {
                 updatePlaylistInSpotify(data.partyid, (r) => {})
             })
             client.on('playlist-downvote-song', (data) => {
+                let party = db.party.find({_id: data.partyid})[0]
+                let playlist = party.playlist
+                for (let i = 0; i < playlist.length; i++) {
+                    if (playlist[i].id === data.track) {
+                        playlist[i].votes--
+                    }
+                }
+                db.party.update({_id: data.partyid}, {playlist: playlist})
                 updatePlaylistInSpotify(data.partyid, (r) => {})
             })
         })
