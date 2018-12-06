@@ -15,7 +15,7 @@
                     </v-layout>
                     <v-layout justify-center>
                         <v-flex class="text-xs-center mt-3">
-                            <v-progress-linear v-model="trackPos"></v-progress-linear>
+                            <v-progress-linear color="primary" height="15" v-model="trackPos"></v-progress-linear>
                         </v-flex>
                     </v-layout>
                     <v-layout justify-center>

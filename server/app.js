@@ -7,6 +7,10 @@ function generateCode() {
     }
     return s;
 }
+function scoreSort($a, $b) {
+    return ($b.votes - $a.votes)
+}
+
 try {
     const PORT = 8888
     const express = require('express')
@@ -63,6 +67,66 @@ try {
     const client_secret = '8de6722b006047c7b2bbb9e1de194f24';
     const redirect_uri = 'http://localhost:8888/party/auth-callback';
 
+    const updatePlaylistInSpotify = (partyID, callback) => {
+        let party = db.party.find({_id: partyID})[0]
+        let playlist = party.playlist
+        playlist.sort(scoreSort)
+        let playlist_uri_list = []
+        for (let i = 0; i < playlist.length; i++) {
+            playlist_uri_list.push('spotify:track:' + playlist[i].id)
+        }
+        axios({
+            method: 'PUT',
+            url: 'https://api.spotify.com/v1/users/' + party.userid + '/playlists/' + party.playlistid + '/tracks',
+            headers: {
+                'Authorization': 'Bearer ' + party.token
+            },
+            data: {
+                uris: playlist_uri_list
+            },
+        })
+            .then(function(response) {
+                callback(response)
+            })
+            .catch(function(error) {
+                callback(error)
+            })
+    }
+
+    const searchTracks = (partyID, searchTerms, callback) => {
+        let party = db.party.find({_id: partyID})[0]
+        axios({
+            method: 'get',
+            url: 'https://api.spotify.com/v1/search/?q=' + searchTerms + '&type=track',
+            headers: {
+                'Authorization': 'Bearer ' + party.token
+            }
+        })
+            .then(function(response) {
+                callback(response)
+            })
+            .catch(function(error) {
+                console.error(error)
+            })
+    }
+
+    const getTrackData = (partyID, trackID, callback) => {
+        let party = db.party.find({_id: partyID})[0]
+        axios({
+            method: 'get',
+            url: 'https://api.spotify.com/v1/tracks/' + trackID,
+            headers: {
+                'Authorization': 'Bearer ' + party.token
+            }
+        })
+            .then(function(response) {
+                callback(response)
+            })
+            .catch(function(error) {
+                console.error(error)
+            })
+    }
+
     app.post('/party/new-party', (req, res) => {
         let pd = req.body
         let partyCode = ""
@@ -74,6 +138,7 @@ try {
             code: partyCode,
             token: null,
             userid: null,
+            playlistid: null,
             playlist: []
         })
         return res.json({
@@ -128,13 +193,37 @@ try {
                     })
                         .then(function(new_response) {
                             let userID = new_response.data.id
-                            db.party.update({_id: id}, {token: authToken, userid: userID})
-                            return res.redirect('http://localhost:8080/#/main/home')
+                            if (db.party.find({_id: id})[0].playlistid === null) {
+                                axios({
+                                    method: 'post',
+                                    url: 'https://api.spotify.com/v1/users/' + userID + '/playlists',
+                                    data: {
+                                        name: "UpNext",
+                                        description: "UpNext playlist for UpNext App",
+                                        public: false,
+                                        collaborative: false
+                                    },
+                                    headers: {
+                                        'Authorization': 'Bearer ' + authToken
+                                    }
+                                })
+                                    .then(function(playlistResponse) {
+                                        let playlistID = playlistResponse.data.id
+                                        updatePlaylistInSpotify(id, function(r) {
+                                            db.party.update({_id: id}, {token: authToken, userid: userID, playlistid: playlistID})
+                                            return res.redirect('http://localhost:8080/#/main/home')
+                                        })
+                                    })
+                                    .catch(function(error) {
+                                        console.error(error)
+                                    })
+                            } else {
+                                return res.redirect('http://localhost:8080/#/main/home')
+                            }
                         })
                         .catch(function(error) {
                             console.error(error)
                         })
-
                 })
                 .catch(function(error) {
                     console.error(error)
@@ -181,6 +270,7 @@ try {
                                 .catch(function(error) {
                                     console.error(error)
                                 })
+
                         }, 1000)
                     })
                 }
@@ -196,17 +286,66 @@ try {
             })
             client.on('get-playlist', (data) => {
                 let playlist = db.party.find({_id: data.id})[0].playlist
+                playlist.sort(scoreSort)
                 client.emit('give-playlist', {
                     id: data.id,
                     playlist: playlist
                 })
             })
+            client.on('search', (data) => {
+                searchTracks(data.partyid, data.searchstring, function (response) {
+                    client.emit('give-search-results', response.data)
+                })
+            })
+            client.on('playlist-add-song', (data) => {
+                getTrackData(data.partyid, data.track.id, function(response) {
+                    let party = db.party.find({_id: data.partyid})[0]
+                    let playlist = party.playlist
+                    let track = response.data
+                    let trackObject = {
+                        id: track.id,
+                        name: track.name,
+                        artist: track.artists[0].name,
+                        artwork: track.album.images.find((element) => {
+                            return element.height <= 64
+                        }).url,
+                        votes: 0
+                    }
+                    let dupeCheck = false
+                    for (let i = 0; i < playlist.length; i++) {
+                        if (playlist[i].id === track.id) {
+                            dupeCheck = true
+                            break
+                        }
+                    }
+                    if (!dupeCheck) {
+                        playlist.push(trackObject)
+                        db.party.update({_id: data.partyid}, {playlist: playlist})
+                    } else {
+                        // Duplicate!
+                    }
+                    updatePlaylistInSpotify(data.partyid, (r) => {})
+                })
+            })
+            client.on('playlist-upvote-song', (data) => {
+                let party = db.party.find({_id: data.partyid})[0]
+                let playlist = party.playlist
+                for (let i = 0; i < playlist.length; i++) {
+                    if (playlist[i].id === data.track) {
+                        playlist[i].votes++
+                    }
+                }
+                db.party.update({_id: data.partyid}, {playlist: playlist})
+                updatePlaylistInSpotify(data.partyid, (r) => {})
+            })
+            client.on('playlist-downvote-song', (data) => {
+                updatePlaylistInSpotify(data.partyid, (r) => {})
+            })
         })
-
-
         app.set('port', PORT)
         http.listen(PORT)
     } catch (e) {
         console.error(e)
     }
+
 
