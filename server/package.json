@@ -1,0 +1,19 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.18.0",
+    "dddos": "^0.1.2",
+    "diskdb": "^0.1.17",
+    "express": "^4.16.4",
+    "helmet": "^3.15.0",
+    "socket.io": "^2.2.0"
+  }
+}
