@@ -58,7 +58,7 @@
     import querystring from 'querystring'
 
     const client_id = 'dd8b5386683d47cc9d955a00c1a9c3f8';
-    const redirect_uri = 'http://localhost:8888/party/auth-callback';
+    const redirect_uri = 'http://api.upnext.ml/party/auth-callback';
     const scope = 'user-read-private user-read-email user-library-read user-library-modify playlist-read-private streaming app-remote-control user-modify-playback-state user-read-currently-playing user-read-playback-state playlist-modify-public playlist-modify-private';
 
     export default {
