@@ -26,6 +26,7 @@
                 <span>Up</span>
                 <span class="font-weight-light">Next</span>
             </v-toolbar-title>
+            <v-spacer></v-spacer>
         </v-toolbar>
         <v-content>
             <router-view name="content"></router-view>

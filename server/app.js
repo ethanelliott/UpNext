@@ -233,10 +233,12 @@ try {
         })
 
         io.on('connection', (client) => {
+            client.on('disconnect', () => {
+                console.log('DISCONNECTED: ', client.id)
+            })
             console.log("CONNECTED:", client.id)
             client.on('start-player-loop', (data) => {
-                let party = db.party.find({_id: data.id})[0]
-                let authToken = party.token
+                let authToken = db.party.find({_id: data.id})[0].token
                 let thisEventLoopID = null
                 for (let i = 0; i < currentPartyEventLoop.length; i++) {
                     if (currentPartyEventLoop[i].id === data.id) {
@@ -255,9 +257,10 @@ try {
                                 }
                             })
                                 .then(function(response) {
+                                    let party = db.party.find({_id: data.id})[0]
                                     if (party.currenttrack === null || party.currenttrack !== response.data.item.id) {
                                         console.log('current: ', party.currenttrack, 'playing:', response.data.item.id)
-                                        party.currenttrack = response.data.item.id
+                                        db.party.update({_id: data.id}, {currenttrack: response.data.item.id})
                                         let playlist = party.playlist
                                         let removeid = null
                                         for (let i = 0; i < playlist.length; i++) {

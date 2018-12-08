@@ -105,7 +105,7 @@
         }),
         mounted() {
             let context = this
-            this.socket = io('http://api.upnext.ml')
+            this.socket = io('http://localhost:8888')
             this.partyID = session.getItem('partyID')
             this.loading = false
             this.eventLoop = setInterval(function() {

@@ -44,7 +44,7 @@
             trackPos: 0
         }),
         mounted() {
-            this.socket = io('http://api.upnext.ml')
+            this.socket = io('http://localhost:8888')
             this.partyID = session.getItem('partyID')
             this.socket.emit('start-player-loop', {id: this.partyID})
             this.socket.on('event-loop', (data) => {
