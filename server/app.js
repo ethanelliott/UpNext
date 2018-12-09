@@ -256,7 +256,7 @@ try {
         let id = req.query.state || null
         let lookupRes = db.party.find({_id: id})
         if (lookupRes.length === 0) {
-            return res.redirect('http://localhost:8080/#/')
+            return res.redirect('http://upnext.ml/#/')
         } else {
             let authOptions = {
                 method: 'post',
@@ -304,13 +304,13 @@ try {
                                             playlistid: playlistID
                                         })
                                         startGlobalEventLoop()
-                                        return res.redirect('http://localhost:8080/#/main/home')
+                                        return res.redirect('http://upnext.ml/#/main/home')
                                     })
                                     .catch(function (error) {
                                         // console.error(error)
                                     })
                             } else {
-                                return res.redirect('http://localhost:8080/#/main/home')
+                                return res.redirect('http://upnext.ml/#/main/home')
                             }
                         })
                         .catch(function (error) {

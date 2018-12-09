@@ -118,7 +118,7 @@
         mounted() {
             let context = this
             // eslint-disable-next-line
-            this.socket = io('http://localhost:8888')
+            this.socket = io('http://api.upnext.ml')
             this.admin = (session.getItem('admin') === 'true')
             this.partyID = session.getItem('partyID')
             this.loading = false
