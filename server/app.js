@@ -70,32 +70,6 @@ try {
     const client_secret = '8de6722b006047c7b2bbb9e1de194f24';
     const redirect_uri = 'http://api.upnext.ml/party/auth-callback';
 
-    // const updatePlaylistInSpotify = (partyID, callback) => {
-    //     let party = db.party.find({_id: partyID})[0]
-    //     let playlist = party.playlist
-    //     playlist.sort(scoreSort)
-    //     let playlist_uri_list = []
-    //     for (let i = 0; i < playlist.length; i++) {
-    //         playlist_uri_list.push('spotify:track:' + playlist[i].id)
-    //     }
-    //     axios({
-    //         method: 'PUT',
-    //         url: 'https://api.spotify.com/v1/users/' + party.userid + '/playlists/' + party.playlistid + '/tracks',
-    //         headers: {
-    //             'Authorization': 'Bearer ' + party.token
-    //         },
-    //         data: {
-    //             uris: playlist_uri_list
-    //         },
-    //     })
-    //         .then(function(response) {
-    //             callback(response)
-    //         })
-    //         .catch(function(error) {
-    //             callback(error)
-    //         })
-    // }
-
     const searchTracks = (partyID, searchTerms, callback) => {
         let party = db.party.find({_id: partyID})[0]
         axios({
@@ -158,6 +132,18 @@ try {
         } else {
             callback()
         }
+    }
+
+    const addSongToArchive = (partyID, songID) => {
+        let party = db.party.find({_id: partyID})[0]
+        axios({
+            method: 'post',
+            url: 'https://api.spotify.com/v1/playlists/' + party.playlistid + '/tracks',
+            headers: {
+                'Authorization': 'Bearer ' + party.token
+            },
+            data: ["spotify:track:" + songID]
+        })
     }
 
     const startGlobalEventLoop = () => {
@@ -448,6 +434,7 @@ try {
                     }
                 }
                 if (!dupeCheck) {
+                    addSongToArchive(data.partyid, track.id)
                     if (playlist.length === 0 && !party.playstate) {
                         axios({
                             method: 'put',
