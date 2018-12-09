@@ -68,7 +68,7 @@ try {
 
     const client_id = 'dd8b5386683d47cc9d955a00c1a9c3f8';
     const client_secret = '8de6722b006047c7b2bbb9e1de194f24';
-    const redirect_uri = 'http://localhost:8888/party/auth-callback';
+    const redirect_uri = 'http://api.upnext.ml/party/auth-callback';
 
     // const updatePlaylistInSpotify = (partyID, callback) => {
     //     let party = db.party.find({_id: partyID})[0]
