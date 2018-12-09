@@ -1,9 +1,11 @@
 <template>
-    <v-layout v-if="loading" justify-center align-center>
-        <v-flex class="text-xs-center">
-            <v-progress-circular :size="200" :width="15" color="primary" indeterminate></v-progress-circular>
-        </v-flex>
-    </v-layout>
+    <v-container v-if="loading" fluid fill-height>
+        <v-layout justify-center align-center>
+            <v-flex class="text-xs-center">
+                <v-progress-circular :size="200" :width="15" color="primary" indeterminate></v-progress-circular>
+            </v-flex>
+        </v-layout>
+    </v-container>
     <v-layout v-else-if="!loading" row>
         <v-dialog v-model="voteDialog" width="500" dark>
             <v-card>
@@ -21,7 +23,7 @@
         <v-dialog v-model="searchDialog" fullscreen hide-overlay transition="dialog-bottom-transition">
             <v-card>
                 <v-toolbar dark color="primary">
-                    <v-btn icon dark @click="searchDialog = false">
+                    <v-btn icon dark @click="closeSearch">
                         <v-icon>close</v-icon>
                     </v-btn>
                     <v-toolbar-title>Search</v-toolbar-title>
@@ -78,19 +80,27 @@
                 </v-list>
             </v-card>
         </v-flex>
-        <v-speed-dial v-model="fab" bottom right direction="top" transition="slide-y-reverse-transition" class="" style="position: fixed; bottom:0;right:0;">
+        <v-speed-dial v-model="fab" bottom right direction="top" transition="slide-y-reverse-transition" class="ma-2" style="position: fixed; bottom:0;right:0;">
             <v-btn slot="activator" color="primary" dark fab @click="searchDialog = true">
                 <v-icon>add</v-icon>
             </v-btn>
         </v-speed-dial>
+        <v-snackbar v-model="snackbar" bottom :timeout="5000" color="secondary">
+            {{ snackbarMessage }}
+            <v-btn color="primary" dark flat @click="snackbar = false">
+                Close
+            </v-btn>
+        </v-snackbar>
     </v-layout>
 </template>
 
 <script>
+    import io from 'socket.io-client'
     import session from 'sessionstorage'
     export default {
-        name: 'About',
+        name: 'Queue',
         data: () => ({
+            admin: false,
             fab: null,
             eventLoop: null,
             socket: null,
@@ -101,11 +111,15 @@
             selectedTrack: null,
             queue: [],
             searchResults: [],
-            searchString: ''
+            searchString: '',
+            snackbar: null,
+            snackbarMessage: 'Hello'
         }),
         mounted() {
             let context = this
+            // eslint-disable-next-line
             this.socket = io('http://localhost:8888')
+            this.admin = (session.getItem('admin') === 'true')
             this.partyID = session.getItem('partyID')
             this.loading = false
             this.eventLoop = setInterval(function() {
@@ -130,8 +144,21 @@
                 })
                 this.searchResults = results
             })
+            this.socket.on('track-added-success', () => {
+                this.snackbarMessage = 'Song added to Queue!'
+                this.snackbar = true
+            })
+            this.socket.on('track-added-duplicate', () => {
+                this.snackbarMessage = 'Song already in Queue! Upvoted.'
+                this.snackbar = true
+            })
         },
         methods: {
+            closeSearch() {
+                this.searchString = ''
+                this.searchResults = []
+                this.searchDialog = false
+            },
             search() {
                 this.socket.emit('search', {
                     partyid: this.partyID,
@@ -149,7 +176,6 @@
                 this.voteDialog = true
             },
             upvoteSong() {
-                console.log(this.selectedTrack, 'upvote')
                 this.socket.emit('playlist-upvote-song', {
                     partyid: this.partyID,
                     track: this.selectedTrack
@@ -157,7 +183,6 @@
                 this.voteDialog = false
             },
             downvoteSong() {
-                console.log(this.selectedTrack, 'downvote')
                 this.socket.emit('playlist-downvote-song', {
                     partyid: this.partyID,
                     track: this.selectedTrack

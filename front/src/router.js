@@ -26,6 +26,11 @@ export default new Router({
             component: () => import('./views/Callback.vue')
         },
         {
+            path: '/logout',
+            name: 'logout',
+            component: () => import('./views/Logout.vue')
+        },
+        {
             path: '/main',
             name: 'main',
             components: {
@@ -47,6 +52,14 @@ export default new Router({
                     components: {
                         default: () => import('./views/Main.vue'),
                         content: () => import('./views/Queue.vue')
+                    }
+                },
+                {
+                    path: 'party-view',
+                    name: 'party-view',
+                    components: {
+                        default: () => import('./views/Main.vue'),
+                        content: () => import('./views/PartyView.vue')
                     }
                 }
             ]

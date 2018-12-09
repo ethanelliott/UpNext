@@ -91,6 +91,9 @@
                         let d = response.data
                         session.clear()
                         session.setItem('partyID', d.id)
+                        session.setItem('partyCode', d.code)
+                        session.setItem('partyName', d.name)
+                        session.setItem('admin', 'true')
                         let url = 'https://accounts.spotify.com/authorize?' +
                             querystring.stringify({
                                 response_type: 'code',

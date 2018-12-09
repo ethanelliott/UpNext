@@ -81,15 +81,17 @@
                 context.setLoading()
                 axios
                     .post('/party/auth-code', {
-                        partyCode: context.partyCode
+                        partyCode: context.partyCode.toUpperCase()
                     })
                     .then(function(response) {
                         let d = response.data
-                        console.log(d)
                         if (d.valid) {
                             context.setNotLoading()
                             session.clear()
                             session.setItem('partyID', d.id)
+                            session.setItem('admin', 'false')
+                            session.setItem('partyCode', context.partyCode.toUpperCase())
+                            session.setItem('partyName', d.name)
                             context.$router.push('/main/home')
                         } else {
                             context.setNotLoading()

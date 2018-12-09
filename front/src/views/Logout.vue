@@ -32,19 +32,6 @@
                                             </v-card>
                                         </v-flex>
                                     </v-layout>
-                                    <v-layout>
-                                        <v-flex>
-                                            <v-card flat color="secondary">
-                                                <v-card-text>
-                                                    <v-btn block color="primary" dark large outline to="/start">
-                                                        <span>
-                                                            Start a Party
-                                                        </span>
-                                                    </v-btn>
-                                                </v-card-text>
-                                            </v-card>
-                                        </v-flex>
-                                    </v-layout>
                                 </v-container>
                             </v-card-text>
                         </v-card>
@@ -58,14 +45,13 @@
 <script>
     import session from 'sessionstorage'
     export default {
-        name: "LandingPage",
+        name: "Logout",
         data: () => ({
 
         }),
         mounted() {
-            if (session.getItem('partyID')) {
-                this.$router.push('/main/home')
-            }
+            session.clear()
+            this.$router.push('/')
         }
     }
 </script>
