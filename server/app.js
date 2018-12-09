@@ -192,7 +192,6 @@ try {
                                                 'Authorization': 'Bearer ' + party.token
                                             }
                                         }).then(function () {
-                                            addSongToArchive(party._id, party.playlist[0].id)
                                             let playlist = party.playlist
                                             playlist.splice(0, 1)
                                             playlist.sort(scoreSort)
@@ -435,6 +434,7 @@ try {
                     }
                 }
                 if (!dupeCheck) {
+                    addSongToArchive(data.partyid, track.id)
                     if (playlist.length === 0 && !party.playstate) {
                         axios({
                             method: 'put',
