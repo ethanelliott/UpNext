@@ -130,6 +130,36 @@ try {
             })
     }
 
+    const checkForValidToken = (partyID, expiresAt, refreshToken, callback) => {
+        let now = (new Date()).valueOf()
+        if (expiresAt - now <= 2000) {
+            let authOptions = {
+                method: 'post',
+                url: 'https://accounts.spotify.com/api/token',
+                params: {
+                    refresh_token: refreshToken,
+                    grant_type: 'refresh_token'
+                },
+                headers: {
+                    'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64'))
+                }
+            }
+            axios(authOptions).then(function(response) {
+                let authToken = response.data.access_token
+                let tokenExpire = (new Date()).valueOf() + (1000 * response.data.expires_in)
+                db.party.update({_id: partyID}, {
+                    token: authToken,
+                    expiresat: tokenExpire
+                })
+                callback()
+            }).catch(function(error) {
+                // console.error(error)
+            })
+        } else {
+            callback()
+        }
+    }
+
     const startGlobalEventLoop = () => {
         let allParties = db.party.find()
         for (let i = 0; i < allParties.length; i++) {
@@ -143,14 +173,14 @@ try {
                 currentPartyEventLoop.push({
                     id: allParties[i]._id,
                     eventLoop: setInterval(function () {
-                        axios({
-                            method: 'get',
-                            url: 'https://api.spotify.com/v1/me/player',
-                            headers: {
-                                'Authorization': 'Bearer ' + allParties[i].token
-                            }
-                        })
-                            .then(function (response) {
+                        checkForValidToken(allParties[i]._id, allParties[i].expiresat, allParties[i].refreshtoken, () => {
+                            axios({
+                                method: 'get',
+                                url: 'https://api.spotify.com/v1/me/player',
+                                headers: {
+                                    'Authorization': 'Bearer ' + allParties[i].token
+                                }
+                            }).then(function (response) {
                                 let track = response.data
                                 let party = db.party.find({_id: allParties[i]._id})[0]
                                 if (party.playstate !== track.is_playing) {
@@ -160,7 +190,6 @@ try {
                                     db.party.update({_id: allParties[i]._id}, {currenttrack: response.data.item.id})
                                     party = db.party.find({_id: allParties[i]._id})[0]
                                 }
-
                                 if (track.item.duration_ms - track.progress_ms <= 1000) {
                                     if (party.playlist.length === 0) {
                                         // No Next Song... Just wait
@@ -184,7 +213,6 @@ try {
                                         })
                                     }
                                 }
-
                                 let thisEventLoopDataID = null
                                 for (let k = 0; k < currentPartyEventLoopData.length; k++) {
                                     if (currentPartyEventLoopData[k].id === allParties[i]._id) {
@@ -198,10 +226,10 @@ try {
                                     id: allParties[i]._id,
                                     data: response.data
                                 })
-                            })
-                            .catch(function (error) {
+                            }).catch(function (error) {
                                 console.error(error)
                             })
+                        })
                     }, 1000)
                 })
             }
@@ -220,6 +248,8 @@ try {
             name: pd.name,
             code: partyCode,
             token: null,
+            refreshtoken: null,
+            expiresat: null,
             userid: null,
             playlistid: null,
             playlist: [],
@@ -273,6 +303,8 @@ try {
             axios(authOptions)
                 .then(function (response) {
                     let authToken = response.data.access_token
+                    let refreshToken = response.data.refresh_token
+                    let tokenExpire = (new Date()).valueOf() + (1000 * response.data.expires_in)
                     axios({
                         method: 'get',
                         url: 'https://api.spotify.com/v1/me',
@@ -300,6 +332,8 @@ try {
                                         let playlistID = playlistResponse.data.id
                                         db.party.update({_id: id}, {
                                             token: authToken,
+                                            refreshtoken: refreshToken,
+                                            expiresat: tokenExpire,
                                             userid: userID,
                                             playlistid: playlistID
                                         })
