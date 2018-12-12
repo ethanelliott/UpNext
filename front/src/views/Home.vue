@@ -119,6 +119,9 @@
             snackbarMessage: 'Hello',
             settingsDialog: false,
         }),
+        beforeDestroy() {
+            this.socket.disconnect()
+        },
         mounted() {
             this.partyID = session.getItem('partyID')
             this.admin = (session.getItem('admin') === 'true')

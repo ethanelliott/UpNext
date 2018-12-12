@@ -14,6 +14,10 @@ function scoreSort($a, $b) {
     return ($b.votes - $a.votes)
 }
 
+function userSort($a, $b) {
+    return ($b.score - $a.score)
+}
+
 try {
     const PORT = 8888
     const express = require('express')
@@ -22,7 +26,7 @@ try {
     const helmet = require('helmet')
     const DDoS = require('dddos')
     const axios = require('axios')
-    const uuid = require('uuid/v5')
+    const uuid = require('uuid/v4')
     const app = express()
     const http = require('http').Server(app)
     const io = require('socket.io')(http)
@@ -151,7 +155,7 @@ try {
 
     const addNewUser = (partyID, nickName) => {
         let partyUsers = db.party.find({_id: partyID})[0].users
-        let userid = uuid('com.ethan.upnext', uuid.DNS)
+        let userid = uuid()
         partyUsers.push({
             uuid: userid,
             nickname: nickName,
@@ -184,6 +188,7 @@ try {
                                 }
                             }).then(function (response) {
                                 let track = response.data
+                                if (track.item === undefined) { return; }
                                 if (party.playstate !== track.is_playing) {
                                     db.party.update({_id: party._id}, {playstate: track.is_playing})
                                     party = db.party.find({_id: party._id})[0]
@@ -287,6 +292,19 @@ try {
                 uuid: addNewUser(lookupRes[0]._id, pd.nickName)
             })
         }
+    })
+
+    app.post('/party/leave', (req, res) => {
+        let pd = req.body
+        let users = db.party.find({_id: pd.id})[0].users
+        for (let i = 0; i < users.length; i++) {
+            if (users[i].uuid === pd.uuid) {
+                users.splice(i, 1)
+                db.party.update({_id: pd.id}, {users: users})
+                return res.json({ valid: true })
+            }
+        }
+        return res.json({ valid: false })
     })
 
     app.post('/party/auth-code-admin', (req, res) => {
@@ -393,12 +411,14 @@ try {
     })
 
     io.on('connection', (client) => {
+        let eventLoop = null
         client.on('disconnect', () => {
             console.log('DISCONNECTED: ', client.id)
+            clearInterval(eventLoop) // So that the app doesn't shit the bed
         })
         console.log("CONNECTED:", client.id)
         client.on('start-player-loop', (data) => {
-            setInterval(function () {
+            let eventLoop = setInterval(function () {
                 let j
                 for (let i = 0; i < currentPartyEventLoopData.length; i++) {
                     if (currentPartyEventLoopData[i].id === data.id) {
@@ -454,6 +474,14 @@ try {
             client.emit('give-playlist', {
                 id: data.id,
                 playlist: playlist
+            })
+        })
+        client.on('get-leaderboard', (data) => {
+            let users = db.party.find({_id: data.id})[0].users
+            users.sort(userSort)
+            client.emit('give-leaderboard', {
+                id: data.id,
+                users: users
             })
         })
         client.on('search', (data) => {

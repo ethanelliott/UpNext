@@ -116,6 +116,10 @@
             snackbar: null,
             snackbarMessage: 'Hello'
         }),
+        beforeDestroy() {
+            this.socket.disconnect()
+            clearInterval(this.eventLoop)
+        },
         mounted() {
             let context = this
             // eslint-disable-next-line

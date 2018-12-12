@@ -25,7 +25,7 @@
                                                 <v-card-text>
                                                     <v-form @submit="validateCode">
                                                         <v-text-field label="Party Code" box full-width v-model="partyCode" :disabled="disableTextInput" :rules="[rules.required, rules.counter]"></v-text-field>
-                                                        <v-text-field label="Nickname" box full-width v-model="nickName" :disabled="disableTextInput" :rules="[rules.required]"></v-text-field>
+                                                        <v-text-field label="Nickname" box full-width v-model="nickName" :disabled="disableTextInput" :rules="[rules.required, rules.nick]"></v-text-field>
                                                         <v-btn block color="primary" dark large @click="validateCode" :loading="isLoadingButton" type="submit">
                                                         <span>
                                                             Join
@@ -67,7 +67,8 @@
             isLoadingButton: false,
             rules: {
                 required: value => !!value || 'Required.',
-                counter: value => value.length === 4 || 'code is 4 characters'
+                counter: value => value.length === 4 || 'code is 4 characters',
+                nick: value => value.length <= 10 || 'nickname must be less than 10 chars'
             }
         }),
         mounted() {

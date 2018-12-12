@@ -1,19 +1,36 @@
 <template>
-    <v-container fluid fill-height :style="backStyle">
+    <v-container fluid>
         <v-layout v-if="loading" justify-center align-center>
             <v-flex class="text-xs-center">
                 <v-progress-circular :size="200" :width="15" color="primary" indeterminate></v-progress-circular>
             </v-flex>
         </v-layout>
-        <v-layout v-if="!loading" justify-center align-center>
+        <v-layout v-if="!loading" justify-center>
             <v-flex lg8 md10 sm10 xs12>
-                <v-container>
-                    <v-layout justify-center>
-                        <v-flex class="text-xs-center">
-                            <img :src="albumArtwork" class="elevation-24 album-art-image" style="width:90%;max-width:600px;" />
-                        </v-flex>
-                    </v-layout>
-                </v-container>
+                <v-list subheader>
+                    <v-subheader>Leaderboard</v-subheader>
+                    <template v-for="(user, index) in users">
+                        <v-list-tile :key="user.title" avatar>
+                            <v-list-tile-avatar tile>
+                                <v-btn flat icon>
+                                    <span>{{ index + 1 }}</span>
+                                </v-btn>
+                            </v-list-tile-avatar>
+                            <v-list-tile-content>
+                                <v-list-tile-title>{{ user.nickname }}</v-list-tile-title>
+                            </v-list-tile-content>
+                            <v-list-tile-action>
+                                <v-btn flat icon color="primary">
+                                    <span>{{ user.score }}</span>
+                                </v-btn>
+                            </v-list-tile-action>
+                        </v-list-tile>
+                        <v-divider
+                                v-if="index + 1 < users.length"
+                                :key="index"
+                        ></v-divider>
+                    </template>
+                </v-list>
             </v-flex>
         </v-layout>
     </v-container>
@@ -28,25 +45,23 @@
         name: "Leaderboard",
         data: () => ({
             socket: null,
-            loading: true,
+            loading: false,
             partyID: null,
-            albumArtwork: null,
-            backStyle: '',
+            users: []
         }),
+        beforeDestroy() {
+            this.socket.disconnect()
+            clearInterval(this.eventLoop)
+        },
         mounted() {
             let t = this
             t.socket = io((PROD ? 'http://api.upnext.ml' : 'http://localhost:8888'))
             t.partyID = session.getItem('partyID')
-            t.socket.emit('start-player-loop', {id: t.partyID})
-            t.socket.on('event-loop', (data) => {
-                let d = data.data
-                t.albumArtwork = d.item.album.images[0].url
-                Vibrant.from(t.albumArtwork).getPalette().then(function (palette) {
-                    t.backStyle = "background: " + palette.DarkVibrant.getHex()
-                })
-                if (t.albumArtwork !== null) {
-                    t.loading = false
-                }
+            t.eventLoop = setInterval(function() {
+                t.socket.emit('get-leaderboard', {id: t.partyID})
+            }, 500)
+            t.socket.on('give-leaderboard', (data) => {
+                t.users = data.users
             })
         },
         methods: {
