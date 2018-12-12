@@ -6,28 +6,15 @@
                     <v-flex lg6 md8 sm8 xs10>
                         <v-card class="elevation-12" color="secondary">
                             <v-card-text>
-                                <v-container grid-list-xl column>
+                                <v-container column grid-list-xl>
                                     <v-layout>
                                         <v-flex>
-                                            <v-card flat color="secondary">
+                                            <v-card color="secondary" flat>
                                                 <v-card-text>
                                                     <p class="text-xs-center big-text text-uppercase">
                                                         <span>Up</span>
                                                         <span class="font-weight-light">Next</span>
                                                     </p>
-                                                </v-card-text>
-                                            </v-card>
-                                        </v-flex>
-                                    </v-layout>
-                                    <v-layout>
-                                        <v-flex>
-                                            <v-card flat color="secondary">
-                                                <v-card-text>
-                                                    <v-btn block color="primary" dark large to="/join">
-                                                        <span>
-                                                            Join a Party
-                                                        </span>
-                                                    </v-btn>
                                                 </v-card-text>
                                             </v-card>
                                         </v-flex>
@@ -48,13 +35,16 @@
 
     export default {
         name: "Logout",
-        data: () => ({ }),
+        data: () => ({}),
         mounted() {
+            let t = this
             axios.post('/party/leave', {
+                id: session.getItem('partyID'),
                 uuid: session.getItem('uuid'),
             }).then(function (response) {
+                console.log(response)
                 session.clear()
-                this.$router.push('/')
+                t.$router.push('/')
             }).catch(function (error) {
                 console.error(error)
             })
