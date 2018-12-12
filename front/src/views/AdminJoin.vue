@@ -23,13 +23,15 @@
                                         <v-flex>
                                             <v-card flat color="secondary">
                                                 <v-card-text>
-                                                    <v-text-field label="Party Code" box full-width v-model="partyCode" :disabled="disableTextInput" :rules="[rules.required, rules.counter]"></v-text-field>
-                                                    <v-text-field label="Admin Password" box full-width v-model="partyAdminPassword" :disabled="disableTextInput" :rules="[rules.required]"></v-text-field>
-                                                    <v-btn block color="primary" dark large @click="validateCode" :loading="isLoadingButton">
-                                                        <span>
-                                                            Join
-                                                        </span>
-                                                    </v-btn>
+                                                    <v-form @submit="validateCode">
+                                                        <v-text-field label="Party Code" box full-width v-model="partyCode" :disabled="disableTextInput" :rules="[rules.required, rules.counter]"></v-text-field>
+                                                        <v-text-field label="Admin Password" box full-width v-model="partyAdminPassword" :disabled="disableTextInput" :rules="[rules.required]"></v-text-field>
+                                                        <v-btn block color="primary" dark large @click="validateCode" :loading="isLoadingButton" type="submit">
+                                                            <span>
+                                                                Join
+                                                            </span>
+                                                        </v-btn>
+                                                    </v-form>
                                                 </v-card-text>
                                             </v-card>
                                         </v-flex>
@@ -41,6 +43,12 @@
                 </v-layout>
             </v-container>
         </v-content>
+        <v-snackbar v-model="snackbar" bottom :timeout="5000" color="secondary">
+            {{ snackbarMessage }}
+            <v-btn color="primary" dark flat @click="snackbar = false">
+                Close
+            </v-btn>
+        </v-snackbar>
     </v-app>
 </template>
 
@@ -54,6 +62,8 @@
         data: () => ({
             partyCode: '',
             partyAdminPassword: '',
+            snackbar: null,
+            snackbarMessage: 'Hello',
             disableTextInput: false,
             isLoadingButton: false,
             rules: {
@@ -73,7 +83,8 @@
                 this.isLoadingButton = false
                 this.disableTextInput = false
             },
-            validateCode() {
+            validateCode(event) {
+                event.preventDefault()
                 let context = this
                 context.setLoading()
                 axios
@@ -93,6 +104,8 @@
                             context.$router.push('/main/home')
                         } else {
                             context.setNotLoading()
+                            context.snackbarMessage = 'Invalid Party Code or Password'
+                            context.snackbar = true
                         }
                     })
                     .catch(function(err) {

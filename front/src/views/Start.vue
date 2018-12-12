@@ -21,16 +21,18 @@
                                     </v-layout>
                                     <v-layout>
                                         <v-flex>
-                                            <v-text-field :disabled="disableTextInput" box full-width label="Party Name"
-                                                          v-model="partyName"></v-text-field>
-                                            <v-text-field :disabled="disableTextInput" box full-width label="Admin Password"
-                                                          v-model="partyAdminPassword"></v-text-field>
-                                            <v-btn :loading="isLoadingButton" @click="validateCode" block color="primary" dark
-                                                   large>
+                                            <v-form @submit="validateCode">
+                                                <v-text-field :disabled="disableTextInput" box full-width label="Party Name"
+                                                              v-model="partyName" :rules="[rules.required]"></v-text-field>
+                                                <v-text-field :disabled="disableTextInput" box full-width label="Admin Password"
+                                                              v-model="partyAdminPassword" :rules="[rules.required]"></v-text-field>
+                                                <v-btn :loading="isLoadingButton" @click="validateCode" block color="primary" dark
+                                                       large type="submit">
                                                         <span>
                                                             Create
                                                         </span>
-                                            </v-btn>
+                                                </v-btn>
+                                            </v-form>
                                         </v-flex>
                                     </v-layout>
                                 </v-container>
@@ -61,6 +63,9 @@
             partyAdminPassword: null,
             disableTextInput: false,
             isLoadingButton: false,
+            rules: {
+                required: value => !!value || 'Required.',
+            }
         }),
         mounted() {
             session.clear()
@@ -74,7 +79,8 @@
                 this.isLoadingButton = false
                 this.disableTextInput = false
             },
-            validateCode() {
+            validateCode(event) {
+                event.preventDefault()
                 let context = this
                 context.setLoading()
                 axios
