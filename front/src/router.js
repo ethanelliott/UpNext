@@ -16,6 +16,11 @@ export default new Router({
             component: () => import('./views/Join.vue')
         },
         {
+            path: '/admin',
+            name: 'admin',
+            component: () => import('./views/AdminJoin.vue')
+        },
+        {
             path: '/start',
             name: 'start',
             component: () => import('./views/Start.vue')

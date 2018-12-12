@@ -95,6 +95,7 @@
 </template>
 
 <script>
+    const PROD = false
     import io from 'socket.io-client'
     import session from 'sessionstorage'
     export default {
@@ -118,7 +119,7 @@
         mounted() {
             let context = this
             // eslint-disable-next-line
-            this.socket = io('http://api.upnext.ml')
+            this.socket = io((PROD ? 'http://api.upnext.ml' : 'http://localhost:8888'))
             this.admin = (session.getItem('admin') === 'true')
             this.partyID = session.getItem('partyID')
             this.loading = false

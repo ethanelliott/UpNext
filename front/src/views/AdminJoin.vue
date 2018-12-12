@@ -6,10 +6,10 @@
                     <v-flex lg6 md8 sm8 xs10>
                         <v-card class="elevation-12" color="secondary">
                             <v-card-text>
-                                <v-container column grid-list-xl>
+                                <v-container grid-list-xl column>
                                     <v-layout>
                                         <v-flex>
-                                            <v-card color="secondary" flat>
+                                            <v-card flat color="secondary">
                                                 <v-card-text>
                                                     <p class="text-xs-center big-text text-uppercase">
                                                         <span>Up</span>
@@ -21,16 +21,17 @@
                                     </v-layout>
                                     <v-layout>
                                         <v-flex>
-                                            <v-text-field :disabled="disableTextInput" box full-width label="Party Name"
-                                                          v-model="partyName"></v-text-field>
-                                            <v-text-field :disabled="disableTextInput" box full-width label="Admin Password"
-                                                          v-model="partyAdminPassword"></v-text-field>
-                                            <v-btn :loading="isLoadingButton" @click="validateCode" block color="primary" dark
-                                                   large>
+                                            <v-card flat color="secondary">
+                                                <v-card-text>
+                                                    <v-text-field label="Party Code" box full-width v-model="partyCode" :disabled="disableTextInput" :rules="[rules.required, rules.counter]"></v-text-field>
+                                                    <v-text-field label="Admin Password" box full-width v-model="partyAdminPassword" :disabled="disableTextInput" :rules="[rules.required]"></v-text-field>
+                                                    <v-btn block color="primary" dark large @click="validateCode" :loading="isLoadingButton">
                                                         <span>
-                                                            Create
+                                                            Join
                                                         </span>
-                                            </v-btn>
+                                                    </v-btn>
+                                                </v-card-text>
+                                            </v-card>
                                         </v-flex>
                                     </v-layout>
                                 </v-container>
@@ -44,23 +45,21 @@
 </template>
 
 <script>
-    const PROD = false
     import axios from 'axios'
     import session from 'sessionstorage'
-    import querystring from 'querystring'
     import sha512 from 'sha512'
 
-    const client_id = 'dd8b5386683d47cc9d955a00c1a9c3f8';
-    const redirect_uri = (PROD ? 'http://api.upnext.ml' : 'http://localhost:8888') + '/party/auth-callback';
-    const scope = 'user-read-private user-read-email user-library-read user-library-modify playlist-read-private streaming app-remote-control user-modify-playback-state user-read-currently-playing user-read-playback-state playlist-modify-public playlist-modify-private';
-
     export default {
-        name: "Start",
+        name: "Join",
         data: () => ({
-            partyName: null,
-            partyAdminPassword: null,
+            partyCode: '',
+            partyAdminPassword: '',
             disableTextInput: false,
             isLoadingButton: false,
+            rules: {
+                required: value => !!value || 'Required.',
+                counter: value => value.length === 4 || 'code is 4 characters'
+            }
         }),
         mounted() {
             session.clear()
@@ -78,28 +77,25 @@
                 let context = this
                 context.setLoading()
                 axios
-                    .post('/party/new-party', {
-                        name: context.partyName,
-                        password: sha512(context.partyAdminPassword).toString('hex')
+                    .post('/party/auth-code-admin', {
+                        partyCode: context.partyCode.toUpperCase(),
+                        partyPassword: sha512(context.partyAdminPassword).toString('hex')
                     })
-                    .then(function (response) {
+                    .then(function(response) {
                         let d = response.data
-                        session.clear()
-                        session.setItem('partyID', d.id)
-                        session.setItem('partyCode', d.code)
-                        session.setItem('partyName', d.name)
-                        session.setItem('admin', 'true')
-                        let url = 'https://accounts.spotify.com/authorize?' +
-                            querystring.stringify({
-                                response_type: 'code',
-                                client_id: client_id,
-                                scope: scope,
-                                redirect_uri: redirect_uri,
-                                state: d.id
-                            })
-                        window.location.href = url
+                        if (d.valid) {
+                            context.setNotLoading()
+                            session.clear()
+                            session.setItem('partyID', d.id)
+                            session.setItem('admin', 'true')
+                            session.setItem('partyCode', context.partyCode.toUpperCase())
+                            session.setItem('partyName', d.name)
+                            context.$router.push('/main/home')
+                        } else {
+                            context.setNotLoading()
+                        }
                     })
-                    .catch(function (err) {
+                    .catch(function(err) {
                         console.error(err)
                     })
             }

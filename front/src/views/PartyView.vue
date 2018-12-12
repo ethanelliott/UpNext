@@ -20,6 +20,7 @@
 </template>
 
 <script>
+    const PROD = false
     import io from 'socket.io-client'
     import session from 'sessionstorage'
     import * as Vibrant from 'node-vibrant'
@@ -34,7 +35,7 @@
         }),
         mounted() {
             let t = this
-            t.socket = io('http://api.upnext.ml')
+            t.socket = io((PROD ? 'http://api.upnext.ml' : 'http://localhost:8888'))
             t.partyID = session.getItem('partyID')
             t.socket.emit('start-player-loop', {id: t.partyID})
             t.socket.on('event-loop', (data) => {

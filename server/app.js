@@ -1,4 +1,5 @@
 "use strict"
+const PROD = false
 
 function generateCode() {
     let ALL = "abcdefghijklmnpqrstuvwxyz1234567890".toUpperCase();
@@ -68,7 +69,7 @@ try {
 
     const client_id = 'dd8b5386683d47cc9d955a00c1a9c3f8';
     const client_secret = '8de6722b006047c7b2bbb9e1de194f24';
-    const redirect_uri = 'http://api.upnext.ml/party/auth-callback';
+    const redirect_uri = (PROD ? 'http://api.upnext.ml' : 'http://localhost:8888') + "/party/auth-callback";
 
     const searchTracks = (partyID, searchTerms, callback) => {
         let party = db.party.find({_id: partyID})[0]
@@ -106,7 +107,7 @@ try {
 
     const checkForValidToken = (partyID, expiresAt, refreshToken, callback) => {
         let now = (new Date()).valueOf()
-        if (expiresAt - now <= 2000) {
+        if (expiresAt - now <= 60000*5) {
             let authOptions = {
                 method: 'post',
                 url: 'https://accounts.spotify.com/api/token',
@@ -125,12 +126,13 @@ try {
                     token: authToken,
                     expiresat: tokenExpire
                 })
-                callback()
+                callback(authToken)
             }).catch(function(error) {
+                callback(db.party.find({_id: partyID})[0].token)
                 // console.error(error)
             })
         } else {
-            callback()
+            callback(db.party.find({_id: partyID})[0].token)
         }
     }
 
@@ -159,24 +161,25 @@ try {
                 currentPartyEventLoop.push({
                     id: allParties[i]._id,
                     eventLoop: setInterval(function () {
-                        checkForValidToken(allParties[i]._id, allParties[i].expiresat, allParties[i].refreshtoken, () => {
+                        let party = db.party.find({_id: allParties[i]._id})[0]
+                        checkForValidToken(party._id, party.expiresat, party.refreshtoken, (token) => {
                             axios({
                                 method: 'get',
                                 url: 'https://api.spotify.com/v1/me/player',
                                 headers: {
-                                    'Authorization': 'Bearer ' + allParties[i].token
+                                    'Authorization': 'Bearer ' + token
                                 }
                             }).then(function (response) {
                                 let track = response.data
-                                let party = db.party.find({_id: allParties[i]._id})[0]
                                 if (party.playstate !== track.is_playing) {
-                                    db.party.update({_id: allParties[i]._id}, {playstate: track.is_playing})
+                                    db.party.update({_id: party._id}, {playstate: track.is_playing})
+                                    party = db.party.find({_id: party._id})[0]
                                 }
                                 if (party.currenttrack === null) {
-                                    db.party.update({_id: allParties[i]._id}, {currenttrack: response.data.item.id})
-                                    party = db.party.find({_id: allParties[i]._id})[0]
+                                    db.party.update({_id: party._id}, {currenttrack: response.data.item.id})
+                                    party = db.party.find({_id: party._id})[0]
                                 }
-                                if (track.item.duration_ms - track.progress_ms <= 1000) {
+                                if (track.item.duration_ms - track.progress_ms <= 2000) {
                                     if (party.playlist.length === 0) {
                                         // No Next Song... Just wait
                                     } else {
@@ -189,19 +192,19 @@ try {
                                                 ]
                                             },
                                             headers: {
-                                                'Authorization': 'Bearer ' + party.token
+                                                'Authorization': 'Bearer ' + token
                                             }
                                         }).then(function () {
                                             let playlist = party.playlist
                                             playlist.splice(0, 1)
                                             playlist.sort(scoreSort)
-                                            db.party.update({_id: allParties[i]._id}, {playlist: playlist})
+                                            db.party.update({_id: party._id}, {playlist: playlist})
                                         })
                                     }
                                 }
                                 let thisEventLoopDataID = null
                                 for (let k = 0; k < currentPartyEventLoopData.length; k++) {
-                                    if (currentPartyEventLoopData[k].id === allParties[i]._id) {
+                                    if (currentPartyEventLoopData[k].id === party._id) {
                                         thisEventLoopDataID = k
                                     }
                                 }
@@ -209,7 +212,7 @@ try {
                                     currentPartyEventLoopData.splice(thisEventLoopDataID, 1)
                                 }
                                 currentPartyEventLoopData.push({
-                                    id: allParties[i]._id,
+                                    id: party._id,
                                     data: response.data
                                 })
                             }).catch(function (error) {
@@ -233,6 +236,7 @@ try {
         db.party.save({
             name: pd.name,
             code: partyCode,
+            adminpassword: pd.password,
             token: null,
             refreshtoken: null,
             expiresat: null,
@@ -240,7 +244,9 @@ try {
             playlistid: null,
             playlist: [],
             currenttrack: null,
-            playstate: false
+            playstate: false,
+            // User Tracking!
+            users: [], // {uuid: "", nickname: "", score: 0, }
         })
         return res.json({
             id: db.party.find({code: partyCode})[0]._id,
@@ -267,12 +273,38 @@ try {
         }
     })
 
+    app.post('/party/auth-code-admin', (req, res) => {
+        let pd = req.body
+        let lookupRes = db.party.find({code: pd.partyCode})
+        if (lookupRes.length === 0) {
+            return res.json({
+                valid: false,
+                id: null,
+                name: null
+            })
+        } else {
+            if (lookupRes[0].adminpassword === pd.partyPassword) {
+                return res.json({
+                    name: lookupRes[0].name,
+                    valid: true,
+                    id: lookupRes[0]._id
+                })
+            } else {
+                return res.json({
+                    valid: false,
+                    id: null,
+                    name: null
+                })
+            }
+        }
+    })
+
     app.get('/party/auth-callback', (req, res) => {
         let code = req.query.code || null
         let id = req.query.state || null
         let lookupRes = db.party.find({_id: id})
         if (lookupRes.length === 0) {
-            return res.redirect('http://upnext.ml/#/')
+            return res.redirect((PROD ? 'http://upnext.ml/#/' : 'http://localhost:8080/#/'))
         } else {
             let authOptions = {
                 method: 'post',
@@ -305,8 +337,8 @@ try {
                                     method: 'post',
                                     url: 'https://api.spotify.com/v1/users/' + userID + '/playlists',
                                     data: {
-                                        name: "UpNextArchive",
-                                        description: "UpNext Archive of all songs played at: " + lookupRes[0].name,
+                                        name: lookupRes[0].name,
+                                        description: lookupRes[0].name + " archive, brought to you by UpNext",
                                         public: false,
                                         collaborative: false
                                     },
@@ -324,13 +356,13 @@ try {
                                             playlistid: playlistID
                                         })
                                         startGlobalEventLoop()
-                                        return res.redirect('http://upnext.ml/#/main/home')
+                                        return res.redirect((PROD ? 'http://upnext.ml' : 'http://localhost:8080') + '/#/main/home')
                                     })
                                     .catch(function (error) {
                                         // console.error(error)
                                     })
                             } else {
-                                return res.redirect('http://upnext.ml/#/main/home')
+                                return res.redirect((PROD ? 'http://upnext.ml' : 'http://localhost:8080') + '/#/main/home')
                             }
                         })
                         .catch(function (error) {
