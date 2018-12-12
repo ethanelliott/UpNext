@@ -42,7 +42,11 @@
                 let d = data.data
                 t.albumArtwork = d.item.album.images[0].url
                 Vibrant.from(t.albumArtwork).getPalette().then(function (palette) {
-                    t.backStyle = "background: " + palette.DarkVibrant.getHex()
+                    if (palette && palette.DarkVibrant) {
+                        t.backStyle = "background: " + palette.DarkVibrant.getHex()
+                    } else {
+                        t.backStyle = "background: rgba(0,0,0,0)"
+                    }
                 })
                 if (t.albumArtwork !== null) {
                     t.loading = false
