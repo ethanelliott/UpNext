@@ -21,17 +21,11 @@
                                     </v-layout>
                                     <v-layout>
                                         <v-flex>
-                                            <p class="text-xs-center text-uppercase">
-                                                <span>Enter the party code:</span>
-                                            </p>
-                                        </v-flex>
-                                    </v-layout>
-                                    <v-layout>
-                                        <v-flex>
                                             <v-card flat color="secondary">
                                                 <v-card-text>
                                                     <v-form @submit="validateCode">
                                                         <v-text-field label="Party Code" box full-width v-model="partyCode" :disabled="disableTextInput" :rules="[rules.required, rules.counter]"></v-text-field>
+                                                        <v-text-field label="Nickname" box full-width v-model="nickName" :disabled="disableTextInput" :rules="[rules.required]"></v-text-field>
                                                         <v-btn block color="primary" dark large @click="validateCode" :loading="isLoadingButton" type="submit">
                                                         <span>
                                                             Join
@@ -61,10 +55,12 @@
 <script>
     import axios from 'axios'
     import session from 'sessionstorage'
+
     export default {
         name: "Join",
         data: () => ({
             partyCode: '',
+            nickName: '',
             snackbar: null,
             snackbarMessage: 'Hello',
             disableTextInput: false,
@@ -92,7 +88,8 @@
                 context.setLoading()
                 axios
                     .post('/party/auth-code', {
-                        partyCode: context.partyCode.toUpperCase()
+                        partyCode: context.partyCode.toUpperCase(),
+                        nickName: context.nickName
                     })
                     .then(function(response) {
                         let d = response.data
@@ -100,6 +97,7 @@
                             context.setNotLoading()
                             session.clear()
                             session.setItem('partyID', d.id)
+                            session.setItem('uuid', d.uuid)
                             session.setItem('admin', 'false')
                             session.setItem('partyCode', context.partyCode.toUpperCase())
                             session.setItem('partyName', d.name)

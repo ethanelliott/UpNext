@@ -44,14 +44,20 @@
 
 <script>
     import session from 'sessionstorage'
+    import axios from 'axios'
+
     export default {
         name: "Logout",
-        data: () => ({
-
-        }),
+        data: () => ({ }),
         mounted() {
-            session.clear()
-            this.$router.push('/')
+            axios.post('/party/leave', {
+                uuid: session.getItem('uuid'),
+            }).then(function (response) {
+                session.clear()
+                this.$router.push('/')
+            }).catch(function (error) {
+                console.error(error)
+            })
         }
     }
 </script>

@@ -92,6 +92,7 @@
                         let d = response.data
                         session.clear()
                         session.setItem('partyID', d.id)
+                        session.setItem('uuid', d.uuid)
                         session.setItem('partyCode', d.code)
                         session.setItem('partyName', d.name)
                         session.setItem('admin', 'true')

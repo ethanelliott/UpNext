@@ -98,6 +98,7 @@
                             context.setNotLoading()
                             session.clear()
                             session.setItem('partyID', d.id)
+                            session.setItem('uuid', d.uuid)
                             session.setItem('admin', 'true')
                             session.setItem('partyCode', context.partyCode.toUpperCase())
                             session.setItem('partyName', d.name)

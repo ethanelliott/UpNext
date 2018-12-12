@@ -22,6 +22,7 @@ try {
     const helmet = require('helmet')
     const DDoS = require('dddos')
     const axios = require('axios')
+    const uuid = require('uuid/v5')
     const app = express()
     const http = require('http').Server(app)
     const io = require('socket.io')(http)
@@ -148,6 +149,18 @@ try {
         })
     }
 
+    const addNewUser = (partyID, nickName) => {
+        let partyUsers = db.party.find({_id: partyID})[0].users
+        let userid = uuid('com.ethan.upnext', uuid.DNS)
+        partyUsers.push({
+            uuid: userid,
+            nickname: nickName,
+            score: 0
+        })
+        db.party.update({_id: partyID}, {users: partyUsers})
+        return userid
+    }
+
     const startGlobalEventLoop = () => {
         let allParties = db.party.find()
         for (let i = 0; i < allParties.length; i++) {
@@ -248,10 +261,12 @@ try {
             // User Tracking!
             users: [], // {uuid: "", nickname: "", score: 0, }
         })
+        let party = db.party.find({code: partyCode})[0]
         return res.json({
-            id: db.party.find({code: partyCode})[0]._id,
+            id: party._id,
             code: partyCode,
-            name: pd.name
+            name: pd.name,
+            uuid: addNewUser(party._id, "admin")
         })
     })
 
@@ -268,7 +283,8 @@ try {
             return res.json({
                 name: lookupRes[0].name,
                 valid: true,
-                id: lookupRes[0]._id
+                id: lookupRes[0]._id,
+                uuid: addNewUser(lookupRes[0]._id, pd.nickName)
             })
         }
     })
@@ -287,7 +303,8 @@ try {
                 return res.json({
                     name: lookupRes[0].name,
                     valid: true,
-                    id: lookupRes[0]._id
+                    id: lookupRes[0]._id,
+                    uuid: addNewUser(lookupRes[0]._id, "admin")
                 })
             } else {
                 return res.json({

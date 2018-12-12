@@ -25,7 +25,7 @@
     import session from 'sessionstorage'
     import * as Vibrant from 'node-vibrant'
     export default {
-        name: "PartyView",
+        name: "Leaderboard",
         data: () => ({
             socket: null,
             loading: true,

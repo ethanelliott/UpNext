@@ -60,6 +60,14 @@ export default new Router({
                     }
                 },
                 {
+                    path: 'leaderboard',
+                    name: 'leaderboard',
+                    components: {
+                        default: () => import('./views/Main.vue'),
+                        content: () => import('./views/Leaderboard.vue')
+                    }
+                },
+                {
                     path: 'party-view',
                     name: 'party-view',
                     components: {

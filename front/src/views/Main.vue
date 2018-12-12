@@ -22,6 +22,14 @@
                         <v-list-tile-title>Queue</v-list-tile-title>
                     </v-list-tile-content>
                 </v-list-tile>
+                <v-list-tile to="/main/leaderboard">
+                    <v-list-tile-action>
+                        <v-icon>poll</v-icon>
+                    </v-list-tile-action>
+                    <v-list-tile-content>
+                        <v-list-tile-title>Leaderboard</v-list-tile-title>
+                    </v-list-tile-content>
+                </v-list-tile>
                 <v-list-tile v-if="admin" to="/main/party-view">
                     <v-list-tile-action>
                         <v-icon>visibility</v-icon>
