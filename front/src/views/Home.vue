@@ -144,6 +144,16 @@
                     }
                 }
             })
+            this.socket.on('vote-voted', (data) => {
+                if (data.success) {
+                    this.snackbarMessage = 'Skip vote has been added'
+                } else {
+                    this.snackbarMessage = 'You have already voted!'
+                }
+                this.voteSkipDialog = false
+
+                this.snackbar = true
+            })
         },
         methods: {
             showSettings() {
@@ -161,9 +171,10 @@
                 })
             },
             voteSkip() {
-                this.voteSkipDialog = false
-                this.snackbarMessage = 'Skip vote has been added'
-                this.snackbar = true
+                this.socket.emit('vote-skip', {
+                    id: this.partyID,
+                    uuid: session.getItem('uuid')
+                })
             }
         }
     }

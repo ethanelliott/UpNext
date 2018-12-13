@@ -65,6 +65,7 @@
                             <v-list-tile-content>
                                 <v-list-tile-title>{{ track.name }}</v-list-tile-title>
                                 <v-list-tile-sub-title class="text--primary">{{ track.artist }}</v-list-tile-sub-title>
+                                <v-list-tile-sub-title>Added By: {{ track.added.name }}</v-list-tile-sub-title>
                             </v-list-tile-content>
                             <v-list-tile-action>
                                 <v-btn flat icon color="primary">
@@ -173,7 +174,8 @@
             addSongToPlaylist(track) {
                 this.socket.emit('playlist-add-song', {
                     partyid: this.partyID,
-                    track:track
+                    uuid: session.getItem('uuid'),
+                    track: track
                 })
             },
             showVoteDialog(track) {
@@ -183,14 +185,16 @@
             upvoteSong() {
                 this.socket.emit('playlist-upvote-song', {
                     partyid: this.partyID,
-                    track: this.selectedTrack
+                    track: this.selectedTrack,
+                    uuid: session.getItem('uuid')
                 })
                 this.voteDialog = false
             },
             downvoteSong() {
                 this.socket.emit('playlist-downvote-song', {
                     partyid: this.partyID,
-                    track: this.selectedTrack
+                    track: this.selectedTrack,
+                    uuid: session.getItem('uuid')
                 })
                 this.voteDialog = false
             }

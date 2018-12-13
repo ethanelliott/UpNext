@@ -112,7 +112,7 @@ try {
 
     const checkForValidToken = (partyID, expiresAt, refreshToken, callback) => {
         let now = (new Date()).valueOf()
-        if (expiresAt - now <= 60000*5) {
+        if (expiresAt - now <= 60000 * 5) {
             let authOptions = {
                 method: 'post',
                 url: 'https://accounts.spotify.com/api/token',
@@ -124,7 +124,7 @@ try {
                     'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64'))
                 }
             }
-            axios(authOptions).then(function(response) {
+            axios(authOptions).then(function (response) {
                 let authToken = response.data.access_token
                 let tokenExpire = (new Date()).valueOf() + (1000 * response.data.expires_in)
                 db.party.update({_id: partyID}, {
@@ -132,7 +132,7 @@ try {
                     expiresat: tokenExpire
                 })
                 callback(authToken)
-            }).catch(function(error) {
+            }).catch(function (error) {
                 callback(db.party.find({_id: partyID})[0].token)
                 // console.error(error)
             })
@@ -188,7 +188,9 @@ try {
                                 }
                             }).then(function (response) {
                                 let track = response.data
-                                if (track.item === undefined) { return; }
+                                if (track.item === undefined) {
+                                    return;
+                                }
                                 if (party.playstate !== track.is_playing) {
                                     db.party.update({_id: party._id}, {playstate: track.is_playing})
                                     party = db.party.find({_id: party._id})[0]
@@ -216,7 +218,7 @@ try {
                                             let playlist = party.playlist
                                             playlist.splice(0, 1)
                                             playlist.sort(scoreSort)
-                                            db.party.update({_id: party._id}, {playlist: playlist})
+                                            db.party.update({_id: party._id}, {playlist: playlist, voteskiplist: []})
                                         })
                                     }
                                 }
@@ -265,6 +267,7 @@ try {
             playstate: false,
             // User Tracking!
             users: [], // {uuid: "", nickname: "", score: 0, }
+            voteskiplist: []
         })
         let party = db.party.find({code: partyCode})[0]
         return res.json({
@@ -301,10 +304,10 @@ try {
             if (users[i].uuid === pd.uuid) {
                 users.splice(i, 1)
                 db.party.update({_id: pd.id}, {users: users})
-                return res.json({ valid: true })
+                return res.json({valid: true})
             }
         }
-        return res.json({ valid: false })
+        return res.json({valid: false})
     })
 
     app.post('/party/auth-code-admin', (req, res) => {
@@ -410,6 +413,29 @@ try {
         }
     })
 
+    const nextSong = (partyID) => {
+        let party = db.party.find({_id: partyID})[0]
+        if (party.playlist.length !== 0) {
+            axios({
+                method: 'put',
+                url: 'https://api.spotify.com/v1/me/player/play',
+                data: {
+                    uris: [
+                        "spotify:track:" + party.playlist[0].id
+                    ]
+                },
+                headers: {
+                    'Authorization': 'Bearer ' + party.token
+                }
+            }).then(function () {
+                let playlist = party.playlist
+                playlist.splice(0, 1)
+                playlist.sort(scoreSort)
+                db.party.update({_id: partyID}, {playlist: playlist})
+            })
+        }
+    }
+
     io.on('connection', (client) => {
         let eventLoop = null
         client.on('disconnect', () => {
@@ -445,28 +471,7 @@ try {
             })
         })
         client.on('next-song', (data) => {
-            let party = db.party.find({_id: data.id})[0]
-            if (party.playlist.length === 0) {
-                client.emit('cannot-skip')
-            } else {
-                axios({
-                    method: 'put',
-                    url: 'https://api.spotify.com/v1/me/player/play',
-                    data: {
-                        uris: [
-                            "spotify:track:" + party.playlist[0].id
-                        ]
-                    },
-                    headers: {
-                        'Authorization': 'Bearer ' + party.token
-                    }
-                }).then(function () {
-                    let playlist = party.playlist
-                    playlist.splice(0, 1)
-                    playlist.sort(scoreSort)
-                    db.party.update({_id: data.id}, {playlist: playlist})
-                })
-            }
+            nextSong(data.id)
         })
         client.on('get-playlist', (data) => {
             let playlist = db.party.find({_id: data.id})[0].playlist
@@ -475,6 +480,33 @@ try {
                 id: data.id,
                 playlist: playlist
             })
+        })
+        client.on('vote-skip', (data) => {
+            let party = db.party.find({_id: data.id})[0]
+            let userID = data.uuid
+            let skipListID = null
+            for (let i = 0; i < party.voteskiplist.length; i++) {
+                if (party.voteskiplist[i] === userID) {
+                    skipListID = i
+                    break
+                }
+            }
+            if (skipListID === null) {
+                // Hasn't voted
+                if (party.voteskiplist.length + 1 >= (party.users.length / 2)) {
+                    // Has over 50%
+                    nextSong(data.id)
+                    db.party.update({_id: data.id}, {voteskiplist: []})
+                } else {
+                    // Not quite there yet
+                    let skipList = party.voteskiplist
+                    skipList.push(userID)
+                    db.party.update({_id: data.id}, {voteskiplist: skipList})
+                }
+                client.emit('vote-voted', {success: true})
+            } else {
+                client.emit('vote-voted', {success: false})
+            }
         })
         client.on('get-leaderboard', (data) => {
             let users = db.party.find({_id: data.id})[0].users
@@ -492,6 +524,12 @@ try {
         client.on('playlist-add-song', (data) => {
             getTrackData(data.partyid, data.track.id, function (response) {
                 let party = db.party.find({_id: data.partyid})[0]
+                let userAddedName = ''
+                party.users.forEach((user) => {
+                    if (user.uuid === data.uuid) {
+                        userAddedName = user.nickname
+                    }
+                })
                 let playlist = party.playlist
                 let track = response.data
                 let trackObject = {
@@ -501,7 +539,13 @@ try {
                     artwork: track.album.images.find((element) => {
                         return element.height <= 64
                     }).url,
-                    votes: 0
+                    votes: 0,
+                    added: {
+                        uuid: data.uuid,
+                        name: userAddedName
+                    },
+                    upvoters: [],
+                    downvoters: []
                 }
                 let dupeCheck = false
                 for (let i = 0; i < playlist.length; i++) {
@@ -547,26 +591,48 @@ try {
         client.on('playlist-upvote-song', (data) => {
             let party = db.party.find({_id: data.partyid})[0]
             let playlist = party.playlist
+            let scoreUserID = null
             for (let i = 0; i < playlist.length; i++) {
                 if (playlist[i].id === data.track) {
-                    playlist[i].votes++
+                    if (!playlist[i].upvoters.includes(data.uuid)) {
+                        playlist[i].votes++
+                        playlist[i].upvoters.push(data.uuid)
+                        scoreUserID = playlist[i].added.uuid
+                    }
                 }
             }
+            let users = party.users
+            for (let i = 0; i < users.length; i++) {
+                if (users[i].uuid === scoreUserID) {
+                    users[i].score++
+                }
+            }
+            users.sort(userSort)
             playlist.sort(scoreSort)
-            db.party.update({_id: data.partyid}, {playlist: playlist})
-            // updatePlaylistInSpotify(data.partyid, (r) => {})
+            db.party.update({_id: data.partyid}, {playlist: playlist, users: users})
         })
         client.on('playlist-downvote-song', (data) => {
             let party = db.party.find({_id: data.partyid})[0]
             let playlist = party.playlist
+            let scoreUserID = null
             for (let i = 0; i < playlist.length; i++) {
                 if (playlist[i].id === data.track) {
-                    playlist[i].votes--
+                    if (!playlist[i].downvoters.includes(data.uuid)) {
+                        playlist[i].votes--
+                        playlist[i].downvoters.push(data.uuid)
+                        scoreUserID = playlist[i].added.uuid
+                    }
                 }
             }
+            let users = party.users
+            for (let i = 0; i < users.length; i++) {
+                if (users[i].uuid === scoreUserID) {
+                    users[i].score--
+                }
+            }
+            users.sort(userSort)
             playlist.sort(scoreSort)
-            db.party.update({_id: data.partyid}, {playlist: playlist})
-            // updatePlaylistInSpotify(data.partyid, (r) => {})
+            db.party.update({_id: data.partyid}, {playlist: playlist, users: users})
         })
     })
     app.set('port', PORT)

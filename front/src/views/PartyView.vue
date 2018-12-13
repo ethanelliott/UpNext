@@ -16,6 +16,9 @@
                 </v-container>
             </v-flex>
         </v-layout>
+        <v-footer dark height="auto" fixed>
+            <v-progress-linear class="my-0 mx-3" height="10" v-model="trackpos"></v-progress-linear>
+        </v-footer>
     </v-container>
 </template>
 
@@ -32,7 +35,11 @@
             partyID: null,
             albumArtwork: null,
             backStyle: '',
+            trackpos: 0
         }),
+        beforeDestroy() {
+            this.socket.disconnect()
+        },
         mounted() {
             let t = this
             t.socket = io((PROD ? 'http://api.upnext.ml' : 'http://localhost:8888'))
@@ -40,6 +47,7 @@
             t.socket.emit('start-player-loop', {id: t.partyID})
             t.socket.on('event-loop', (data) => {
                 let d = data.data
+                t.trackpos = (d.progress_ms / d.item.duration_ms) * 100
                 t.albumArtwork = d.item.album.images[0].url
                 Vibrant.from(t.albumArtwork).getPalette().then(function (palette) {
                     if (palette && palette.DarkVibrant) {
@@ -57,3 +65,8 @@
         }
     }
 </script>
+<style>
+    html {
+        overflow-y: hidden;
+    }
+</style>
