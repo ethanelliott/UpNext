@@ -1,5 +1,5 @@
 "use strict"
-const PROD = true
+const PROD = false
 
 function generateCode() {
     let ALL = "abcdefghijklmnpqrstuvwxyz1234567890".toUpperCase();
@@ -375,7 +375,7 @@ try {
                                     method: 'post',
                                     url: 'https://api.spotify.com/v1/users/' + userID + '/playlists',
                                     data: {
-                                        name: lookupRes[0].name,
+                                        name: lookupRes[0].name + ' By UpNext 🎵',
                                         description: lookupRes[0].name + " archive, brought to you by UpNext",
                                         public: false,
                                         collaborative: false

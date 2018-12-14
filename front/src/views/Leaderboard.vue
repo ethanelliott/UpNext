@@ -37,7 +37,7 @@
 </template>
 
 <script>
-    const PROD = true
+    const PROD = false
     import io from 'socket.io-client'
     import session from 'sessionstorage'
 

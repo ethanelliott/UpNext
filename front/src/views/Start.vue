@@ -46,7 +46,7 @@
 </template>
 
 <script>
-    const PROD = true
+    const PROD = false
     import axios from 'axios'
     import session from 'sessionstorage'
     import querystring from 'querystring'

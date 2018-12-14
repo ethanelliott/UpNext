@@ -10,20 +10,32 @@
                 <v-container>
                     <v-layout justify-center>
                         <v-flex class="text-xs-center">
-                            <img :src="albumArtwork" class="elevation-24 album-art-image" style="width:90%;max-width:600px;" />
+                            <img :src="albumArtwork" class="elevation-24 album-art-image"
+                                 style="width:90%;max-width:650px;"/>
                         </v-flex>
                     </v-layout>
                 </v-container>
             </v-flex>
         </v-layout>
-        <v-footer dark height="auto" fixed>
-            <v-progress-linear class="my-0 mx-3" height="10" v-model="trackpos"></v-progress-linear>
+        <v-footer class="elevation-20" dark fixed height="auto">
+            <v-container class="ma-0 pa-2" fluid>
+                <v-layout align-center justify-center>
+                    <v-flex class="text-xs-center headline">
+                        <p>{{ trackName }} - {{ artist }}</p>
+                    </v-flex>
+                </v-layout>
+                <v-layout align-center justify-center>
+                    <v-flex>
+                        <v-progress-linear class="my-0" height="10" v-model="trackpos"></v-progress-linear>
+                    </v-flex>
+                </v-layout>
+            </v-container>
         </v-footer>
     </v-container>
 </template>
 
 <script>
-    const PROD = true
+    const PROD = false
     import io from 'socket.io-client'
     import session from 'sessionstorage'
     import * as Vibrant from 'node-vibrant'
@@ -35,6 +47,8 @@
             loading: true,
             partyID: null,
             albumArtwork: null,
+            trackName: null,
+            artist: null,
             backStyle: '',
             trackpos: 0
         }),
@@ -50,6 +64,8 @@
                 let d = data.data
                 t.trackpos = (d.progress_ms / d.item.duration_ms) * 100
                 t.albumArtwork = d.item.album.images[0].url
+                t.trackName = d.item.name
+                t.artist = d.item.artists[0].name
                 Vibrant.from(t.albumArtwork).getPalette().then(function (palette) {
                     if (palette && palette.DarkVibrant) {
                         t.backStyle = "background: " + palette.DarkVibrant.getHex()
