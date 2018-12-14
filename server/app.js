@@ -1,5 +1,5 @@
 "use strict"
-const PROD = false
+const PROD = true
 
 function generateCode() {
     let ALL = "abcdefghijklmnpqrstuvwxyz1234567890".toUpperCase();

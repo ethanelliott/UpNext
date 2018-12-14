@@ -96,7 +96,7 @@
 </template>
 
 <script>
-    const PROD = false
+    const PROD = true
     import io from 'socket.io-client'
     import session from 'sessionstorage'
 
