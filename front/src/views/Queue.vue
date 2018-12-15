@@ -96,7 +96,7 @@
 </template>
 
 <script>
-    const PROD = true
+    const PROD = false
     import io from 'socket.io-client'
     import session from 'sessionstorage'
 
@@ -156,7 +156,7 @@
                 this.snackbar = true
             })
             this.socket.on('track-added-duplicate', () => {
-                this.snackbarMessage = 'Song already in Queue! Upvoted.'
+                this.snackbarMessage = 'Song already in Queue!'
                 this.snackbar = true
             })
         },

@@ -1,5 +1,5 @@
 "use strict"
-const PROD = true
+const PROD = false
 
 /**
  * @TODO: COOL ARTIST BACKGROUND STUFF - USAT -> musicbrainz -> fanart.tv
@@ -583,11 +583,6 @@ try {
                     client.emit('track-added-success')
                 } else {
                     // Duplicate!
-                    for (let i = 0; i < playlist.length; i++) {
-                        if (playlist[i].id === track.id) {
-                            playlist[i].votes++
-                        }
-                    }
                     playlist.sort(scoreSort)
                     db.party.update({_id: data.partyid}, {playlist: playlist})
                     client.emit('track-added-duplicate')
@@ -598,9 +593,15 @@ try {
             let party = db.party.find({_id: data.partyid})[0]
             let playlist = party.playlist
             let scoreUserID = null
+            let swap = false
             for (let i = 0; i < playlist.length; i++) {
                 if (playlist[i].id === data.track) {
                     if (!playlist[i].upvoters.includes(data.uuid)) {
+                        if (playlist[i].downvoters.includes(data.uuid)) {
+                            playlist[i].downvoters = playlist[i].downvoters.filter(el => el !== data.uuid)
+                            playlist[i].votes++
+                            swap = true
+                        }
                         playlist[i].votes++
                         playlist[i].upvoters.push(data.uuid)
                         scoreUserID = playlist[i].added.uuid
@@ -610,7 +611,7 @@ try {
             let users = party.users
             for (let i = 0; i < users.length; i++) {
                 if (users[i].uuid === scoreUserID) {
-                    users[i].score++
+                    users[i].score += (swap ? 2 : 1)
                 }
             }
             users.sort(userSort)
@@ -621,9 +622,15 @@ try {
             let party = db.party.find({_id: data.partyid})[0]
             let playlist = party.playlist
             let scoreUserID = null
+            let swap = false
             for (let i = 0; i < playlist.length; i++) {
                 if (playlist[i].id === data.track) {
                     if (!playlist[i].downvoters.includes(data.uuid)) {
+                        if (playlist[i].upvoters.includes(data.uuid)) {
+                            playlist[i].upvoters = playlist[i].upvoters.filter(el => el !== data.uuid)
+                            playlist[i].votes--
+                            swap = true
+                        }
                         playlist[i].votes--
                         playlist[i].downvoters.push(data.uuid)
                         scoreUserID = playlist[i].added.uuid
@@ -633,7 +640,7 @@ try {
             let users = party.users
             for (let i = 0; i < users.length; i++) {
                 if (users[i].uuid === scoreUserID) {
-                    users[i].score--
+                    users[i].score -= (swap ? 2 : 1)
                 }
             }
             users.sort(userSort)
