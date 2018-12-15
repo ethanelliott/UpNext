@@ -1,11 +1,11 @@
 <template>
-    <v-container fluid fill-height :style="backStyle">
-        <v-layout v-if="loading" justify-center align-center>
+    <v-container :style="backStyle" fill-height fluid>
+        <v-layout align-center justify-center v-if="loading">
             <v-flex class="text-xs-center">
                 <v-progress-circular :size="200" :width="15" color="primary" indeterminate></v-progress-circular>
             </v-flex>
         </v-layout>
-        <v-layout v-if="!loading" justify-center align-center>
+        <v-layout align-center justify-center v-if="!loading">
             <v-flex lg8 md10 sm10 xs12>
                 <v-container>
                     <v-layout justify-center>
@@ -66,6 +66,7 @@
                 t.albumArtwork = d.item.album.images[0].url
                 t.trackName = d.item.name
                 t.artist = d.item.artists[0].name
+                // t.backStyle = "filter: blur(16px); background: url('https://assets.fanart.tv/fanart/music/a6c6897a-7415-4f8d-b5a5-3a5e05f3be67/artistbackground/twenty-one-pilots-538ed3f0e6392.jpg');"
                 Vibrant.from(t.albumArtwork).getPalette().then(function (palette) {
                     if (palette && palette.DarkVibrant) {
                         t.backStyle = "background: " + palette.DarkVibrant.getHex()
@@ -78,8 +79,7 @@
                 }
             })
         },
-        methods: {
-        }
+        methods: {}
     }
 </script>
 <style>
