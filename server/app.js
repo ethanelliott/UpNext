@@ -1,6 +1,11 @@
 "use strict"
 const PROD = true
 
+/**
+ * @TODO: COOL ARTIST BACKGROUND STUFF - USAT -> musicbrainz -> fanart.tv
+ *
+ */
+
 function generateCode() {
     let ALL = "abcdefghijklmnpqrstuvwxyz1234567890".toUpperCase();
     let s = "";
