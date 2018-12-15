@@ -1,5 +1,5 @@
 "use strict"
-const PROD = false
+const PROD = true
 
 /**
  * @TODO: COOL ARTIST BACKGROUND STUFF - USAT -> musicbrainz -> fanart.tv
