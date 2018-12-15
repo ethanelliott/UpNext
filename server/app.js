@@ -3,7 +3,8 @@ const PROD = true
 
 /**
  * @TODO: COOL ARTIST BACKGROUND STUFF - USAT -> musicbrainz -> fanart.tv
- *
+ * https://musicbrainz.org/ws/2/recording/?fmt=json&limit=10&query=isrc:USAT21810685
+ * https://webservice.fanart.tv/v3/music/a6c6897a-7415-4f8d-b5a5-3a5e05f3be67?api_key=caac10e56d42dd9f2acb2dc924e62c30
  */
 
 function generateCode() {
