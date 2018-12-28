@@ -538,7 +538,6 @@ try {
                 })
                 let playlist = party.playlist
                 let track = response.data
-                console.log(track)
                 let trackObject = {
                     id: track.id,
                     name: track.name,
