@@ -46,14 +46,13 @@
 </template>
 
 <script>
-    const PROD = true
     import axios from 'axios'
     import session from 'sessionstorage'
     import querystring from 'querystring'
     import sha512 from 'sha512'
 
     const client_id = 'dd8b5386683d47cc9d955a00c1a9c3f8';
-    const redirect_uri = (PROD ? 'http://api.upnext.ml' : 'http://localhost:8888') + '/party/auth-callback';
+    let redirect_uri = '';
     const scope = 'user-read-private user-read-email user-library-read user-library-modify playlist-read-private streaming app-remote-control user-modify-playback-state user-read-currently-playing user-read-playback-state playlist-modify-public playlist-modify-private';
 
     export default {
@@ -69,6 +68,7 @@
         }),
         mounted() {
             session.clear()
+            redirect_uri = this.$socketPath + '/party/auth-callback'
         },
         methods: {
             setLoading() {

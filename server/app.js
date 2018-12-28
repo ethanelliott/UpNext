@@ -1,5 +1,5 @@
 "use strict"
-const PROD = true
+const PROD = false
 
 /**
  * @TODO: COOL ARTIST BACKGROUND STUFF - USAT -> musicbrainz -> fanart.tv
@@ -538,6 +538,7 @@ try {
                 })
                 let playlist = party.playlist
                 let track = response.data
+                console.log(track)
                 let trackObject = {
                     id: track.id,
                     name: track.name,

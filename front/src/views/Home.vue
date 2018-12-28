@@ -99,7 +99,6 @@
 </template>
 
 <script>
-    const PROD = true
     import io from 'socket.io-client'
     import session from 'sessionstorage'
 
@@ -127,7 +126,7 @@
             this.partyID = session.getItem('partyID')
             this.admin = (session.getItem('admin') === 'true')
 
-            this.socket = io((PROD ? 'http://api.upnext.ml' : 'http://localhost:8888'))
+            this.socket = io(this.$socketPath)
             this.socket.on('connect', () => {
                 this.socket.on('disconnect', () => { })
                 this.socket.emit('start-player-loop', {id: this.partyID})

@@ -1,5 +1,5 @@
 <template>
-    <v-container :style="backStyle" fill-height fluid>
+    <v-container :style="backStyle" class="back-style" fill-height fluid>
         <v-layout align-center justify-center row v-if="loading">
             <v-flex class="text-xs-center">
                 <v-progress-circular :size="200" :width="15" color="primary" indeterminate></v-progress-circular>
@@ -14,7 +14,7 @@
                                 <v-flex xs6>
                                     <img :src="albumArtwork" class="elevation-24 album-art-image"
                                          style="width:90%;max-width:500px;"/>
-                                </v-flex xs4>
+                                </v-flex>
                                 <v-flex fill-height style="max-width: 500px">
                                     <p :style="textStyle" class="big-text">{{ trackName }}</p>
                                     <p class="headline font-weight-light">{{ artist }}</p>
@@ -70,8 +70,9 @@
                                     <div style="font-size: 1.5em">Up Next:</div>
                                 </v-flex>
                                 <v-flex>
-                                    <template v-for="(track, index) in queue">
-                                        <div class="queue-artwork-container ma-2 mr-5 pr-4 d-inline-block">
+                                    <template v-for="(track) in queue">
+                                        <div class="queue-artwork-container ma-2 mr-5 pr-4 d-inline-block"
+                                             v-bind:key="track.id">
                                             <img :src="track.artwork" class="elevation-24"
                                                  style="height: 128px; width:128px; filter: blur(2px) brightness(50%);position: absolute;">
                                             <div style="height: 128px; width:128px; position: relative; z-index: 2; top:0; bottom: 0; left: 0; right: 0;display: flex; justify-content: center;align-items: center;">
@@ -96,7 +97,8 @@
             <v-container class="ma-0 pa-2" fluid>
                 <v-layout align-center justify-center>
                     <v-flex>
-                        <v-progress-linear class="my-0" height="10" v-model="trackpos"></v-progress-linear>
+                        <v-progress-linear :color="progressColour" class="my-0" height="10"
+                                           v-model="trackPos"></v-progress-linear>
                     </v-flex>
                 </v-layout>
             </v-container>
@@ -105,9 +107,10 @@
 </template>
 
 <script>
-    const PROD = true
     import io from 'socket.io-client'
+    import axios from 'axios'
     import session from 'sessionstorage'
+    import Jimp from 'jimp'
     import * as Vibrant from 'node-vibrant'
 
     export default {
@@ -119,11 +122,14 @@
             albumArtwork: null,
             trackName: null,
             artist: null,
+            isrc: null,
             backStyle: '',
             textStyle: '',
-            trackpos: 0,
+            trackPos: 0,
             users: [],
-            queue: []
+            queue: [],
+            previousTrack: '',
+            progressColour: 'primary'
         }),
         beforeDestroy() {
             this.socket.disconnect()
@@ -131,7 +137,7 @@
         },
         mounted() {
             let t = this
-            t.socket = io((PROD ? 'http://api.upnext.ml' : 'http://localhost:8888'))
+            t.socket = io(this.$socketPath)
             t.partyID = session.getItem('partyID')
             t.socket.emit('start-player-loop', {id: t.partyID})
             t.eventLoop = setInterval(function () {
@@ -146,29 +152,76 @@
             })
             t.socket.on('event-loop', (data) => {
                 let d = data.data
-                t.trackpos = (d.progress_ms / d.item.duration_ms) * 100
+                t.trackPos = (d.progress_ms / d.item.duration_ms) * 100
                 t.albumArtwork = d.item.album.images[0].url
                 t.trackName = d.item.name
                 t.artist = d.item.artists[0].name
-                // t.backStyle = "filter: blur(16px); background: url('https://assets.fanart.tv/fanart/music/a6c6897a-7415-4f8d-b5a5-3a5e05f3be67/artistbackground/twenty-one-pilots-538ed3f0e6392.jpg');"
-                Vibrant.from(t.albumArtwork).getPalette().then(function (palette) {
-                    if (palette && palette.Muted) {
-                        t.backStyle = "background: " + palette.Muted.getHex()
-                    } else {
-                        t.backStyle = "background: rgba(0,0,0,0)"
-                    }
-                    // if (palette && palette.DarkVibrant) {
-                    //     t.textStyle = "color: " + palette.DarkVibrant.getHex()
-                    // } else {
-                    //     t.textStyle = ''
-                    // }
-                })
+                t.isrc = d.item.external_ids.isrc
+                if (t.previousTrack !== t.trackName) {
+                    t.previousTrack = t.trackName
+                    Vibrant.from(t.albumArtwork).getPalette().then(function (palette) {
+                        if (palette && palette.Vibrant) {
+                            t.progressColour = palette.Vibrant.getHex()
+                        } else {
+                            t.progressColour = 'primary'
+                        }
+                        if (palette && palette.Muted) {
+                            t.backStyle = "background: " + palette.Muted.getHex()
+                        } else {
+                            t.backStyle = "background: rgba(0,0,0,0)"
+                        }
+                        // I just run both promises at the same time, and the one that succeeds gets to change the image
+                        axios.get(`https://musicbrainz.org/ws/2/recording/?fmt=json&limit=10&query=isrc:${t.isrc}`).then(artist_id => {
+                            if (artist_id.data.recordings.length > 0) {
+                                let artistID = artist_id.data.recordings[0]["artist-credit"][0].artist.id
+                                axios.get(`https://webservice.fanart.tv/v3/music/${artistID}?api_key=caac10e56d42dd9f2acb2dc924e62c30`).then(images => {
+                                    if (images.data.artistbackground) {
+                                        t.loadBackgroundImage(images.data.artistbackground[Math.floor(Math.random() * images.data.artistbackground.length)].url)
+                                    } else {
+                                        axios.get(`https://musicbrainz.org/ws/2/recording/?fmt=json&limit=10&query=${t.artist}`).then(artist_id_name => {
+                                            if (artist_id_name.data.recordings.length > 0) {
+                                                let artistID = artist_id_name.data.recordings[0]["artist-credit"][0].artist.id
+                                                axios.get(`https://webservice.fanart.tv/v3/music/${artistID}?api_key=caac10e56d42dd9f2acb2dc924e62c30`).then(images_Artist => {
+                                                    if (images_Artist.data.artistbackground) {
+                                                        t.loadBackgroundImage(images_Artist.data.artistbackground[Math.floor(Math.random() * images_Artist.data.artistbackground.length)].url)
+                                                    }
+                                                }).catch(err => {
+                                                })
+                                            }
+                                        }).catch(err => {
+                                        })
+                                    }
+                                }).catch(err => {
+                                })
+                            }
+                        }).catch(err => {
+                        })
+                    })
+                }
                 if (t.albumArtwork !== null) {
                     t.loading = false
                 }
             })
         },
-        methods: {}
+        methods: {
+            loadBackgroundImage(imgURL) {
+                let t = this
+                let proxyURL = "https://cors-anywhere.herokuapp.com/"
+                Jimp.read(proxyURL + imgURL)
+                    .then(image => {
+                        image.scale(1.2)
+                        image.blur(10)
+                        image.brightness(-0.8)
+                        image.getBase64Async(Jimp.MIME_PNG).then(url => {
+                            t.backStyle = `animation-play-state: running;background: url(${url});`
+                        })
+                            .catch(err => {
+                                console.error(err)
+                            })
+                    })
+                    .catch(err => console.error(err))
+            }
+        }
     }
 </script>
 <style>
@@ -177,7 +230,34 @@
     }
 </style>
 <style scoped>
+    /* OOOUUUUU VERY RANDOM MOVEMENT*/
+    @keyframes MOVE-BG {
+        0% {
+            background-position: left top;
+        }
+        25% {
+            background-position: right bottom;
+        }
+        50% {
+            background-position: center center;
+        }
+        75% {
+            background-position: left bottom;
+        }
+        100% {
+            background-position: left top;
+        }
+    }
     .big-text {
         font-size: 2.6em;
+    }
+
+    .back-style {
+        animation-name: MOVE-BG;
+        animation-duration: 60s;
+        animation-timing-function: linear;
+        animation-iteration-count: infinite;
+        animation-play-state: paused;
+        transition: all 1s;
     }
 </style>

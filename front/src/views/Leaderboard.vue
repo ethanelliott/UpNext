@@ -37,7 +37,6 @@
 </template>
 
 <script>
-    const PROD = true
     import io from 'socket.io-client'
     import session from 'sessionstorage'
 
@@ -55,7 +54,7 @@
         },
         mounted() {
             let t = this
-            t.socket = io((PROD ? 'http://api.upnext.ml' : 'http://localhost:8888'))
+            t.socket = io(this.$socketPath)
             t.partyID = session.getItem('partyID')
             t.eventLoop = setInterval(function() {
                 t.socket.emit('get-leaderboard', {id: t.partyID})
