@@ -8,8 +8,8 @@ import axios from 'axios'
 
 const PROD = true
 
-axios.defaults.baseURL = (PROD ? 'http://api.upnext.ml' : 'http://localhost:8888')
-Vue.prototype.$socketPath = (PROD ? 'http://api.upnext.ml' : 'http://localhost:8888')
+axios.defaults.baseURL = (PROD ? 'https://api.upnext.ml' : 'http://localhost:8888')
+Vue.prototype.$socketPath = (PROD ? 'https://api.upnext.ml' : 'http://localhost:8888')
 Vue.config.productionTip = false
 
 new Vue({

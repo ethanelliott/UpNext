@@ -80,7 +80,7 @@ try {
 
     const client_id = 'dd8b5386683d47cc9d955a00c1a9c3f8';
     const client_secret = '8de6722b006047c7b2bbb9e1de194f24';
-    const redirect_uri = (PROD ? 'http://api.upnext.ml' : 'http://localhost:8888') + "/party/auth-callback";
+    const redirect_uri = (PROD ? 'https://api.upnext.ml' : 'http://localhost:8888') + "/party/auth-callback";
 
     const searchTracks = (partyID, searchTerms, callback) => {
         let party = db.party.find({_id: partyID})[0]
@@ -348,7 +348,7 @@ try {
         let id = req.query.state || null
         let lookupRes = db.party.find({_id: id})
         if (lookupRes.length === 0) {
-            return res.redirect((PROD ? 'http://upnext.ml/#/' : 'http://localhost:8080/#/'))
+            return res.redirect((PROD ? 'https://upnext.ml/#/' : 'http://localhost:8080/#/'))
         } else {
             let authOptions = {
                 method: 'post',
@@ -400,13 +400,13 @@ try {
                                             playlistid: playlistID
                                         })
                                         startGlobalEventLoop()
-                                        return res.redirect((PROD ? 'http://upnext.ml' : 'http://localhost:8080') + '/#/main/home')
+                                        return res.redirect((PROD ? 'https://upnext.ml' : 'http://localhost:8080') + '/#/main/home')
                                     })
                                     .catch(function (error) {
                                         // console.error(error)
                                     })
                             } else {
-                                return res.redirect((PROD ? 'http://upnext.ml' : 'http://localhost:8080') + '/#/main/home')
+                                return res.redirect((PROD ? 'https://upnext.ml' : 'http://localhost:8080') + '/#/main/home')
                             }
                         })
                         .catch(function (error) {
