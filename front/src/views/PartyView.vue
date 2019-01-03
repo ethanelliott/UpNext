@@ -134,16 +134,19 @@
         beforeDestroy() {
             this.socket.disconnect()
             clearInterval(this.eventLoop)
+            this.previousTrack = ''
         },
         mounted() {
             let t = this
-            t.socket = io(this.$socketPath)
             t.partyID = session.getItem('partyID')
-            t.socket.emit('start-player-loop', {id: t.partyID})
-            t.eventLoop = setInterval(function () {
-                t.socket.emit('get-leaderboard', {id: t.partyID})
-                t.socket.emit('get-playlist', {id: t.partyID})
-            }, 500)
+            t.socket = io(this.$socketPath)
+            t.socket.on('connect', () => {
+                t.socket.emit('start-player-loop', {id: t.partyID})
+                t.eventLoop = setInterval(function () {
+                    t.socket.emit('get-leaderboard', {id: t.partyID})
+                    t.socket.emit('get-playlist', {id: t.partyID})
+                }, 500)
+            })
             t.socket.on('give-leaderboard', (data) => {
                 t.users = data.users.slice(0, 5)
             })
