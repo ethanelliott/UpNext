@@ -13,7 +13,7 @@
                             <v-layout align-center justify-start>
                                 <v-flex xs6>
                                     <img :src="albumArtwork" class="elevation-24 album-art-image"
-                                         style="width:90%;max-width:500px;"/>
+                                         style="width:90%;max-width:500px;max-height: 500px;"/>
                                 </v-flex>
                                 <v-flex fill-height style="max-width: 500px">
                                     <p :style="textStyle" class="big-text">{{ trackName }}</p>

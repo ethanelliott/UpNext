@@ -3,6 +3,7 @@
 const {logger} = require('./logger')
 const axios = require('axios')
 
+const {playlistSort} = require('./sorts')
 const {getParty, updateParty} = require('./utils')
 const {client_id, client_secret} = require('./creds')
 
@@ -124,6 +125,8 @@ class UpNext {
                                             playlist.splice(0, 1)
                                             playlist.sort(playlistSort)
                                             db.party.update({_id: party._id}, {playlist: playlist, voteskiplist: []})
+                                        }).catch(function (error) {
+                                            console.error(error)
                                         })
                                     }
                                 }
