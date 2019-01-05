@@ -2,49 +2,43 @@
 const {logger} = require('./logger')
 const axios = require('axios')
 const {playlistSort, userSort} = require('./sorts')
-const {getParty, updateParty} = require('./utils')
 
-const {UpNext} = require('./upnext')
-const upnext = UpNext.getInstance()
+const upnext = require('./upnext').UpNext.getInstance()
+const db = require('./database').Database.getInstance()
 
 const searchTracks = (partyID, searchTerms, callback) => {
-    let party = getParty(partyID)
+    let party = db.getParty(partyID)
     axios({
         method: 'get',
         url: 'https://api.spotify.com/v1/search/?q=' + searchTerms + '&type=track',
         headers: {
             'Authorization': 'Bearer ' + party.token
         }
+    }).then((response) => {
+        callback(response)
     })
-        .then(function (response) {
-            callback(response)
-        })
-        .catch(function (error) {
+        .catch((error) => {
             // Just let this fail silently, we don't care if there is no search term
-            // logger.error(error.response.data.error)
         })
-
 }
 
 const getTrackData = (partyID, trackID, callback) => {
-    let party = getParty(partyID)
+    let party = db.getParty(partyID)
     axios({
         method: 'get',
         url: 'https://api.spotify.com/v1/tracks/' + trackID,
         headers: {
             'Authorization': 'Bearer ' + party.token
         }
+    }).then((response) => {
+        callback(response)
+    }).catch((error) => {
+        logger.error(error.stack)
     })
-        .then(function (response) {
-            callback(response)
-        })
-        .catch(function (error) {
-            logger.error(error)
-        })
 }
 
 const addSongToArchive = (partyID, songID) => {
-    let party = getParty(partyID)
+    let party = db.getParty(partyID)
     axios({
         method: 'post',
         url: 'https://api.spotify.com/v1/playlists/' + party.playlistid + '/tracks',
@@ -52,6 +46,10 @@ const addSongToArchive = (partyID, songID) => {
             'Authorization': 'Bearer ' + party.token
         },
         data: ["spotify:track:" + songID]
+    }).then(() => {
+        // Do nothing
+    }).catch((error) => {
+        logger.error(error.stack)
     })
 }
 
@@ -66,27 +64,29 @@ const playSong = (partyID, songID, callback) => {
             ]
         },
         headers: {
-            'Authorization': 'Bearer ' + getParty(partyID).token
+            'Authorization': 'Bearer ' + db.getParty(partyID).token
         }
     }).then(() => {
         callback()
+    }).catch((error) => {
+        logger.error(error.stack)
     })
 }
 
 const nextSong = partyID => {
-    let party = getParty(partyID)
+    let party = db.getParty(partyID)
     if (party.playlist.length !== 0) {
         playSong(partyID, party.playlist[0].id, () => {
             let playlist = party.playlist
             playlist.splice(0, 1)
             playlist.sort(playlistSort)
-            updateParty(partyID, {playlist: playlist})
+            db.updateParty(partyID, {playlist: playlist})
         })
     }
 }
 
 const togglePlayback = (partyID, playback) => {
-    let authToken = getParty(partyID).token
+    let authToken = db.getParty(partyID).token
     axios({
         method: 'put',
         url: (playback ? 'https://api.spotify.com/v1/me/player/play' : 'https://api.spotify.com/v1/me/player/pause'),
@@ -97,7 +97,7 @@ const togglePlayback = (partyID, playback) => {
 }
 
 const sortPlaylistFromPartyID = partyID => {
-    let playlist = getParty(partyID).playlist
+    let playlist = db.getParty(partyID).playlist
     playlist.sort(playlistSort)
     return playlist
 }
@@ -110,7 +110,7 @@ const getPlaylist = partyID => {
 }
 
 const voteToSkip = (partyID, userID) => {
-    let party = getParty(partyID)
+    let party = db.getParty(partyID)
     let skipListID = null
     for (let i = 0; i < party.voteskiplist.length; i++) {
         if (party.voteskiplist[i] === userID) {
@@ -121,11 +121,11 @@ const voteToSkip = (partyID, userID) => {
     if (skipListID === null) {
         if (party.voteskiplist.length + 1 >= (party.users.length / 2)) {
             nextSong(partyID)
-            updateParty(partyID, {voteskiplist: []})
+            db.updateParty(partyID, {voteskiplist: []})
         } else {
             let skipList = party.voteskiplist
             skipList.push(userID)
-            updateParty(partyID, {voteskiplist: skipList})
+            db.updateParty(partyID, {voteskiplist: skipList})
         }
         return true
     } else {
@@ -134,7 +134,7 @@ const voteToSkip = (partyID, userID) => {
 }
 
 const getLeaderboard = partyID => {
-    let users = getParty(partyID).users
+    let users = db.getParty(partyID).users
     users.sort(userSort)
     return {
         id: partyID,
@@ -144,7 +144,7 @@ const getLeaderboard = partyID => {
 
 const addSongToPlaylist = (partyID, userID, songID, callbackSuccess, callbackDuplicate) => {
     getTrackData(partyID, songID, (response) => {
-        let party = getParty(partyID)
+        let party = db.getParty(partyID)
         let userAddedName = ''
         party.users.forEach((user) => {
             if (user.uuid === userID) {
@@ -184,7 +184,7 @@ const addSongToPlaylist = (partyID, userID, songID, callbackSuccess, callbackDup
             } else {
                 playlist.push(trackObject)
                 playlist.sort(playlistSort)
-                updateParty(partyID, {playlist: playlist})
+                db.updateParty(partyID, {playlist: playlist})
             }
             callbackSuccess()
         } else {
@@ -194,7 +194,7 @@ const addSongToPlaylist = (partyID, userID, songID, callbackSuccess, callbackDup
 }
 
 const upvoteSong = (partyID, songID, userID) => {
-    let party = getParty(partyID)
+    let party = db.getParty(partyID)
     let playlist = party.playlist
     let swap = false
     let scoreUserID = null
@@ -220,11 +220,11 @@ const upvoteSong = (partyID, songID, userID) => {
     }
     users.sort(userSort)
     playlist.sort(playlistSort)
-    updateParty(partyID, {playlist: playlist, users: users})
+    db.updateParty(partyID, {playlist: playlist, users: users})
 }
 
 const downvoteSong = (partyID, songID, userID) => {
-    let party = getParty(partyID)
+    let party = db.getParty(partyID)
     let playlist = party.playlist
     let swap = false
     let scoreUserID = null
@@ -250,7 +250,15 @@ const downvoteSong = (partyID, songID, userID) => {
     }
     users.sort(userSort)
     playlist.sort(playlistSort)
-    updateParty(partyID, {playlist: playlist, users: users})
+    db.updateParty(partyID, {playlist: playlist, users: users})
+}
+
+const getParties = () => {
+    return db.getAllParties()
+}
+
+const getPartyData = (partyID) => {
+    return db.getParty(partyID)
 }
 
 const socket_connection_callback = (client) => {
@@ -276,6 +284,12 @@ const socket_connection_callback = (client) => {
     client.on('next-song', (data) => {
         nextSong(data.id)
     })
+    client.on('get-parties', () => {
+        client.emit('give-parties', getParties())
+    })
+    client.on('get-party-data', (data) => {
+        client.emit('give-party-data', getPartyData(data.id))
+    })
     client.on('get-playlist', (data) => {
         client.emit('give-playlist', getPlaylist(data.id))
     })
@@ -288,7 +302,7 @@ const socket_connection_callback = (client) => {
         client.emit('give-leaderboard', getLeaderboard(data.id))
     })
     client.on('search', (data) => {
-        searchTracks(data.partyid, data.searchstring, function (response) {
+        searchTracks(data.partyid, data.searchstring, (response) => {
             client.emit('give-search-results', response.data)
         })
     })

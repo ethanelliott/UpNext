@@ -4,11 +4,9 @@ const {logger} = require('./logger')
 const axios = require('axios')
 
 const {playlistSort} = require('./sorts')
-const {getParty, updateParty} = require('./utils')
 const {client_id, client_secret} = require('./creds')
 
-const {Database} = require('./database')
-const db = Database.getInstance().getDatabase()
+const db = require('./database').Database.getInstance()
 
 const checkForValidToken = (partyID, expiresAt, refreshToken, callback) => {
     let now = (new Date()).valueOf()
@@ -21,23 +19,23 @@ const checkForValidToken = (partyID, expiresAt, refreshToken, callback) => {
                 grant_type: 'refresh_token'
             },
             headers: {
-                'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64'))
+                'Authorization': 'Basic ' + Buffer.from(client_id + ':' + client_secret).toString('base64')
             }
         }
-        axios(authOptions).then(function (response) {
+        axios(authOptions).then((response) => {
             let authToken = response.data.access_token
             let tokenExpire = (new Date()).valueOf() + (1000 * response.data.expires_in)
-            updateParty(partyID, {
+            db.updateParty(partyID, {
                 token: authToken,
                 expiresat: tokenExpire
             })
             callback(authToken)
-        }).catch(function (error) {
-            callback(getParty(partyID).token)
-            logger.error(error)
+        }).catch((error) => {
+            callback(db.getParty(partyID).token)
+            logger.error(error.stack)
         })
     } else {
-        callback(getParty(partyID).token)
+        callback(db.getParty(partyID).token)
     }
 }
 
@@ -71,7 +69,8 @@ class UpNext {
     }
 
     startGlobalEventLoop() {
-        let allParties = db.party.find()
+        let allParties = db.getAllParties()
+        logger.info(`Starting Parties...`)
         for (let i = 0; i < allParties.length; i++) {
             let thisEventLoopID = null
             for (let j = 0; j < this._currentPartyEventLoop.length; j++) {
@@ -84,7 +83,7 @@ class UpNext {
                 ref._currentPartyEventLoop.push({
                     id: allParties[i]._id,
                     eventLoop: setInterval(function () {
-                        let party = getParty(allParties[i]._id)
+                        let party = db.getParty(allParties[i]._id)
                         checkForValidToken(party._id, party.expiresat, party.refreshtoken, (token) => {
                             axios({
                                 method: 'get',
@@ -92,18 +91,18 @@ class UpNext {
                                 headers: {
                                     'Authorization': 'Bearer ' + token
                                 }
-                            }).then(function (response) {
+                            }).then((response) => {
                                 let track = response.data
                                 if (track.item === undefined) {
                                     return;
                                 }
                                 if (party.playstate !== track.is_playing) {
-                                    updateParty(party._id, {playstate: track.is_playing})
-                                    party = getParty(party._id)
+                                    db.updateParty(party._id, {playstate: track.is_playing})
+                                    party = db.getParty(party._id)
                                 }
                                 if (party.currenttrack === null) {
-                                    updateParty(party._id, {currenttrack: response.data.item.id})
-                                    party = getParty(party._id)
+                                    db.updateParty(party._id, {currenttrack: response.data.item.id})
+                                    party = db.getParty(party._id)
                                 }
                                 if (track.item.duration_ms - track.progress_ms <= 2000) {
                                     if (party.playlist.length === 0) {
@@ -120,13 +119,13 @@ class UpNext {
                                             headers: {
                                                 'Authorization': 'Bearer ' + token
                                             }
-                                        }).then(function () {
+                                        }).then(() => {
                                             let playlist = party.playlist
                                             playlist.splice(0, 1)
                                             playlist.sort(playlistSort)
-                                            db.party.update({_id: party._id}, {playlist: playlist, voteskiplist: []})
-                                        }).catch(function (error) {
-                                            console.error(error)
+                                            db.updateParty(party._id, {playlist: playlist, voteskiplist: []})
+                                        }).catch((error) => {
+                                            logger.error(error.stack)
                                         })
                                     }
                                 }
@@ -143,7 +142,7 @@ class UpNext {
                                     id: party._id,
                                     data: response.data
                                 })
-                            }).catch(function (error) {
+                            }).catch((error) => {
                                 logger.error(error)
                             })
                         })

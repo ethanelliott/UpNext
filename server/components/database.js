@@ -33,8 +33,27 @@ class Database {
         return this.instance
     }
 
+    find(jsonFind) {
+        return this.database.party.find(jsonFind)
+    }
     getDatabase() {
         return this.database
+    }
+
+    getAllParties() {
+        return this.database.party.find()
+    }
+
+    getParty(partyID) {
+        return this.database.party.find({_id: partyID})[0]
+    }
+
+    updateParty(partyID, thingToUpdate) {
+        return this.database.party.update({_id: partyID}, thingToUpdate)
+    }
+
+    add(thingToAdd) {
+        this.database.party.save(thingToAdd)
     }
 }
 

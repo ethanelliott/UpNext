@@ -38,6 +38,14 @@
                         <v-list-tile-title>Party View</v-list-tile-title>
                     </v-list-tile-content>
                 </v-list-tile>
+                <v-list-tile to="/main/admin" v-if="admin">
+                    <v-list-tile-action>
+                        <v-icon>settings</v-icon>
+                    </v-list-tile-action>
+                    <v-list-tile-content>
+                        <v-list-tile-title>Admin</v-list-tile-title>
+                    </v-list-tile-content>
+                </v-list-tile>
             </v-list>
             <v-divider></v-divider>
             <v-list>
@@ -70,6 +78,7 @@
 
 <script>
     import session from 'sessionstorage'
+
     export default {
         name: "Main",
         data: () => ({

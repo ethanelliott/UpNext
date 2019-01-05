@@ -1,3 +1,4 @@
+"use strict"
 const playlistSort = ($a, $b) => {
     let n = $b.votes - $a.votes
     if (n !== 0) return n

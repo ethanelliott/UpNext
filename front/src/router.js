@@ -10,6 +10,40 @@ export default new Router({
             name: 'home',
             component: () => import('./views/LandingPage.vue')
         },
+        // {
+        //     path: '/stats/admin',
+        //     components: {
+        //         default: () => import('./views/AdminMain.vue'),
+        //         content: () => import('./views/AdminStats.vue')
+        //     },
+        //     children: [
+        //         {
+        //             path: '',
+        //             name: 'adminStatsMain',
+        //             components: {
+        //                 default: () => import('./views/AdminMain.vue'),
+        //                 content: () => import('./views/AdminStats.vue')
+        //             }
+        //         },
+        //         {
+        //             path: 'login',
+        //             name: 'adminStatsLogin',
+        //             components: {
+        //                 default: () => import('./views/AdminMain.vue'),
+        //                 content: () => import('./views/AdminStatsLogin.vue')
+        //             }
+        //         },
+        //         {
+        //             path: 'party/:id',
+        //             name: 'adminPartyView',
+        //             props: {default: false, content: true},
+        //             components: {
+        //                 default: () => import('./views/AdminMain.vue'),
+        //                 content: () => import('./views/AdminPartyView.vue')
+        //             }
+        //         },
+        //     ]
+        // },
         {
             path: '/join',
             name: 'join',
@@ -45,7 +79,7 @@ export default new Router({
             children: [
                 {
                     path: 'home',
-                    name: 'home',
+                    name: 'mainHome',
                     components: {
                         default: () => import('./views/Main.vue'),
                         content: () => import('./views/Home.vue')
@@ -73,6 +107,14 @@ export default new Router({
                     components: {
                         default: () => import('./views/Main.vue'),
                         content: () => import('./views/PartyView.vue')
+                    }
+                },
+                {
+                    path: 'admin',
+                    name: 'party-admin',
+                    components: {
+                        default: () => import('./views/Main.vue'),
+                        content: () => import('./views/AdminPartyViewMain.vue')
                     }
                 }
             ]

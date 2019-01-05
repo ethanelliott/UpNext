@@ -4,13 +4,10 @@ const {logger} = require('./logger')
 const axios = require('axios')
 const uuid = require('uuid/v4')
 
-const {PROD, client_id, client_secret, redirect_uri} = require('./creds')
+const {client_id, client_secret, base_uri_api, base_uri_main} = require('./creds')
 
-const {UpNext} = require('./upnext')
-const upnext = UpNext.getInstance()
-
-const {Database} = require('./database')
-const db = Database.getInstance().getDatabase()
+const upnext = require('./upnext').UpNext.getInstance()
+const db = require('./database').Database.getInstance()
 
 function generateCode() {
     let ALL = "abcdefghijklmnpqrstuvwxyz1234567890".toUpperCase();
@@ -22,14 +19,14 @@ function generateCode() {
 }
 
 const addNewUser = (partyID, nickName) => {
-    let partyUsers = db.party.find({_id: partyID})[0].users
+    let partyUsers = db.getParty(partyID).users
     let userid = uuid()
     partyUsers.push({
         uuid: userid,
         nickname: nickName,
         score: 0
     })
-    db.party.update({_id: partyID}, {users: partyUsers})
+    db.updateParty(partyID, {users: partyUsers})
     return userid
 }
 
@@ -38,8 +35,8 @@ const app_post_newParty = (req, res) => {
     let partyCode = ""
     do {
         partyCode = generateCode()
-    } while (db.party.find({code: partyCode}).length !== 0)
-    db.party.save({
+    } while (db.find({code: partyCode}).length !== 0)
+    db.add({
         name: pd.name,
         code: partyCode,
         adminpassword: pd.password,
@@ -51,11 +48,10 @@ const app_post_newParty = (req, res) => {
         playlist: [],
         currenttrack: null,
         playstate: false,
-        // User Tracking!
-        users: [], // {uuid: "", nickname: "", score: 0, }
+        users: [],
         voteskiplist: []
     })
-    let party = db.party.find({code: partyCode})[0]
+    let party = db.find({code: partyCode})[0]
     return res.json({
         id: party._id,
         code: partyCode,
@@ -66,7 +62,7 @@ const app_post_newParty = (req, res) => {
 
 const app_post_authCode = (req, res) => {
     let pd = req.body
-    let lookupRes = db.party.find({code: pd.partyCode})
+    let lookupRes = db.find({code: pd.partyCode})
     if (lookupRes.length === 0) {
         return res.json({
             valid: false,
@@ -85,25 +81,33 @@ const app_post_authCode = (req, res) => {
 
 const app_post_leaveParty = (req, res) => {
     let pd = req.body
-    let testVal = db.party.find({_id: pd.id})[0]
+    let testVal = db.getParty(pd.id)
     if (testVal === undefined) {
-        // Allow someone still in a deleted party to leave
         return res.json({valid: true})
     }
     let users = testVal.users
     for (let i = 0; i < users.length; i++) {
         if (users[i].uuid === pd.uuid) {
             users.splice(i, 1)
-            db.party.update({_id: pd.id}, {users: users})
+            db.updateParty(pd.id, {users: users})
             return res.json({valid: true})
         }
     }
     return res.json({valid: false})
 }
 
+const app_post_adminLogin = (req, res) => {
+    let pd = req.body
+    if (pd.password === "35da0078d3198d3b774b87c9a28b99b76c4f59ff9a5dc400f1aa9cdcd24d2291913c308532926088292e436779b0583c6cd39011b26d307df2ca2f884856c38f") {
+        return res.json({valid: true})
+    } else {
+        return res.json({valid: false})
+    }
+}
+
 const app_post_authAdminCode = (req, res) => {
     let pd = req.body
-    let lookupRes = db.party.find({code: pd.partyCode})
+    let lookupRes = db.find({code: pd.partyCode})
     if (lookupRes.length === 0) {
         return res.json({
             valid: false,
@@ -131,16 +135,16 @@ const app_post_authAdminCode = (req, res) => {
 const app_post_authCallback = (req, res) => {
     let code = req.query.code || null
     let id = req.query.state || null
-    let lookupRes = db.party.find({_id: id})
+    let lookupRes = db.getParty(id)
     if (lookupRes.length === 0) {
-        return res.redirect((PROD ? 'https://upnext.ml/#/' : 'http://localhost:8080/#/'))
+        return res.redirect(base_uri_main)
     } else {
         let authOptions = {
             method: 'post',
             url: 'https://accounts.spotify.com/api/token',
             params: {
                 code: code,
-                redirect_uri: redirect_uri,
+                redirect_uri: base_uri_api + "/party/auth-callback",
                 grant_type: 'authorization_code'
             },
             headers: {
@@ -148,7 +152,7 @@ const app_post_authCallback = (req, res) => {
             }
         }
         axios(authOptions)
-            .then(function (response) {
+            .then((response) => {
                 let authToken = response.data.access_token
                 let refreshToken = response.data.refresh_token
                 let tokenExpire = (new Date()).valueOf() + (1000 * response.data.expires_in)
@@ -158,51 +162,43 @@ const app_post_authCallback = (req, res) => {
                     headers: {
                         'Authorization': 'Bearer ' + authToken
                     }
-                })
-                    .then(function (new_response) {
-                        let userID = new_response.data.id
-                        if (db.party.find({_id: id})[0].playlistid === null) {
-                            axios({
-                                method: 'post',
-                                url: 'https://api.spotify.com/v1/users/' + userID + '/playlists',
-                                data: {
-                                    name: lookupRes[0].name + ' By UpNext 🎵',
-                                    description: lookupRes[0].name + " archive, brought to you by UpNext",
-                                    public: false,
-                                    collaborative: false
-                                },
-                                headers: {
-                                    'Authorization': 'Bearer ' + authToken
-                                }
+                }).then((new_response) => {
+                    let userID = new_response.data.id
+                    if (db.getParty(id).playlistid === null) {
+                        axios({
+                            method: 'post',
+                            url: 'https://api.spotify.com/v1/users/' + userID + '/playlists',
+                            data: {
+                                name: lookupRes.name + ' By UpNext 🎵',
+                                description: lookupRes.name + " archive, brought to you by UpNext",
+                                public: false,
+                                collaborative: false
+                            },
+                            headers: {
+                                'Authorization': 'Bearer ' + authToken
+                            }
+                        }).then((playlistResponse) => {
+                            let playlistID = playlistResponse.data.id
+                            db.updateParty(id, {
+                                token: authToken,
+                                refreshtoken: refreshToken,
+                                expiresat: tokenExpire,
+                                userid: userID,
+                                playlistid: playlistID
                             })
-                                .then(function (playlistResponse) {
-                                    let playlistID = playlistResponse.data.id
-                                    db.party.update({_id: id}, {
-                                        token: authToken,
-                                        refreshtoken: refreshToken,
-                                        expiresat: tokenExpire,
-                                        userid: userID,
-                                        playlistid: playlistID
-                                    })
-                                    upnext.startGlobalEventLoop()
-                                    return res.redirect((PROD ? 'https://upnext.ml' : 'http://localhost:8080') + '/#/main/home')
-                                })
-                                .catch(function (error) {
-                                    console.log("Error 3", error)
-                                    logger.error(error)
-                                })
-                        } else {
-                            return res.redirect((PROD ? 'https://upnext.ml' : 'http://localhost:8080') + '/#/main/home')
-                        }
-                    })
-                    .catch(function (error) {
-                        console.log("Error 2", error)
-                        logger.error(error)
-                    })
-            })
-            .catch(function (error) {
-                console.log("Error 1", error)
-                logger.error(error)
+                            upnext.startGlobalEventLoop()
+                            return res.redirect(base_uri_main + '/#/main/home')
+                        }).catch((error) => {
+                            logger.error(error.stack)
+                        })
+                    } else {
+                        return res.redirect(base_uri_main + '/#/main/home')
+                    }
+                }).catch((error) => {
+                    logger.error(error.stack)
+                })
+            }).catch((error) => {
+            logger.error(error.stack)
             })
     }
 }
@@ -212,5 +208,6 @@ module.exports = {
     app_post_authAdminCode,
     app_post_leaveParty,
     app_post_authCode,
-    app_post_newParty
+    app_post_newParty,
+    app_post_adminLogin
 }
