@@ -1,32 +1,100 @@
 <template>
-    <v-container fluid fill-height>
-        <v-dialog v-model="voteSkipDialog" width="500" dark>
+    <v-container
+            :style="'transition:all 1s; background-image: linear-gradient(' + progressColourBackground + ' 10%, rgba(0,0,0,1) 90%);'"
+            fill-height fluid>
+        <v-dialog dark transition="slide-x-reverse-transition" v-model="voteDialog" width="500">
             <v-card>
                 <v-card-actions>
-                    <v-btn color="error" dark large block @click="voteSkip">
-                        Vote to Skip
+                    <v-btn @click="downvoteSong" color="primary" flat>
+                        Downvote
+                    </v-btn>
+                    <v-spacer></v-spacer>
+                    <v-btn @click="upvoteSong" color="primary" flat>
+                        Upvote
                     </v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
-        <v-dialog v-model="settingsDialog" fullscreen hide-overlay transition="dialog-bottom-transition">
-            <v-card>
-                <v-toolbar dark color="primary">
-                    <v-btn icon dark @click="settingsDialog = false">
+        <v-dialog fullscreen hide-overlay transition="dialog-bottom-transition" v-model="queueDialog">
+            <v-card fill-height height="100%">
+                <v-toolbar dark fixed>
+                    <v-btn @click="queueDialog = false" dark icon>
                         <v-icon>close</v-icon>
                     </v-btn>
-                    <v-toolbar-title>Settings</v-toolbar-title>
+                    <v-toolbar-title>Queue</v-toolbar-title>
                 </v-toolbar>
-                <v-list subheader>
-                    <v-subheader>Setup</v-subheader>
-                    <!--<v-list-tile avatar >-->
-                        <!--<v-list-tile-content>-->
-                            <!--<v-list-tile-title>Jump to Playlist</v-list-tile-title>-->
-                            <!--<v-list-tile-sub-title>Click to set the current playlist to the UpNext playlist</v-list-tile-sub-title>-->
-                        <!--</v-list-tile-content>-->
-                    <!--</v-list-tile>-->
+                <v-flex align-center height="100%" justify-center v-if="queue.length <= 0">
+                    <v-flex class="text-xs-center pt-5">
+                        <v-icon class="pt-5" color="primary" size="120">music_note</v-icon>
+                        <p class="pt-5 title">The Queue is Empty!</p>
+                        <p class="pt-2 subheading">Click the + below to get the party started</p>
+                    </v-flex>
+                </v-flex>
+                <v-flex offset-sm3 sm6 v-else xs12>
+                    <v-list class="mt-5 pt-2" two-line>
+                        <template v-for="(track, index) in queue">
+                            <v-list-tile :key="track.title" @click="showVoteDialog(track)" avatar>
+                                <v-list-tile-avatar tile>
+                                    <img :src="track.artwork">
+                                </v-list-tile-avatar>
+                                <v-list-tile-content>
+                                    <v-list-tile-title>{{ track.name }}</v-list-tile-title>
+                                    <v-list-tile-sub-title class="text--primary">{{ track.artist }}
+                                    </v-list-tile-sub-title>
+                                    <v-list-tile-sub-title>Added By: {{ track.added.name }}</v-list-tile-sub-title>
+                                </v-list-tile-content>
+                                <v-list-tile-action>
+                                    <v-btn color="primary" flat icon>
+                                        <span>{{ track.votes }}</span>
+                                    </v-btn>
+                                </v-list-tile-action>
+                            </v-list-tile>
+                            <v-divider
+                                    :key="index"
+                                    v-if="index + 1 < queue.length"
+                            ></v-divider>
+                        </template>
+                    </v-list>
+                </v-flex>
+                <v-speed-dial bottom class="ma-2" direction="top" right style="position: fixed; bottom:0;right:0;"
+                              transition="slide-y-reverse-transition" v-model="fab">
+                    <v-btn @click="searchDialog = true" color="primary" dark fab slot="activator">
+                        <v-icon>add</v-icon>
+                    </v-btn>
+                </v-speed-dial>
+            </v-card>
+        </v-dialog>
+        <v-dialog fullscreen hide-overlay transition="scale-transition" v-model="searchDialog">
+            <v-card>
+                <v-toolbar dark fixed>
+                    <v-btn @click="searchDialog = false" dark icon>
+                        <v-icon>close</v-icon>
+                    </v-btn>
+                    <v-text-field @input="search" box clearable label="Search by song name..."
+                                  v-model="searchString"></v-text-field>
+                </v-toolbar>
+                <v-list class="mt-5 pt-2" two-line>
+                    <template v-for="(track, index) in searchResults">
+                        <v-list-tile :key="track.title" avatar>
+                            <v-list-tile-avatar tile>
+                                <img :src="track.artwork">
+                            </v-list-tile-avatar>
+                            <v-list-tile-content>
+                                <v-list-tile-title>{{ track.name }}</v-list-tile-title>
+                                <v-list-tile-sub-title class="text--primary">{{ track.artist }}</v-list-tile-sub-title>
+                            </v-list-tile-content>
+                            <v-list-tile-action>
+                                <v-btn @click="addSongToPlaylist(track)" color="primary" flat icon>
+                                    <v-icon large>add</v-icon>
+                                </v-btn>
+                            </v-list-tile-action>
+                        </v-list-tile>
+                        <v-divider
+                                :key="index"
+                                v-if="index + 1 < searchResults.length"
+                        ></v-divider>
+                    </template>
                 </v-list>
-                <v-divider></v-divider>
             </v-card>
         </v-dialog>
         <v-layout v-if="loading" justify-center align-center>
@@ -34,61 +102,45 @@
                 <v-progress-circular :size="200" :width="15" color="primary" indeterminate></v-progress-circular>
             </v-flex>
         </v-layout>
-        <v-layout v-if="!loading" justify-center align-center>
+        <v-layout align-center justify-center v-if="!loading">
             <v-flex lg6 md8 sm8 xs12>
-                <v-container>
+                <v-flex>
                     <v-layout justify-center>
                         <v-flex class="text-xs-center">
-                            <img :src="albumArtwork" class="elevation-15" style="width:90%;max-width:400px;" />
-                        </v-flex>
-                    </v-layout>
-                    <v-layout v-if="admin" justify-center>
-                        <v-flex xs12 class="text-xs-center">
-                            <v-progress-linear color="primary" height="5" v-model="trackPos"></v-progress-linear>
-                        </v-flex>
-                    </v-layout>
-                    <v-layout v-else justify-center>
-                        <v-flex xs1></v-flex>
-                        <v-flex xs10 class="text-xs-center mt-3">
-                            <v-progress-linear color="primary" height="15" v-model="trackPos"></v-progress-linear>
-                        </v-flex>
-                        <v-flex xs1 class="text-xs-center mt-3">
-                            <v-btn flat icon @click="voteSkipDialog = true">
-                                <v-icon>more_vert</v-icon>
-                            </v-btn>
+                            <img :src="albumArtwork" class="elevation-20" style="width:100%;max-width: 50vh;"/>
                         </v-flex>
                     </v-layout>
                     <v-layout justify-center>
-                        <v-flex v-if="admin" class="text-xs-center">
+                        <v-flex class="mt-3">
                             <span class="title">{{trackName}}</span>
-                            <p class="font-weight-thin">{{trackArtist}}</p>
-                        </v-flex>
-                        <v-flex v-else class="text-xs-center mt-3">
-                            <span class="title">{{trackName}}</span>
-                            <p class="font-weight-thin">{{trackArtist}}</p>
+                            <p class="subheading font-weight-thin font-italic">{{trackArtist}}</p>
                         </v-flex>
                     </v-layout>
-                    <v-layout v-if="admin" justify-center>
-                        <v-flex xs-4 class="text-xs-center">
-                            <v-btn medium fab flat color="primary" @click="showSettings">
-                                <v-icon>settings</v-icon>
-                            </v-btn>
-                        </v-flex>
-                        <v-flex xs-4 class="text-xs-center">
-                            <v-btn outline medium fab color="primary" @click="toggleplayback">
-                                <v-icon v-if="playing">pause</v-icon>
-                                <v-icon v-else>play_arrow</v-icon>
-                            </v-btn>
-                        </v-flex>
-                        <v-flex xs-4 class="text-xs-center">
-                            <v-btn medium flat fab color="primary" @click="nextSong">
+                    <v-layout justify-center>
+                        <v-flex class="text-xs-center" xs-6>
+                            <v-btn @click="voteSkip" color="white" fab flat medium>
                                 <v-icon>skip_next</v-icon>
                             </v-btn>
                         </v-flex>
+                        <v-flex class="text-xs-center" xs-6>
+                            <v-btn @click="queueDialog = true" color="white" fab flat medium>
+                                <v-icon>queue_music</v-icon>
+                            </v-btn>
+                        </v-flex>
                     </v-layout>
-                </v-container>
+                </v-flex>
             </v-flex>
         </v-layout>
+        <v-footer class="elevation-20" dark fixed>
+            <v-container class="ma-0 pa-2" fluid>
+                <v-layout align-center justify-center>
+                    <v-flex>
+                        <v-progress-linear :color="progressColour" class="my-0" height="7"
+                                           v-model="trackPos"></v-progress-linear>
+                    </v-flex>
+                </v-layout>
+            </v-container>
+        </v-footer>
         <v-snackbar v-model="snackbar" bottom :timeout="5000" color="secondary">
             {{ snackbarMessage }}
             <v-btn color="primary" dark flat @click="snackbar = false">
@@ -101,6 +153,7 @@
 <script>
     import io from 'socket.io-client'
     import session from 'sessionstorage'
+    import * as Vibrant from 'node-vibrant'
 
     export default {
         name: "Home",
@@ -113,32 +166,64 @@
             trackName: null,
             trackArtist: null,
             trackPos: 0,
+            trackLength: 0,
             playing: false,
+            progressColour: 'primary',
+            progressColourBackground: 'rgba(0,0,0,0)',
             voteSkipDialog: null,
             snackbar: null,
             snackbarMessage: 'Hello',
-            settingsDialog: false,
+            voteDialog: null,
+            queueDialog: false,
+            queue: [],
+            fab: null,
+            searchDialog: null,
+            searchResults: [],
+            searchString: '',
         }),
         beforeDestroy() {
             this.socket.disconnect()
         },
         mounted() {
-            this.partyID = session.getItem('partyID')
-            this.admin = (session.getItem('admin') === 'true')
+            let t = this
+            t.partyID = session.getItem('partyID')
+            t.admin = (session.getItem('admin') === 'true')
 
-            this.socket = io(this.$socketPath)
-            this.socket.on('connect', () => {
-                this.socket.on('disconnect', () => { })
-                this.socket.emit('start-player-loop', {id: this.partyID})
+            t.socket = io(t.$socketPath)
+            t.socket.on('connect', () => {
+                t.socket.on('disconnect', () => {
+                })
+                t.socket.emit('start-player-loop', {id: t.partyID})
+                t.socket.emit('get-playlist', {id: t.partyID})
             })
-            this.socket.on('event-loop', (data) => {
+            t.eventLoop = setInterval(function () {
+                t.socket.emit('get-playlist', {id: t.partyID})
+            }, 500)
+            t.socket.on('give-playlist', (data) => {
+                t.queue = data.playlist
+            })
+            t.socket.on('event-loop', (data) => {
                 if (data) {
                     let d = data.data
-                    this.playing = d.is_playing
-                    this.trackPos = (d.progress_ms / d.item.duration_ms) * 100
-                    this.albumArtwork = d.item.album.images[0].url
-                    this.trackName = d.item.name
-                    this.trackArtist = d.item.artists[0].name
+                    t.playing = d.is_playing
+                    t.trackPos = (d.progress_ms / d.item.duration_ms) * 100
+                    t.albumArtwork = d.item.album.images[0].url
+                    t.trackName = d.item.name
+                    t.trackArtist = d.item.artists.map(e => e.name).reduce((a, b) => {
+                        return `${a}${b}, `
+                    }, ``).slice(0, -2)
+                    if (t.previousTrack !== t.trackName) {
+                        t.previousTrack = t.trackName
+                        Vibrant.from(t.albumArtwork).getPalette().then(function (palette) {
+                            if (palette && palette.DarkVibrant) {
+                                t.progressColour = palette.Muted.getHex()
+                                t.progressColourBackground = palette.DarkVibrant.getHex()
+                            } else {
+                                t.progressColour = 'white'
+                                t.progressColourBackground = 'rgba(0,0,0,0)'
+                            }
+                        })
+                    }
                     if (this.trackName !== null) {
                         this.loading = false
                     }
@@ -152,6 +237,30 @@
                 }
                 this.voteSkipDialog = false
 
+                this.snackbar = true
+            })
+            this.socket.on('give-search-results', (data) => {
+                let tracks = data.tracks.items
+                let results = tracks.map((track) => {
+                    return {
+                        id: track.id,
+                        name: track.name,
+                        artwork: track.album.images.find((element) => {
+                            return element.height <= 64
+                        }).url,
+                        artist: track.artists.map(e => e.name).reduce((a, b) => {
+                            return `${a}${b}, `
+                        }, ``).slice(0, -2)
+                    }
+                })
+                this.searchResults = results
+            })
+            this.socket.on('track-added-success', () => {
+                this.snackbarMessage = 'Song added to Queue!'
+                this.snackbar = true
+            })
+            this.socket.on('track-added-duplicate', () => {
+                this.snackbarMessage = 'Song already in Queue!'
                 this.snackbar = true
             })
         },
@@ -170,11 +279,44 @@
                     playback: !this.playing
                 })
             },
+            search() {
+                this.socket.emit('search', {
+                    partyid: this.partyID,
+                    searchstring: this.searchString
+                })
+            },
+            addSongToPlaylist(track) {
+                this.socket.emit('playlist-add-song', {
+                    partyid: this.partyID,
+                    uuid: session.getItem('uuid'),
+                    track: track
+                })
+            },
             voteSkip() {
                 this.socket.emit('vote-skip', {
                     id: this.partyID,
                     uuid: session.getItem('uuid')
                 })
+            },
+            showVoteDialog(track) {
+                this.selectedTrack = track.id
+                this.voteDialog = true
+            },
+            upvoteSong() {
+                this.socket.emit('playlist-upvote-song', {
+                    partyid: this.partyID,
+                    track: this.selectedTrack,
+                    uuid: session.getItem('uuid')
+                })
+                this.voteDialog = false
+            },
+            downvoteSong() {
+                this.socket.emit('playlist-downvote-song', {
+                    partyid: this.partyID,
+                    track: this.selectedTrack,
+                    uuid: session.getItem('uuid')
+                })
+                this.voteDialog = false
             }
         }
     }

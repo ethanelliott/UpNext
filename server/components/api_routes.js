@@ -132,6 +132,15 @@ const app_post_authAdminCode = (req, res) => {
     }
 }
 
+const app_post_adminSudoLogin = (req, res) => {
+    let p = req.body.sudopass || null
+    if (p === "35da0078d3198d3b774b87c9a28b99b76c4f59ff9a5dc400f1aa9cdcd24d2291913c308532926088292e436779b0583c6cd39011b26d307df2ca2f884856c38f") {
+        return res.json({valid: true})
+    } else {
+        return res.json({valid: false})
+    }
+}
+
 const app_post_authCallback = (req, res) => {
     let code = req.query.code || null
     let id = req.query.state || null
@@ -209,5 +218,6 @@ module.exports = {
     app_post_leaveParty,
     app_post_authCode,
     app_post_newParty,
-    app_post_adminLogin
+    app_post_adminLogin,
+    app_post_adminSudoLogin
 }

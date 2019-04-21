@@ -158,20 +158,19 @@
                 t.trackPos = (d.progress_ms / d.item.duration_ms) * 100
                 t.albumArtwork = d.item.album.images[0].url
                 t.trackName = d.item.name
-                t.artist = d.item.artists[0].name
+                t.artist = d.item.artists.map(e => e.name).reduce((a, b) => {
+                    return `${a}${b}, `
+                }, ``).slice(0, -2)
                 t.isrc = d.item.external_ids.isrc
                 if (t.previousTrack !== t.trackName) {
                     t.previousTrack = t.trackName
                     Vibrant.from(t.albumArtwork).getPalette().then(function (palette) {
-                        if (palette && palette.Vibrant) {
-                            t.progressColour = palette.Vibrant.getHex()
+                        if (palette && (palette.DarkVibrant || palette.Vibrant)) {
+                            t.backStyle = "background-image: linear-gradient(" + (palette.Vibrant ? palette.Vibrant.getHex() : palette.DarkVibrant.getHex()) + " 10%, rgba(0,0,0,1) 90%);'"
+                            t.progressColour = (palette.Vibrant ? palette.Vibrant.getHex() : palette.DarkVibrant.getHex())
                         } else {
-                            t.progressColour = 'primary'
-                        }
-                        if (palette && palette.Muted) {
-                            t.backStyle = "background: " + palette.Muted.getHex()
-                        } else {
-                            t.backStyle = "background: rgba(0,0,0,0)"
+                            t.backStyle = "background-image: linear-gradient(rgba(0,0,0,0) 10%, rgba(0,0,0,1) 90%);'"
+                            t.progressColour = 'white'
                         }
                         // I just run both promises at the same time, and the one that succeeds gets to change the image
                         axios.get(`https://musicbrainz.org/ws/2/recording/?fmt=json&limit=10&query=isrc:${t.isrc}`).then(artist_id => {

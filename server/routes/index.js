@@ -5,7 +5,8 @@ const {
     app_post_authCode,
     app_post_leaveParty,
     app_post_newParty,
-    app_post_adminLogin
+    app_post_adminLogin,
+    app_post_adminSudoLogin
 } = require('../components/api_routes')
 const express = require('express')
 
@@ -17,6 +18,7 @@ app.post('/party/leave', app_post_leaveParty)
 app.post('/party/auth-code-admin', app_post_authAdminCode)
 app.get('/party/auth-callback', app_post_authCallback)
 app.post('/party/auth-admin-login', app_post_adminLogin)
+app.post('/admin/sudo/login', app_post_adminSudoLogin)
 
 module.exports = app
 
