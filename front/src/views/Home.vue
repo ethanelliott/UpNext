@@ -22,6 +22,13 @@
                         <v-icon>close</v-icon>
                     </v-btn>
                     <v-toolbar-title>Queue</v-toolbar-title>
+                    <v-spacer></v-spacer>
+                    <v-flex v-if="searchQueue">
+                        <v-text-field @input="" box clearable label="Search" v-model="searchString"></v-text-field>
+                    </v-flex>
+                    <v-btn @click="searchQueue = !searchQueue" dark icon>
+                        <v-icon>search</v-icon>
+                    </v-btn>
                 </v-toolbar>
                 <v-flex align-center height="100%" justify-center v-if="queue.length <= 0">
                     <v-flex class="text-xs-center pt-5">
@@ -67,7 +74,7 @@
         <v-dialog fullscreen hide-overlay transition="scale-transition" v-model="searchDialog">
             <v-card>
                 <v-toolbar dark fixed>
-                    <v-btn @click="searchDialog = false" dark icon>
+                    <v-btn @click="closeSearch" dark icon>
                         <v-icon>close</v-icon>
                     </v-btn>
                     <v-text-field @input="search" box clearable label="Search by song name..."
@@ -180,6 +187,7 @@
             searchDialog: null,
             searchResults: [],
             searchString: '',
+            searchQueue: false
         }),
         beforeDestroy() {
             this.socket.disconnect()
@@ -278,6 +286,11 @@
                     id: this.partyID,
                     playback: !this.playing
                 })
+            },
+            closeSearch() {
+                this.searchString = ''
+                this.searchResults = []
+                this.searchDialog = false
             },
             search() {
                 this.socket.emit('search', {
