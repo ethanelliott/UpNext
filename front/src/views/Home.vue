@@ -126,12 +126,12 @@
                     <v-layout justify-center>
                         <v-flex class="text-xs-center" xs-6>
                             <v-btn @click="voteSkip" color="white" fab flat medium>
-                                <v-icon>skip_next</v-icon>
+                                <v-icon x-large>skip_next</v-icon>
                             </v-btn>
                         </v-flex>
                         <v-flex class="text-xs-center" xs-6>
                             <v-btn @click="queueDialog = true" color="white" fab flat medium>
-                                <v-icon>queue_music</v-icon>
+                                <v-icon x-large>queue_music</v-icon>
                             </v-btn>
                         </v-flex>
                     </v-layout>
