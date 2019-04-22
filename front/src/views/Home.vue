@@ -24,7 +24,7 @@
                     <v-toolbar-title>Queue</v-toolbar-title>
                     <v-spacer></v-spacer>
                     <v-flex v-if="searchQueue">
-                        <v-text-field @input="" box clearable label="Search" v-model="searchString"></v-text-field>
+                        <v-text-field box clearable label="Search" v-model="searchString"></v-text-field>
                     </v-flex>
                     <v-btn @click="searchQueue = !searchQueue" dark icon>
                         <v-icon>search</v-icon>
