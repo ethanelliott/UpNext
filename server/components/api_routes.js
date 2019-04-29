@@ -196,12 +196,12 @@ const app_post_authCallback = (req, res) => {
                                 playlistid: playlistID
                             })
                             upnext.startGlobalEventLoop()
-                            return res.redirect(base_uri_main + '/#/main/home')
+                            return res.redirect(base_uri_main + '/#/m')
                         }).catch((error) => {
                             logger.error(error.stack)
                         })
                     } else {
-                        return res.redirect(base_uri_main + '/#/main/home')
+                        return res.redirect(base_uri_main + '/#/m')
                     }
                 }).catch((error) => {
                     logger.error(error.stack)

@@ -23,12 +23,12 @@
                     </v-btn>
                     <v-toolbar-title>Queue</v-toolbar-title>
                     <v-spacer></v-spacer>
-                    <v-flex v-if="searchQueue">
-                        <v-text-field box clearable label="Search" v-model="searchString"></v-text-field>
-                    </v-flex>
-                    <v-btn @click="searchQueue = !searchQueue" dark icon>
-                        <v-icon>search</v-icon>
-                    </v-btn>
+                    <!--                    <v-flex v-if="searchQueue">-->
+                    <!--                        <v-text-field box clearable label="Search" v-model="searchString"></v-text-field>-->
+                    <!--                    </v-flex>-->
+                    <!--                    <v-btn @click="searchQueue = !searchQueue" dark icon>-->
+                    <!--                        <v-icon>search</v-icon>-->
+                    <!--                    </v-btn>-->
                 </v-toolbar>
                 <v-flex align-center height="100%" justify-center v-if="queue.length <= 0">
                     <v-flex class="text-xs-center pt-5">
@@ -77,11 +77,11 @@
                     <v-btn @click="closeSearch" dark icon>
                         <v-icon>close</v-icon>
                     </v-btn>
-                    <v-text-field @input="search" box clearable label="Search by song name..."
+                    <v-text-field @input="isTypingSearch = true" box clearable label="Search by song name..."
                                   v-model="searchString"></v-text-field>
                 </v-toolbar>
                 <v-list class="mt-5 pt-2" two-line>
-                    <template v-for="(track, index) in searchResults">
+                    <template v-for="(track, index) in searchResults.tracks">
                         <v-list-tile :key="track.title" avatar>
                             <v-list-tile-avatar tile>
                                 <img :src="track.artwork">
@@ -162,6 +162,16 @@
     import session from 'sessionstorage'
     import * as Vibrant from 'node-vibrant'
 
+    function debounce(func, wait = 100) {
+        let timeout
+        return function (...args) {
+            clearTimeout(timeout)
+            timeout = setTimeout(() => {
+                func.apply(this, args)
+            }, wait)
+        }
+    }
+
     export default {
         name: "Home",
         data: () => ({
@@ -185,12 +195,27 @@
             queue: [],
             fab: null,
             searchDialog: null,
-            searchResults: [],
+            searchResults: {
+                tracks: [],
+                artists: [],
+                playlists: []
+            },
             searchString: '',
-            searchQueue: false
+            searchQueue: false,
+            isTypingSearch: false
         }),
         beforeDestroy() {
             this.socket.disconnect()
+        },
+        watch: {
+            searchString: debounce(function () {
+                this.isTypingSearch = false
+            }, 500),
+            isTypingSearch: function (value) {
+                if (!value) {
+                    this.search()
+                }
+            }
         },
         mounted() {
             let t = this
@@ -248,8 +273,8 @@
                 this.snackbar = true
             })
             this.socket.on('give-search-results', (data) => {
-                let tracks = data.tracks.items
-                let results = tracks.map((track) => {
+                // console.log(data)
+                this.searchResults.tracks = data.tracks.items.map((track) => {
                     return {
                         id: track.id,
                         name: track.name,
@@ -261,7 +286,7 @@
                         }, ``).slice(0, -2)
                     }
                 })
-                this.searchResults = results
+                console.log(this.searchResults)
             })
             this.socket.on('track-added-success', () => {
                 this.snackbarMessage = 'Song added to Queue!'
@@ -293,10 +318,14 @@
                 this.searchDialog = false
             },
             search() {
-                this.socket.emit('search', {
-                    partyid: this.partyID,
-                    searchstring: this.searchString
-                })
+                if (this.searchString !== "") {
+                    this.socket.emit('search', {
+                        partyid: this.partyID,
+                        searchstring: this.searchString
+                    })
+                } else {
+                    this.searchResults = []
+                }
             },
             addSongToPlaylist(track) {
                 this.socket.emit('playlist-add-song', {

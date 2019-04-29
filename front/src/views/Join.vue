@@ -1,51 +1,42 @@
 <template>
-    <v-app color="accent" dark>
+    <v-app dark>
         <v-content>
             <v-container fill-height fluid>
                 <v-layout align-center justify-center>
-                    <v-flex lg6 md8 sm8 xs10>
-                        <v-card class="elevation-12" color="secondary">
-                            <v-card-text>
-                                <v-container grid-list-xl column>
-                                    <v-layout>
-                                        <v-flex>
-                                            <v-card flat color="secondary">
-                                                <v-card-text>
-                                                    <p class="text-xs-center big-text text-uppercase">
-                                                        <span>Up</span>
-                                                        <span class="font-weight-light">Next</span>
-                                                    </p>
-                                                </v-card-text>
-                                            </v-card>
-                                        </v-flex>
-                                    </v-layout>
-                                    <v-layout>
-                                        <v-flex>
-                                            <v-card flat color="secondary">
-                                                <v-card-text>
-                                                    <v-form @submit="validateCode">
-                                                        <v-text-field label="Party Code" box full-width v-model="partyCode" :disabled="disableTextInput" :rules="[rules.required, rules.counter]"></v-text-field>
-                                                        <v-text-field label="Nickname" box full-width v-model="nickName" :disabled="disableTextInput" :rules="[rules.required, rules.nick]"></v-text-field>
-                                                        <v-btn block color="primary" dark large @click="validateCode" :loading="isLoadingButton" type="submit">
-                                                        <span>
-                                                            Join
-                                                        </span>
-                                                        </v-btn>
-                                                    </v-form>
-                                                </v-card-text>
-                                            </v-card>
-                                        </v-flex>
-                                    </v-layout>
-                                </v-container>
-                            </v-card-text>
-                        </v-card>
+                    <v-flex lg8 md10 sm10 xl4 xs12>
+                        <v-flex class="text-xs-center">
+                            <v-icon color="primary" size="120">music_note</v-icon>
+                            <p class="display-2 text-uppercase mb-5">
+                                <span class="font-weight-bold">Up</span>
+                                <span class="font-weight-light">Next</span>
+                            </p>
+                            <p class="my-2 subheading">Join the party!</p>
+                            <span class="my-5">&nbsp;</span>
+                            <v-form @submit="validateCode" ref="form" v-model="valid">
+                                <v-text-field :disabled="disableTextInput" :rules="[rules.required, rules.counter]"
+                                              @input="checkFormValid" box
+                                              full-width
+                                              label="Party Code"
+                                              v-model="partyCode"></v-text-field>
+                                <v-text-field :disabled="disableTextInput" :rules="[rules.required, rules.nick]"
+                                              @input="checkFormValid" box
+                                              full-width
+                                              label="Nickname"
+                                              v-model="nickName"></v-text-field>
+                                <v-btn :disabled="!isFormValid" :loading="isLoadingButton" @click="validateCode" block
+                                       color="primary" dark large
+                                       type="submit">
+                                    Join
+                                </v-btn>
+                            </v-form>
+                        </v-flex>
                     </v-flex>
                 </v-layout>
             </v-container>
         </v-content>
-        <v-snackbar v-model="snackbar" bottom :timeout="5000" color="secondary">
+        <v-snackbar :timeout="5000" bottom color="secondary" v-model="snackbar">
             {{ snackbarMessage }}
-            <v-btn color="primary" dark flat @click="snackbar = false">
+            <v-btn @click="snackbar = false" color="primary" dark flat>
                 Close
             </v-btn>
         </v-snackbar>
@@ -59,6 +50,8 @@
     export default {
         name: "Join",
         data: () => ({
+            valid: null,
+            isFormValid: false,
             partyCode: '',
             nickName: '',
             snackbar: null,
@@ -83,42 +76,41 @@
                 this.isLoadingButton = false
                 this.disableTextInput = false
             },
+            checkFormValid() {
+                this.isFormValid = this.$refs.form.validate()
+            },
             validateCode(event) {
                 event.preventDefault()
-                let context = this
-                context.setLoading()
-                axios
-                    .post('/party/auth-code', {
-                        partyCode: context.partyCode.toUpperCase(),
-                        nickName: context.nickName
-                    })
-                    .then(function(response) {
-                        let d = response.data
-                        if (d.valid) {
-                            context.setNotLoading()
-                            session.clear()
-                            session.setItem('partyID', d.id)
-                            session.setItem('uuid', d.uuid)
-                            session.setItem('admin', 'false')
-                            session.setItem('partyCode', context.partyCode.toUpperCase())
-                            session.setItem('partyName', d.name)
-                            context.$router.push('/main/home')
-                        } else {
-                            context.setNotLoading()
-                            context.snackbarMessage = 'Invalid Party Code'
-                            context.snackbar = true
-                        }
-                    })
-                    .catch(function(err) {
-                        console.error(err)
-                    })
+                let c = this
+                if (c.$refs.form.validate()) {
+                    c.setLoading()
+                    axios
+                        .post('/party/auth-code', {
+                            partyCode: c.partyCode.toUpperCase(),
+                            nickName: c.nickName
+                        })
+                        .then(function (response) {
+                            let d = response.data
+                            if (d.valid) {
+                                c.setNotLoading()
+                                session.clear()
+                                session.setItem('partyID', d.id)
+                                session.setItem('uuid', d.uuid)
+                                session.setItem('admin', 'false')
+                                session.setItem('partyCode', c.partyCode.toUpperCase())
+                                session.setItem('partyName', d.name)
+                                c.$router.push('/main/home')
+                            } else {
+                                c.setNotLoading()
+                                c.snackbarMessage = 'Invalid Party Code'
+                                c.snackbar = true
+                            }
+                        })
+                        .catch(function (err) {
+                            console.error(err)
+                        })
+                }
             }
         }
     }
 </script>
-
-<style scoped>
-    .big-text {
-        font-size: 3em;
-    }
-</style>

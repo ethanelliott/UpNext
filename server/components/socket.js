@@ -10,7 +10,7 @@ const searchTracks = (partyID, searchTerms, callback) => {
     let party = db.getParty(partyID)
     axios({
         method: 'get',
-        url: 'https://api.spotify.com/v1/search/?q=' + searchTerms + '&type=track',
+        url: 'https://api.spotify.com/v1/search/?q=' + searchTerms + '&type=track%2Cartist%2Cplaylist&market=CA',
         headers: {
             'Authorization': 'Bearer ' + party.token
         }

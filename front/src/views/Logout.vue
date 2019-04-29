@@ -1,27 +1,17 @@
 <template>
-    <v-app color="accent" dark>
+    <v-app dark>
         <v-content>
             <v-container fill-height fluid>
                 <v-layout align-center justify-center>
-                    <v-flex lg6 md8 sm8 xs10>
-                        <v-card class="elevation-12" color="secondary">
-                            <v-card-text>
-                                <v-container column grid-list-xl>
-                                    <v-layout>
-                                        <v-flex>
-                                            <v-card color="secondary" flat>
-                                                <v-card-text>
-                                                    <p class="text-xs-center big-text text-uppercase">
-                                                        <span>Up</span>
-                                                        <span class="font-weight-light">Next</span>
-                                                    </p>
-                                                </v-card-text>
-                                            </v-card>
-                                        </v-flex>
-                                    </v-layout>
-                                </v-container>
-                            </v-card-text>
-                        </v-card>
+                    <v-flex lg8 md10 sm10 xl4 xs12>
+                        <v-flex class="text-xs-center">
+                            <v-icon color="primary" size="120">music_note</v-icon>
+                            <p class="display-2 text-uppercase mb-5">
+                                <span class="font-weight-bold">Up</span>
+                                <span class="font-weight-light">Next</span>
+                            </p>
+                            <p class="my-2 subheading">Logging out...</p>
+                        </v-flex>
                     </v-flex>
                 </v-layout>
             </v-container>
@@ -44,7 +34,9 @@
             }).then(function (response) {
                 console.log(response)
                 session.clear()
-                t.$router.push('/')
+                setTimeout(() => {
+                    t.$router.push('/')
+                }, 700)
             }).catch(function (error) {
                 console.error(error)
             })

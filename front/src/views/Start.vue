@@ -1,43 +1,33 @@
 <template>
-    <v-app color="accent" dark>
+    <v-app dark>
         <v-content>
             <v-container fill-height fluid>
                 <v-layout align-center justify-center>
-                    <v-flex lg6 md8 sm8 xs10>
-                        <v-card class="elevation-12" color="secondary">
-                            <v-card-text>
-                                <v-container column grid-list-xl>
-                                    <v-layout>
-                                        <v-flex>
-                                            <v-card color="secondary" flat>
-                                                <v-card-text>
-                                                    <p class="text-xs-center big-text text-uppercase">
-                                                        <span>Up</span>
-                                                        <span class="font-weight-light">Next</span>
-                                                    </p>
-                                                </v-card-text>
-                                            </v-card>
-                                        </v-flex>
-                                    </v-layout>
-                                    <v-layout>
-                                        <v-flex>
-                                            <v-form @submit="validateCode">
-                                                <v-text-field :disabled="disableTextInput" box full-width label="Party Name"
-                                                              v-model="partyName" :rules="[rules.required]"></v-text-field>
-                                                <v-text-field :disabled="disableTextInput" box full-width label="Admin Password"
-                                                              v-model="partyAdminPassword" :rules="[rules.required]"></v-text-field>
-                                                <v-btn :loading="isLoadingButton" @click="validateCode" block color="primary" dark
-                                                       large type="submit">
-                                                        <span>
-                                                            Create
-                                                        </span>
-                                                </v-btn>
-                                            </v-form>
-                                        </v-flex>
-                                    </v-layout>
-                                </v-container>
-                            </v-card-text>
-                        </v-card>
+                    <v-flex lg8 md10 sm10 xl4 xs12>
+                        <v-flex class="text-xs-center">
+                            <v-icon color="primary" size="120">music_note</v-icon>
+                            <p class="display-2 text-uppercase mb-5">
+                                <span class="font-weight-bold">Up</span>
+                                <span class="font-weight-light">Next</span>
+                            </p>
+                            <p class="my-2 subheading">Start the party!</p>
+                            <span class="my-5">&nbsp;</span>
+                            <v-form @submit="validateCode" ref="form" v-model="startFormValid">
+                                <v-text-field :disabled="disableTextInput" :rules="[rules.required, rules.limit]"
+                                              @input="checkFormValid" box
+                                              full-width
+                                              label="Party Name" v-model="partyName"></v-text-field>
+                                <v-text-field :disabled="disableTextInput" :rules="[rules.required]"
+                                              @input="checkFormValid" box
+                                              full-width
+                                              label="Admin Password" v-model="partyAdminPassword"></v-text-field>
+                                <v-btn :disabled="!isFormValid" :loading="isLoadingButton" @click="validateCode" block
+                                       color="primary" dark
+                                       large type="submit">
+                                    Create
+                                </v-btn>
+                            </v-form>
+                        </v-flex>
                     </v-flex>
                 </v-layout>
             </v-container>
@@ -58,12 +48,15 @@
     export default {
         name: "Start",
         data: () => ({
+            startFormValid: null,
+            isFormValid: false,
             partyName: null,
             partyAdminPassword: null,
             disableTextInput: false,
             isLoadingButton: false,
             rules: {
-                required: value => !!value || 'Required.',
+                required: value => !!value || 'Required',
+                limit: value => (value ? value.length : 0) <= 12 || 'Party name less than 12 chars'
             }
         }),
         mounted() {
@@ -78,6 +71,9 @@
             setNotLoading() {
                 this.isLoadingButton = false
                 this.disableTextInput = false
+            },
+            checkFormValid() {
+                this.isFormValid = this.$refs.form.validate()
             },
             validateCode(event) {
                 event.preventDefault()
