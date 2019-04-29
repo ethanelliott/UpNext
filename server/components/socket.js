@@ -10,7 +10,7 @@ const searchTracks = (partyID, searchTerms, callback) => {
     let party = db.getParty(partyID)
     axios({
         method: 'get',
-        url: 'https://api.spotify.com/v1/search/?q=' + searchTerms + '&type=track%2Cartist%2Cplaylist&market=CA',
+        url: 'https://api.spotify.com/v1/search/?q=' + searchTerms + '&type=track%2Cartist%2Cplaylist%2Calbum&market=CA',
         headers: {
             'Authorization': 'Bearer ' + party.token
         }
@@ -18,6 +18,7 @@ const searchTracks = (partyID, searchTerms, callback) => {
         callback(response)
     })
         .catch((error) => {
+            logger.error(error.stack)
             // Just let this fail silently, we don't care if there is no search term
         })
 }

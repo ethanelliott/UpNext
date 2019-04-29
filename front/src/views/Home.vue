@@ -1,4 +1,4 @@
-<template>
+<template xmlns:v-slot="http://www.w3.org/1999/XSL/Transform">
     <v-container
             :style="'transition:all 1s; background-image: linear-gradient(' + progressColourBackground + ' 10%, rgba(0,0,0,1) 90%);'"
             fill-height fluid>
@@ -73,38 +73,121 @@
         </v-dialog>
         <v-dialog fullscreen hide-overlay transition="scale-transition" v-model="searchDialog">
             <v-card>
-                <v-toolbar dark fixed>
+                <v-toolbar dark fixed tabs>
                     <v-btn @click="closeSearch" dark icon>
                         <v-icon>close</v-icon>
                     </v-btn>
                     <v-text-field @input="isTypingSearch = true" box clearable label="Search by song name..."
                                   v-model="searchString"></v-text-field>
-                </v-toolbar>
-                <v-list class="mt-5 pt-2" two-line>
-                    <template v-for="(track, index) in searchResults.tracks">
-                        <v-list-tile :key="track.title" avatar>
-                            <v-list-tile-avatar tile>
-                                <img :src="track.artwork">
-                            </v-list-tile-avatar>
-                            <v-list-tile-content>
-                                <v-list-tile-title>{{ track.name }}</v-list-tile-title>
-                                <v-list-tile-sub-title class="text--primary">{{ track.artist }}</v-list-tile-sub-title>
-                            </v-list-tile-content>
-                            <v-list-tile-action>
-                                <v-btn @click="addSongToPlaylist(track)" color="primary" flat icon>
-                                    <v-icon large>add</v-icon>
-                                </v-btn>
-                            </v-list-tile-action>
-                        </v-list-tile>
-                        <v-divider
-                                :key="index"
-                                v-if="index + 1 < searchResults.length"
-                        ></v-divider>
+                    <template v-slot:extension>
+                        <v-tabs color="darker" grow slider-color="primary" v-model="searchTabs">
+                            <v-tab>Songs</v-tab>
+                            <v-tab>Albums</v-tab>
+                            <v-tab>Artists</v-tab>
+                            <v-tab>Playlists</v-tab>
+                        </v-tabs>
                     </template>
-                </v-list>
+                </v-toolbar>
+                <p class="my-2">&nbsp;</p>
+                <p class="my-4">&nbsp;</p>
+                <v-tabs-items v-model="searchTabs">
+                    <v-tab-item>
+                        <v-card flat>
+                            <v-list class="" two-line>
+                                <template v-for="(track, index) in searchResults.tracks">
+                                    <v-list-tile :key="track.title" avatar>
+                                        <v-list-tile-avatar tile>
+                                            <img :src="track.artwork">
+                                        </v-list-tile-avatar>
+                                        <v-list-tile-content>
+                                            <v-list-tile-title>{{ track.name }}</v-list-tile-title>
+                                            <v-list-tile-sub-title class="text--primary">{{ track.artist }}
+                                            </v-list-tile-sub-title>
+                                        </v-list-tile-content>
+                                        <v-list-tile-action>
+                                            <v-btn @click="addSongToPlaylist(track)" color="primary" flat icon>
+                                                <v-icon large>add</v-icon>
+                                            </v-btn>
+                                        </v-list-tile-action>
+                                    </v-list-tile>
+                                    <v-divider
+                                            :key="index"
+                                            v-if="index + 1 < searchResults.tracks.length"
+                                    ></v-divider>
+                                </template>
+                            </v-list>
+                        </v-card>
+                    </v-tab-item>
+                    <v-tab-item>
+                        <v-card flat>
+                            <v-list class="" two-line>
+                                <template v-for="(track, index) in searchResults.albums">
+                                    <v-list-tile :key="track.title" avatar>
+                                        <v-list-tile-avatar tile>
+                                            <img :src="track.images[0].url" v-if="track.images.length > 0">
+                                        </v-list-tile-avatar>
+                                        <v-list-tile-content>
+                                            <v-list-tile-title>{{ track.name }}</v-list-tile-title>
+                                            <v-list-tile-sub-title class="text--primary">{{ track.artist }}
+                                            </v-list-tile-sub-title>
+                                        </v-list-tile-content>
+                                    </v-list-tile>
+                                    <v-divider
+                                            :key="index"
+                                            v-if="index + 1 < searchResults.tracks.length"
+                                    ></v-divider>
+                                </template>
+                            </v-list>
+                        </v-card>
+                    </v-tab-item>
+                    <v-tab-item>
+                        <v-card flat>
+                            <v-list class="" two-line>
+                                <template v-for="(track, index) in searchResults.artists">
+                                    <v-list-tile :key="track.title" @click="">
+                                        <v-list-tile-avatar tile>
+                                            <img :src="track.images[0].url" v-if="track.images.length > 0">
+                                        </v-list-tile-avatar>
+                                        <v-list-tile-content>
+                                            <v-list-tile-title>{{ track.name }}</v-list-tile-title>
+                                            <v-list-tile-sub-title class="text--primary">{{ track.artist }}
+                                            </v-list-tile-sub-title>
+                                        </v-list-tile-content>
+                                    </v-list-tile>
+                                    <v-divider
+                                            :key="index"
+                                            v-if="index + 1 < searchResults.artists.length"
+                                    ></v-divider>
+                                </template>
+                            </v-list>
+                        </v-card>
+                    </v-tab-item>
+                    <v-tab-item>
+                        <v-card flat>
+                            <v-list class="" two-line>
+                                <template v-for="(track, index) in searchResults.playlists">
+                                    <v-list-tile :key="track.title" @click="">
+                                        <v-list-tile-avatar tile>
+                                            <img :src="track.images[0].url" v-if="track.images.length > 0">
+                                        </v-list-tile-avatar>
+                                        <v-list-tile-content>
+                                            <v-list-tile-title>{{ track.name }}</v-list-tile-title>
+                                            <v-list-tile-sub-title class="text--primary">{{ track.artist }}
+                                            </v-list-tile-sub-title>
+                                        </v-list-tile-content>
+                                    </v-list-tile>
+                                    <v-divider
+                                            :key="index"
+                                            v-if="index + 1 < searchResults.playlists.length"
+                                    ></v-divider>
+                                </template>
+                            </v-list>
+                        </v-card>
+                    </v-tab-item>
+                </v-tabs-items>
             </v-card>
         </v-dialog>
-        <v-layout v-if="loading" justify-center align-center>
+        <v-layout align-center justify-center v-if="loading">
             <v-flex class="text-xs-center">
                 <v-progress-circular :size="200" :width="15" color="primary" indeterminate></v-progress-circular>
             </v-flex>
@@ -148,9 +231,9 @@
                 </v-layout>
             </v-container>
         </v-footer>
-        <v-snackbar v-model="snackbar" bottom :timeout="5000" color="secondary">
+        <v-snackbar :timeout="5000" bottom color="secondary" v-model="snackbar">
             {{ snackbarMessage }}
-            <v-btn color="primary" dark flat @click="snackbar = false">
+            <v-btn @click="snackbar = false" color="primary" dark flat>
                 Close
             </v-btn>
         </v-snackbar>
@@ -159,7 +242,8 @@
 
 <script>
     import io from 'socket.io-client'
-    import session from 'sessionstorage'
+    // import session from 'sessionstorage'
+    import session from 'localStorage'
     import * as Vibrant from 'node-vibrant'
 
     function debounce(func, wait = 100) {
@@ -198,11 +282,13 @@
             searchResults: {
                 tracks: [],
                 artists: [],
+                albums: [],
                 playlists: []
             },
             searchString: '',
             searchQueue: false,
-            isTypingSearch: false
+            isTypingSearch: false,
+            searchTabs: null
         }),
         beforeDestroy() {
             this.socket.disconnect()
@@ -285,6 +371,15 @@
                             return `${a}${b}, `
                         }, ``).slice(0, -2)
                     }
+                })
+                this.searchResults.artists = data.artists.items.map((artist) => {
+                    return artist
+                })
+                this.searchResults.albums = data.albums.items.map((album) => {
+                    return album
+                })
+                this.searchResults.playlists = data.playlists.items.map((playlist) => {
+                    return playlist
                 })
                 console.log(this.searchResults)
             })

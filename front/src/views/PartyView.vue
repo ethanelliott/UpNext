@@ -109,7 +109,8 @@
 <script>
     import io from 'socket.io-client'
     import axios from 'axios'
-    import session from 'sessionstorage'
+    // import session from 'sessionstorage'
+    import session from 'localStorage'
     import Jimp from 'jimp'
     import * as Vibrant from 'node-vibrant'
 
@@ -187,16 +188,12 @@
                                                     if (images_Artist.data.artistbackground) {
                                                         t.loadBackgroundImage(images_Artist.data.artistbackground[Math.floor(Math.random() * images_Artist.data.artistbackground.length)].url)
                                                     }
-                                                }).catch(err => {
                                                 })
                                             }
-                                        }).catch(err => {
                                         })
                                     }
-                                }).catch(err => {
                                 })
                             }
-                        }).catch(err => {
                         })
                     })
                 }

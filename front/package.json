@@ -10,6 +10,7 @@
   "dependencies": {
     "axios": "^0.18.0",
     "jimp": "^0.6.0",
+    "localStorage": "^1.0.4",
     "material-design-icons-iconfont": "^3.0.3",
     "node-vibrant": "^3.0.0",
     "querystring": "^0.2.0",

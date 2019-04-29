@@ -37,7 +37,8 @@
 
 <script>
     import axios from 'axios'
-    import session from 'sessionstorage'
+    // import session from 'sessionstorage'
+    import session from 'localStorage'
     import querystring from 'querystring'
     import sha512 from 'sha512'
 
@@ -60,8 +61,12 @@
             }
         }),
         mounted() {
-            session.clear()
-            redirect_uri = this.$socketPath + '/party/auth-callback'
+            if (session.getItem('partyID')) {
+                this.$router.push('/m/home')
+            } else {
+                session.clear()
+                redirect_uri = this.$socketPath + '/party/auth-callback'
+            }
         },
         methods: {
             setLoading() {

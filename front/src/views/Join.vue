@@ -45,7 +45,8 @@
 
 <script>
     import axios from 'axios'
-    import session from 'sessionstorage'
+    // import session from 'sessionstorage'
+    import session from 'localStorage'
 
     export default {
         name: "Join",
@@ -65,7 +66,11 @@
             }
         }),
         mounted() {
-            session.clear()
+            if (session.getItem('partyID')) {
+                this.$router.push('/m/home')
+            } else {
+                session.clear()
+            }
         },
         methods: {
             setLoading() {

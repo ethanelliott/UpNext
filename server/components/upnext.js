@@ -143,7 +143,7 @@ class UpNext {
                                     data: response.data
                                 })
                             }).catch((error) => {
-                                logger.error(error)
+                                logger.error(error.stack)
                             })
                         })
                     }, 1000)
