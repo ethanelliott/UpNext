@@ -36,7 +36,35 @@ export default new Router({
             children: [
                 {
                     path: 'home',
-                    name: 'mainHome',
+                    name: 'Home',
+                    props: {default: false, content: true},
+                    components: {
+                        default: () => import('./views/Main.vue'),
+                        content: () => import('./views/Home.vue')
+                    },
+                },
+                {
+                    path: 'home/:tqueue',
+                    name: 'Home',
+                    props: {default: false, content: true},
+                    components: {
+                        default: () => import('./views/Main.vue'),
+                        content: () => import('./views/Home.vue')
+                    },
+                },
+                {
+                    path: 'home/:tqueue/:tadd',
+                    name: 'Home',
+                    props: {default: false, content: true},
+                    components: {
+                        default: () => import('./views/Main.vue'),
+                        content: () => import('./views/Home.vue')
+                    },
+                },
+                {
+                    path: 'home/:tqueue/:tadd/:taddtab',
+                    name: 'Home',
+                    props: {default: false, content: true},
                     components: {
                         default: () => import('./views/Main.vue'),
                         content: () => import('./views/Home.vue')

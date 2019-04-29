@@ -45,7 +45,6 @@
 
 <script>
     import axios from 'axios'
-    // import session from 'sessionstorage'
     import session from 'localStorage'
 
     export default {
@@ -104,7 +103,7 @@
                                 session.setItem('admin', 'false')
                                 session.setItem('partyCode', c.partyCode.toUpperCase())
                                 session.setItem('partyName', d.name)
-                                c.$router.push('/main/home')
+                                c.$router.push('/m')
                             } else {
                                 c.setNotLoading()
                                 c.snackbarMessage = 'Invalid Party Code'

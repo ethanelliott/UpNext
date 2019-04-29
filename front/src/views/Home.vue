@@ -1,8 +1,8 @@
-<template xmlns:v-slot="http://www.w3.org/1999/XSL/Transform">
+<template>
     <v-container
             :style="'transition:all 1s; background-image: linear-gradient(' + progressColourBackground + ' 10%, rgba(0,0,0,1) 90%);'"
             fill-height fluid>
-        <v-dialog dark transition="slide-x-reverse-transition" v-model="voteDialog" width="500">
+        <v-dialog dark v-model="voteDialog" width="500">
             <v-card>
                 <v-card-actions>
                     <v-btn @click="downvoteSong" color="primary" flat>
@@ -18,7 +18,7 @@
         <v-dialog fullscreen hide-overlay transition="dialog-bottom-transition" v-model="queueDialog">
             <v-card fill-height height="100%">
                 <v-toolbar dark fixed>
-                    <v-btn @click="queueDialog = false" dark icon>
+                    <v-btn @click="closeQueue" dark icon>
                         <v-icon>close</v-icon>
                     </v-btn>
                     <v-toolbar-title>Queue</v-toolbar-title>
@@ -65,7 +65,7 @@
                 </v-flex>
                 <v-speed-dial bottom class="ma-2" direction="top" right style="position: fixed; bottom:0;right:0;"
                               transition="slide-y-reverse-transition" v-model="fab">
-                    <v-btn @click="searchDialog = true" color="primary" dark fab slot="activator">
+                    <v-btn @click="showSearch" color="primary" dark fab slot="activator">
                         <v-icon>add</v-icon>
                     </v-btn>
                 </v-speed-dial>
@@ -79,19 +79,19 @@
                     </v-btn>
                     <v-text-field @input="isTypingSearch = true" box clearable label="Search by song name..."
                                   v-model="searchString"></v-text-field>
-                    <template v-slot:extension>
+                    <template slot="extension">
                         <v-tabs color="darker" grow slider-color="primary" v-model="searchTabs">
-                            <v-tab>Songs</v-tab>
-                            <v-tab>Albums</v-tab>
-                            <v-tab>Artists</v-tab>
-                            <v-tab>Playlists</v-tab>
+                            <v-tab @click="songsTab" key="songs">Songs</v-tab>
+                            <v-tab @click="albumsTab" key="albums">Albums</v-tab>
+                            <v-tab @click="artistsTab" key="artists">Artists</v-tab>
+                            <v-tab @click="playlistsTab" key="playlists">Playlists</v-tab>
                         </v-tabs>
                     </template>
                 </v-toolbar>
                 <p class="my-2">&nbsp;</p>
                 <p class="my-4">&nbsp;</p>
                 <v-tabs-items v-model="searchTabs">
-                    <v-tab-item>
+                    <v-tab-item key="songs">
                         <v-card flat>
                             <v-list class="" two-line>
                                 <template v-for="(track, index) in searchResults.tracks">
@@ -118,7 +118,7 @@
                             </v-list>
                         </v-card>
                     </v-tab-item>
-                    <v-tab-item>
+                    <v-tab-item key="albums">
                         <v-card flat>
                             <v-list class="" two-line>
                                 <template v-for="(track, index) in searchResults.albums">
@@ -140,7 +140,7 @@
                             </v-list>
                         </v-card>
                     </v-tab-item>
-                    <v-tab-item>
+                    <v-tab-item key="artists">
                         <v-card flat>
                             <v-list class="" two-line>
                                 <template v-for="(track, index) in searchResults.artists">
@@ -162,7 +162,7 @@
                             </v-list>
                         </v-card>
                     </v-tab-item>
-                    <v-tab-item>
+                    <v-tab-item key="playlists">
                         <v-card flat>
                             <v-list class="" two-line>
                                 <template v-for="(track, index) in searchResults.playlists">
@@ -202,7 +202,7 @@
                     </v-layout>
                     <v-layout justify-center>
                         <v-flex class="mt-3">
-                            <span class="title">{{trackName}}</span>
+                            <span class="headline font-weight-medium">{{trackName}}</span>
                             <p class="subheading font-weight-thin font-italic">{{trackArtist}}</p>
                         </v-flex>
                     </v-layout>
@@ -213,7 +213,7 @@
                             </v-btn>
                         </v-flex>
                         <v-flex class="text-xs-center" xs-6>
-                            <v-btn @click="queueDialog = true" color="white" fab flat medium>
+                            <v-btn @click="showQueue" color="white" fab flat medium>
                                 <v-icon x-large>queue_music</v-icon>
                             </v-btn>
                         </v-flex>
@@ -242,7 +242,6 @@
 
 <script>
     import io from 'socket.io-client'
-    // import session from 'sessionstorage'
     import session from 'localStorage'
     import * as Vibrant from 'node-vibrant'
 
@@ -258,8 +257,8 @@
 
     export default {
         name: "Home",
+        props: ['tqueue', 'tadd', 'taddtab'],
         data: () => ({
-            admin: false,
             socket: null,
             loading: true,
             partyID: null,
@@ -278,7 +277,7 @@
             queueDialog: false,
             queue: [],
             fab: null,
-            searchDialog: null,
+            searchDialog: false,
             searchResults: {
                 tracks: [],
                 artists: [],
@@ -304,10 +303,36 @@
             }
         },
         mounted() {
+            window.scrollTo(0, 0)
             let t = this
             t.partyID = session.getItem('partyID')
-            t.admin = (session.getItem('admin') === 'true')
 
+            if (t.tadd !== undefined) {
+                t.queueDialog = true
+                setTimeout(() => {
+                    t.showSearch()
+                }, 500)
+            } else if (t.tqueue !== undefined) {
+                t.queueDialog = true
+            }
+
+            switch (t.taddtab) {
+                case 'songs':
+                    t.searchTabs = 0
+                    break
+                case 'albums':
+                    t.searchTabs = 1
+                    break
+                case 'artists':
+                    t.searchTabs = 2
+                    break
+                case 'playlists':
+                    t.searchTabs = 3
+                    break
+                default:
+                    t.searchTabs = 0
+                    break
+            }
             t.socket = io(t.$socketPath)
             t.socket.on('connect', () => {
                 t.socket.on('disconnect', () => {
@@ -393,8 +418,45 @@
             })
         },
         methods: {
-            showSettings() {
-                this.settingsDialog = true
+            songsTab() {
+                this.$router.push("/m/home/queue/add/songs")
+            },
+            albumsTab() {
+                this.$router.push("/m/home/queue/add/albums")
+            },
+            artistsTab() {
+                this.$router.push("/m/home/queue/add/artists")
+            },
+            playlistsTab() {
+                this.$router.push("/m/home/queue/add/playlists")
+            },
+            showSearch() {
+                this.searchDialog = true
+                this.$router.push("/m/home/queue/add")
+            },
+            closeSearch() {
+                this.searchString = ''
+                this.searchResults = []
+                this.searchDialog = false
+                this.$router.push("/m/home/queue")
+            },
+            search() {
+                if (this.searchString !== "") {
+                    this.socket.emit('search', {
+                        partyid: this.partyID,
+                        searchstring: this.searchString
+                    })
+                } else {
+                    this.searchResults = []
+                }
+            },
+            showQueue() {
+                this.queueDialog = true
+                this.$router.push("/m/home/queue")
+            },
+            closeQueue() {
+                this.queueDialog = false
+                this.$router.push("/m/home")
             },
             nextSong() {
                 this.socket.emit('next-song', {
@@ -406,21 +468,6 @@
                     id: this.partyID,
                     playback: !this.playing
                 })
-            },
-            closeSearch() {
-                this.searchString = ''
-                this.searchResults = []
-                this.searchDialog = false
-            },
-            search() {
-                if (this.searchString !== "") {
-                    this.socket.emit('search', {
-                        partyid: this.partyID,
-                        searchstring: this.searchString
-                    })
-                } else {
-                    this.searchResults = []
-                }
             },
             addSongToPlaylist(track) {
                 this.socket.emit('playlist-add-song', {

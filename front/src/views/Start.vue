@@ -37,7 +37,6 @@
 
 <script>
     import axios from 'axios'
-    // import session from 'sessionstorage'
     import session from 'localStorage'
     import querystring from 'querystring'
     import sha512 from 'sha512'
