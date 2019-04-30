@@ -6,36 +6,84 @@ const {playlistSort, userSort} = require('./sorts')
 const upnext = require('./upnext').UpNext.getInstance()
 const db = require('./database').Database.getInstance()
 
+const get = async (url, token) => {
+    return await axios({
+        method: 'get',
+        url: url,
+        headers: {
+            'Authorization': 'Bearer ' + token
+        }
+    })
+}
+
 const searchTracks = (partyID, searchTerms, callback) => {
     let party = db.getParty(partyID)
-    axios({
-        method: 'get',
-        url: 'https://api.spotify.com/v1/search/?q=' + searchTerms + '&type=track%2Cartist%2Cplaylist%2Calbum&market=CA',
-        headers: {
-            'Authorization': 'Bearer ' + party.token
-        }
-    }).then((response) => {
-        callback(response)
-    })
+    get('https://api.spotify.com/v1/search/?q=' + searchTerms + '&type=track%2Cartist%2Cplaylist%2Calbum&market=CA', party.token)
+        .then((data) => {
+            callback(data)
+        })
         .catch((error) => {
             logger.error(error.stack)
-            // Just let this fail silently, we don't care if there is no search term
         })
 }
 
 const getTrackData = (partyID, trackID, callback) => {
     let party = db.getParty(partyID)
-    axios({
-        method: 'get',
-        url: 'https://api.spotify.com/v1/tracks/' + trackID,
-        headers: {
-            'Authorization': 'Bearer ' + party.token
+    get('https://api.spotify.com/v1/tracks/' + trackID, party.token)
+        .then((data) => {
+            callback(data)
+        })
+        .catch((error) => {
+            logger.error(error.stack)
+        })
+}
+
+const getAlbumData = (partyID, albumID, callback) => {
+    let party = db.getParty(partyID)
+    get('https://api.spotify.com/v1/albums/' + albumID, party.token)
+        .then((data) => {
+            callback(data)
+        })
+        .catch((error) => {
+            logger.error(error.stack)
+        })
+}
+
+let get_data_array_albums = []
+
+const recursiveGetItems = (url, token) => {
+    return get(url, token).then(data => {
+        get_data_array_albums = get_data_array_albums.concat(data.data.items)
+        if (data.data.next !== null) {
+            return recursiveGetItems(data.data.next, token)
         }
-    }).then((response) => {
-        callback(response)
-    }).catch((error) => {
-        logger.error(error.stack)
     })
+}
+
+const getArtistAlbums = (partyID, artistID) => {
+    let party = db.getParty(partyID)
+    let url = `https://api.spotify.com/v1/artists/${artistID}/albums?offset=0&limit=50&include_groups=album,single&market=CA`
+    get_data_array_albums = []
+    return recursiveGetItems(url, party.token)
+}
+
+const getArtistData = (partyID, artistID, callback) => {
+    let party = db.getParty(partyID)
+    get(`https://api.spotify.com/v1/artists/${artistID}`, party.token)
+        .then((general_data) => {
+            get(`https://api.spotify.com/v1/artists/${artistID}/top-tracks?country=CA`, party.token)
+                .then((top_tracks_data) => {
+                    getArtistAlbums(partyID, artistID).then(() => {
+                        callback(general_data, top_tracks_data, get_data_array_albums)
+                    })
+                })
+                .catch((error) => {
+                    logger.error(error.stack)
+                })
+        })
+        .catch((error) => {
+            logger.error(error.stack)
+        })
 }
 
 const addSongToArchive = (partyID, songID) => {
@@ -319,6 +367,20 @@ const socket_connection_callback = (client) => {
     })
     client.on('playlist-downvote-song', (data) => {
         downvoteSong(data.partyid, data.track, data.uuid)
+    })
+    client.on('get-album-data', (data) => {
+        getAlbumData(data.partyid, data.album, (response) => {
+            client.emit('got-album-data', response.data)
+        })
+    })
+    client.on('get-artist-data', (data) => {
+        getArtistData(data.partyid, data.artist, (general_data, top_tracks_data, albums_data) => {
+            client.emit('got-artist-data', {
+                general: general_data.data,
+                top_tracks: top_tracks_data.data,
+                albums: albums_data
+            })
+        })
     })
 }
 

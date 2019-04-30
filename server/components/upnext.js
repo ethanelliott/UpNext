@@ -68,14 +68,18 @@ class UpNext {
         return this.instance
     }
 
+    //TODO: Figure out how to kill a dead party
+    //Also what defines a dead party?
     startGlobalEventLoop() {
         let allParties = db.getAllParties()
         logger.info(`Starting Parties...`)
         for (let i = 0; i < allParties.length; i++) {
             let thisEventLoopID = null
             for (let j = 0; j < this._currentPartyEventLoop.length; j++) {
-                if (this._currentPartyEventLoop[j].id === allParties[j].id) {
-                    thisEventLoopID = j
+                if (allParties[j] !== undefined) {
+                    if (this._currentPartyEventLoop[j].id === allParties[j].id) {
+                        thisEventLoopID = j
+                    }
                 }
             }
             if (thisEventLoopID === null) {

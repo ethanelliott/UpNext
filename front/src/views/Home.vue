@@ -15,7 +15,7 @@
                 </v-card-actions>
             </v-card>
         </v-dialog>
-        <v-dialog fullscreen hide-overlay transition="dialog-bottom-transition" v-model="queueDialog">
+        <v-dialog fullscreen transition="dialog-bottom-transition" v-model="queueDialog">
             <v-card fill-height height="100%">
                 <v-toolbar dark fixed>
                     <v-btn @click="closeQueue" dark icon>
@@ -71,13 +71,13 @@
                 </v-speed-dial>
             </v-card>
         </v-dialog>
-        <v-dialog fullscreen hide-overlay transition="scale-transition" v-model="searchDialog">
+        <v-dialog fullscreen transition="scale-transition" v-model="searchDialog">
             <v-card>
                 <v-toolbar dark fixed tabs>
                     <v-btn @click="closeSearch" dark icon>
                         <v-icon>close</v-icon>
                     </v-btn>
-                    <v-text-field @input="isTypingSearch = true" box clearable label="Search by song name..."
+                    <v-text-field @input="isTypingSearch = true" box clearable label="Search for music here"
                                   v-model="searchString"></v-text-field>
                     <template slot="extension">
                         <v-tabs color="darker" grow slider-color="primary" v-model="searchTabs">
@@ -95,7 +95,7 @@
                         <v-card flat>
                             <v-list class="" two-line>
                                 <template v-for="(track, index) in searchResults.tracks">
-                                    <v-list-tile :key="track.title" avatar>
+                                    <v-list-tile :key="track.id" avatar>
                                         <v-list-tile-avatar tile>
                                             <img :src="track.artwork">
                                         </v-list-tile-avatar>
@@ -121,14 +121,14 @@
                     <v-tab-item key="albums">
                         <v-card flat>
                             <v-list class="" two-line>
-                                <template v-for="(track, index) in searchResults.albums">
-                                    <v-list-tile :key="track.title" avatar>
+                                <template v-for="(album, index) in searchResults.albums">
+                                    <v-list-tile :key="album.title" @click="showAlbumDialog(album)" avatar>
                                         <v-list-tile-avatar tile>
-                                            <img :src="track.images[0].url" v-if="track.images.length > 0">
+                                            <img :src="album.artwork" v-if="album.artwork">
                                         </v-list-tile-avatar>
                                         <v-list-tile-content>
-                                            <v-list-tile-title>{{ track.name }}</v-list-tile-title>
-                                            <v-list-tile-sub-title class="text--primary">{{ track.artist }}
+                                            <v-list-tile-title>{{ album.name }}</v-list-tile-title>
+                                            <v-list-tile-sub-title class="text--primary">{{ album.artist }}
                                             </v-list-tile-sub-title>
                                         </v-list-tile-content>
                                     </v-list-tile>
@@ -143,14 +143,14 @@
                     <v-tab-item key="artists">
                         <v-card flat>
                             <v-list class="" two-line>
-                                <template v-for="(track, index) in searchResults.artists">
-                                    <v-list-tile :key="track.title" @click="">
+                                <template v-for="(artist, index) in searchResults.artists">
+                                    <v-list-tile :key="artist.title" @click="showArtistDialog(artist)" avatar>
                                         <v-list-tile-avatar tile>
-                                            <img :src="track.images[0].url" v-if="track.images.length > 0">
+                                            <img :src="artist.images[0].url" v-if="artist.images.length > 0">
                                         </v-list-tile-avatar>
                                         <v-list-tile-content>
-                                            <v-list-tile-title>{{ track.name }}</v-list-tile-title>
-                                            <v-list-tile-sub-title class="text--primary">{{ track.artist }}
+                                            <v-list-tile-title>{{ artist.name }}</v-list-tile-title>
+                                            <v-list-tile-sub-title class="text--primary">{{ artist.artist }}
                                             </v-list-tile-sub-title>
                                         </v-list-tile-content>
                                     </v-list-tile>
@@ -185,6 +185,119 @@
                         </v-card>
                     </v-tab-item>
                 </v-tabs-items>
+            </v-card>
+        </v-dialog>
+        <v-dialog max-width="700px" persistent scrollable v-model="albumDialog">
+            <v-card>
+                <v-card-title>
+                    <v-btn @click="closeAlbumDialog" dark icon>
+                        <v-icon>close</v-icon>
+                    </v-btn>
+                    <span>Album</span>
+                </v-card-title>
+                <v-card-text>
+                    <v-flex>
+                        <v-layout justify-center>
+                            <v-flex class="text-xs-center">
+                                <img :src="albumSearchDialogData.artwork" class="elevation-20"
+                                     style="width:100%;max-width: 25vh;"/>
+                            </v-flex>
+                        </v-layout>
+                    </v-flex>
+                    <v-flex>
+                        <v-layout justify-center>
+                            <v-flex class="text-xs-center">
+                                <span class="headline font-weight-medium">{{albumSearchDialogData.name}}</span>
+                                <p class="subheading font-weight-thin font-italic">{{albumSearchDialogData.artist}}</p>
+                            </v-flex>
+                        </v-layout>
+                    </v-flex>
+                    <v-list class="" two-line>
+                        <template v-for="(track, index) in albumSearchDialogData.tracks">
+                            <v-list-tile :key="track.id" avatar>
+                                <v-list-tile-content>
+                                    <v-list-tile-title>{{ track.name }}</v-list-tile-title>
+                                    <v-list-tile-sub-title class="text--primary">{{ track.artist }}
+                                    </v-list-tile-sub-title>
+                                </v-list-tile-content>
+                                <v-list-tile-action>
+                                    <v-btn @click="addSongToPlaylist(track)" color="primary" flat icon>
+                                        <v-icon large>add</v-icon>
+                                    </v-btn>
+                                </v-list-tile-action>
+                            </v-list-tile>
+                            <v-divider
+                                    :key="index"
+                                    v-if="index + 1 < albumSearchDialogData.tracks.length"
+                            ></v-divider>
+                        </template>
+                    </v-list>
+                </v-card-text>
+            </v-card>
+        </v-dialog>
+        <v-dialog max-width="700px" persistent scrollable v-model="artistDialog">
+            <v-card>
+                <v-img :src="artistSearchDialogData.image" class="white--text" height="200px">
+                    <v-container fill-height fluid>
+                        <v-layout fill-height>
+                            <v-flex align-end flexbox xs12>
+                                <v-btn @click="closeArtistDialog" color="primary" dark icon>
+                                    <v-icon>close</v-icon>
+                                </v-btn>
+                            </v-flex>
+                        </v-layout>
+                    </v-container>
+                </v-img>
+                <v-card-title class="text-xs-center">
+                    <span class="headline">{{artistSearchDialogData.name}}</span>
+                </v-card-title>
+                <v-divider></v-divider>
+                <v-card-text>
+                    <span class="title">Top Songs</span>
+                    <v-list class="" two-line>
+                        <template v-for="(track, index) in artistSearchDialogData.tracks">
+                            <v-list-tile :key="track.id" avatar>
+                                <v-list-tile-content>
+                                    <v-list-tile-title>{{ track.name }}</v-list-tile-title>
+                                    <v-list-tile-sub-title class="text--primary">{{ track.artist }}
+                                    </v-list-tile-sub-title>
+                                </v-list-tile-content>
+                                <v-list-tile-action>
+                                    <v-btn @click="addSongToPlaylist(track)" color="primary" flat icon>
+                                        <v-icon large>add</v-icon>
+                                    </v-btn>
+                                </v-list-tile-action>
+                            </v-list-tile>
+                            <v-divider
+                                    :key="index"
+                                    v-if="index + 1 < artistSearchDialogData.tracks.length"
+                            ></v-divider>
+                        </template>
+                    </v-list>
+                    <v-divider></v-divider>
+                    <p></p>
+                    <p class="title">Albums</p>
+                    <v-container fluid grid-list-md>
+                        <v-layout row wrap>
+                            <v-flex :key="album.id" v-for="(album, index) in artistSearchDialogData.albums" xs6>
+                                <v-card @click="showAlbumDialog(album)" flat tile>
+                                    <v-img :src="album.artwork"></v-img>
+                                </v-card>
+                            </v-flex>
+                        </v-layout>
+                    </v-container>
+                    <p></p>
+                    <p class="title">Singles</p>
+                    <v-container fluid grid-list-md>
+                        <v-layout row wrap>
+                            <v-flex :key="album.id" v-for="(album, index) in artistSearchDialogData.singles" xs6>
+                                <v-card @click="showAlbumDialog(album)" flat tile>
+                                    <v-img :src="album.artwork"></v-img>
+                                </v-card>
+                            </v-flex>
+                        </v-layout>
+                    </v-container>
+                </v-card-text>
             </v-card>
         </v-dialog>
         <v-layout align-center justify-center v-if="loading">
@@ -287,7 +400,11 @@
             searchString: '',
             searchQueue: false,
             isTypingSearch: false,
-            searchTabs: null
+            searchTabs: null,
+            albumDialog: false,
+            albumSearchDialogData: {},
+            artistDialog: false,
+            artistSearchDialogData: {},
         }),
         beforeDestroy() {
             this.socket.disconnect()
@@ -314,24 +431,6 @@
                 }, 500)
             } else if (t.tqueue !== undefined) {
                 t.queueDialog = true
-            }
-
-            switch (t.taddtab) {
-                case 'songs':
-                    t.searchTabs = 0
-                    break
-                case 'albums':
-                    t.searchTabs = 1
-                    break
-                case 'artists':
-                    t.searchTabs = 2
-                    break
-                case 'playlists':
-                    t.searchTabs = 3
-                    break
-                default:
-                    t.searchTabs = 0
-                    break
             }
             t.socket = io(t.$socketPath)
             t.socket.on('connect', () => {
@@ -384,7 +483,6 @@
                 this.snackbar = true
             })
             this.socket.on('give-search-results', (data) => {
-                // console.log(data)
                 this.searchResults.tracks = data.tracks.items.map((track) => {
                     return {
                         id: track.id,
@@ -401,12 +499,20 @@
                     return artist
                 })
                 this.searchResults.albums = data.albums.items.map((album) => {
-                    return album
+                    return {
+                        id: album.id,
+                        name: album.name,
+                        artwork: album.images.find((element) => {
+                            return element.height <= 64
+                        }).url,
+                        artist: album.artists.map(e => e.name).reduce((a, b) => {
+                            return `${a}${b}, `
+                        }, ``).slice(0, -2)
+                    }
                 })
                 this.searchResults.playlists = data.playlists.items.map((playlist) => {
                     return playlist
                 })
-                console.log(this.searchResults)
             })
             this.socket.on('track-added-success', () => {
                 this.snackbarMessage = 'Song added to Queue!'
@@ -415,6 +521,69 @@
             this.socket.on('track-added-duplicate', () => {
                 this.snackbarMessage = 'Song already in Queue!'
                 this.snackbar = true
+            })
+            this.socket.on('got-album-data', (data) => {
+                this.albumSearchDialogData = {
+                    name: data.name,
+                    artist: data.artists[0].name,
+                    artwork: data.images[0].url,
+                    tracks: data.tracks.items.map((track) => {
+                        return {
+                            id: track.id,
+                            name: track.name,
+                            artist: track.artists.map(e => e.name).reduce((a, b) => {
+                                return `${a}${b}, `
+                            }, ``).slice(0, -2)
+                        }
+                    })
+                }
+                this.albumDialog = true
+            })
+            this.socket.on('got-artist-data', (data) => {
+                this.artistSearchDialogData = {
+                    name: data.general.name,
+                    image: (data.general.images.length > 0 ? data.general.images[0].url : ""),
+                    tracks: data.top_tracks.tracks.map((track) => {
+                        return {
+                            id: track.id,
+                            name: track.name,
+                            artist: track.artists.map(e => e.name).reduce((a, b) => {
+                                return `${a}${b}, `
+                            }, ``).slice(0, -2)
+                        }
+                    }),
+                    albums: data.albums
+                        .map(e => e.name)
+                        .map((e, i, final) => final.indexOf(e) === i && i)
+                        .filter(e => data.albums[e]).map(e => data.albums[e])
+                        .filter((album) => album.album_type === "album")
+                        .map((album) => {
+                            return {
+                                id: album.id,
+                                name: album.name,
+                                artwork: album.images[0].url,
+                                artist: album.artists.map(e => e.name).reduce((a, b) => {
+                                    return `${a}${b}, `
+                                }, ``).slice(0, -2)
+                            }
+                        }),
+                    singles: data.albums
+                        .map(e => e.name)
+                        .map((e, i, final) => final.indexOf(e) === i && i)
+                        .filter(e => data.albums[e]).map(e => data.albums[e])
+                        .filter((album) => album.album_type === "single")
+                        .map((album) => {
+                            return {
+                                id: album.id,
+                                name: album.name,
+                                artwork: album.images[0].url,
+                                artist: album.artists.map(e => e.name).reduce((a, b) => {
+                                    return `${a}${b}, `
+                                }, ``).slice(0, -2)
+                            }
+                        }),
+                }
+                this.artistDialog = true
             })
         },
         methods: {
@@ -457,6 +626,26 @@
             closeQueue() {
                 this.queueDialog = false
                 this.$router.push("/m/home")
+            },
+            showAlbumDialog(album) {
+                this.socket.emit('get-album-data', {
+                    partyid: this.partyID,
+                    album: album.id
+                })
+            },
+            closeAlbumDialog() {
+                this.albumDialog = false
+                this.albumSearchDialogData = {}
+            },
+            showArtistDialog(artist) {
+                this.socket.emit('get-artist-data', {
+                    partyid: this.partyID,
+                    artist: artist.id
+                })
+            },
+            closeArtistDialog() {
+                this.artistDialog = false
+                this.artistSearchDialogData = {}
             },
             nextSong() {
                 this.socket.emit('next-song', {

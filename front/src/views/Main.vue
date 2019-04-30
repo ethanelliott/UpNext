@@ -8,6 +8,11 @@
                     </v-btn>
                     <v-toolbar-title>Settings</v-toolbar-title>
                 </v-toolbar>
+                <v-container fill-height fluid>
+                    <v-btn block class="my-5" color="secondary" dark large to="/logout">
+                        Logout
+                    </v-btn>
+                </v-container>
             </v-card>
         </v-dialog>
         <v-toolbar app dark>
