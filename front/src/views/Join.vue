@@ -49,6 +49,7 @@
 
     export default {
         name: "Join",
+        props: ['code'],
         data: () => ({
             valid: null,
             isFormValid: false,
@@ -65,6 +66,7 @@
             }
         }),
         mounted() {
+            this.partyCode = (this.code ? this.code : '')
             if (session.getItem('partyID')) {
                 this.$router.push('/m/home')
             } else {

@@ -13,6 +13,7 @@ export default new Router({
         {
             path: '/join',
             name: 'join',
+            props: (route) => ({code: route.query.c}),
             component: () => import('./views/Join.vue')
         },
         {

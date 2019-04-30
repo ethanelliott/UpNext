@@ -8,10 +8,18 @@
                     </v-btn>
                     <v-toolbar-title>Settings</v-toolbar-title>
                 </v-toolbar>
-                <v-container fill-height fluid>
-                    <v-btn block class="my-5" color="secondary" dark large to="/logout">
-                        Logout
-                    </v-btn>
+                <v-container>
+                    <v-flex>
+                        <v-btn @click="sharePartyCode" block class="my-5" color="primary" dark large>
+                            Share Party Code
+                        </v-btn>
+                    </v-flex>
+                    <v-flex>
+                        <v-btn block class="my-5" color="secondary" dark large to="/logout">
+                            Logout
+                        </v-btn>
+                    </v-flex>
+
                 </v-container>
             </v-card>
         </v-dialog>
@@ -51,6 +59,19 @@
             this.code = session.getItem('partyCode')
             this.name = session.getItem('partyName')
             this.admin = (session.getItem('admin') === 'true')
+        },
+        methods: {
+            sharePartyCode() {
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'UpNext Party Code',
+                        text: 'Join the party!',
+                        url: `https://upnext.ml/#/join?c=${this.code}`,
+                    })
+                        .then(() => console.log('Successful share'))
+                        .catch((error) => console.log('Error sharing', error));
+                }
+            }
         }
     }
 </script>
