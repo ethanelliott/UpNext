@@ -49,22 +49,22 @@ const getAlbumData = (partyID, albumID, callback) => {
         })
 }
 
-let get_data_array_albums = []
-
-const recursiveGetItems = (url, token) => {
+const recursiveGetItems = (url, token, array) => {
     return get(url, token).then(data => {
-        get_data_array_albums = get_data_array_albums.concat(data.data.items)
+        array.push(...data.data.items)
         if (data.data.next !== null) {
-            return recursiveGetItems(data.data.next, token)
+            return recursiveGetItems(data.data.next, token, array)
         }
     })
 }
 
-const getArtistAlbums = (partyID, artistID) => {
+const getArtistAlbums = (partyID, artistID, callback) => {
     let party = db.getParty(partyID)
     let url = `https://api.spotify.com/v1/artists/${artistID}/albums?offset=0&limit=50&include_groups=album,single&market=CA`
-    get_data_array_albums = []
-    return recursiveGetItems(url, party.token)
+    let album_array = []
+    recursiveGetItems(url, party.token, album_array).then(() => {
+        callback(album_array)
+    })
 }
 
 const getArtistData = (partyID, artistID, callback) => {
@@ -73,13 +73,35 @@ const getArtistData = (partyID, artistID, callback) => {
         .then((general_data) => {
             get(`https://api.spotify.com/v1/artists/${artistID}/top-tracks?country=CA`, party.token)
                 .then((top_tracks_data) => {
-                    getArtistAlbums(partyID, artistID).then(() => {
-                        callback(general_data, top_tracks_data, get_data_array_albums)
+                    getArtistAlbums(partyID, artistID, (albums) => {
+                        callback(general_data, top_tracks_data, albums)
                     })
                 })
                 .catch((error) => {
                     logger.error(error.stack)
                 })
+        })
+        .catch((error) => {
+            logger.error(error.stack)
+        })
+}
+
+const getPlaylistTracks = (partyID, playlistID, callback) => {
+    let party = db.getParty(partyID)
+    let url = `https://api.spotify.com/v1/playlists/${playlistID}/tracks?offset=0&limit=100`
+    let track_array = []
+    recursiveGetItems(url, party.token, track_array).then(() => {
+        callback(track_array)
+    })
+}
+
+const getPlaylistData = (partyID, playlistID, callback) => {
+    let party = db.getParty(partyID)
+    get(`https://api.spotify.com/v1/playlists/${playlistID}`, party.token)
+        .then((general_data) => {
+            getPlaylistTracks(partyID, playlistID, (tracks) => {
+                callback(general_data, tracks)
+            })
         })
         .catch((error) => {
             logger.error(error.stack)
@@ -379,6 +401,14 @@ const socket_connection_callback = (client) => {
                 general: general_data.data,
                 top_tracks: top_tracks_data.data,
                 albums: albums_data
+            })
+        })
+    })
+    client.on('get-playlist-data', (data) => {
+        getPlaylistData(data.partyid, data.playlist, (general_data, track_data) => {
+            client.emit('got-playlist-data', {
+                general: general_data.data,
+                tracks: track_data
             })
         })
     })

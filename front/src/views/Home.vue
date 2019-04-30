@@ -38,7 +38,8 @@
                     </v-flex>
                 </v-flex>
                 <v-flex offset-sm3 sm6 v-else xs12>
-                    <v-list class="mt-5 pt-2" two-line>
+                    <p class="mt-4">&nbsp;</p>
+                    <v-list two-line>
                         <template v-for="(track, index) in queue">
                             <v-list-tile :key="track.title" @click="showVoteDialog(track)" avatar>
                                 <v-list-tile-avatar tile>
@@ -165,14 +166,14 @@
                     <v-tab-item key="playlists">
                         <v-card flat>
                             <v-list class="" two-line>
-                                <template v-for="(track, index) in searchResults.playlists">
-                                    <v-list-tile :key="track.title" @click="">
+                                <template v-for="(playlist, index) in searchResults.playlists">
+                                    <v-list-tile :key="playlist.id" @click="showPlaylistDialog(playlist)" avatar>
                                         <v-list-tile-avatar tile>
-                                            <img :src="track.images[0].url" v-if="track.images.length > 0">
+                                            <img :src="playlist.artwork">
                                         </v-list-tile-avatar>
                                         <v-list-tile-content>
-                                            <v-list-tile-title>{{ track.name }}</v-list-tile-title>
-                                            <v-list-tile-sub-title class="text--primary">{{ track.artist }}
+                                            <v-list-tile-title>{{ playlist.name }}</v-list-tile-title>
+                                            <v-list-tile-sub-title class="text--primary">{{ playlist.owner }}
                                             </v-list-tile-sub-title>
                                         </v-list-tile-content>
                                     </v-list-tile>
@@ -214,7 +215,7 @@
                     </v-flex>
                     <v-list class="" two-line>
                         <template v-for="(track, index) in albumSearchDialogData.tracks">
-                            <v-list-tile :key="track.id" avatar>
+                            <v-list-tile :key="`${track.id}${index}`" avatar>
                                 <v-list-tile-content>
                                     <v-list-tile-title>{{ track.name }}</v-list-tile-title>
                                     <v-list-tile-sub-title class="text--primary">{{ track.artist }}
@@ -256,7 +257,10 @@
                     <span class="title">Top Songs</span>
                     <v-list class="" two-line>
                         <template v-for="(track, index) in artistSearchDialogData.tracks">
-                            <v-list-tile :key="track.id" avatar>
+                            <v-list-tile :key="`${track.id}${index}`" avatar>
+                                <v-list-tile-avatar tile>
+                                    <img :src="track.artwork">
+                                </v-list-tile-avatar>
                                 <v-list-tile-content>
                                     <v-list-tile-title>{{ track.name }}</v-list-tile-title>
                                     <v-list-tile-sub-title class="text--primary">{{ track.artist }}
@@ -279,7 +283,7 @@
                     <p class="title">Albums</p>
                     <v-container fluid grid-list-md>
                         <v-layout row wrap>
-                            <v-flex :key="album.id" v-for="(album, index) in artistSearchDialogData.albums" xs6>
+                            <v-flex :key="album.id" v-for="(album) in artistSearchDialogData.albums" xs6>
                                 <v-card @click="showAlbumDialog(album)" flat tile>
                                     <v-img :src="album.artwork"></v-img>
                                 </v-card>
@@ -290,13 +294,57 @@
                     <p class="title">Singles</p>
                     <v-container fluid grid-list-md>
                         <v-layout row wrap>
-                            <v-flex :key="album.id" v-for="(album, index) in artistSearchDialogData.singles" xs6>
+                            <v-flex :key="album.id" v-for="(album) in artistSearchDialogData.singles" xs6>
                                 <v-card @click="showAlbumDialog(album)" flat tile>
                                     <v-img :src="album.artwork"></v-img>
                                 </v-card>
                             </v-flex>
                         </v-layout>
                     </v-container>
+                </v-card-text>
+            </v-card>
+        </v-dialog>
+        <v-dialog max-width="700px" persistent scrollable v-model="playlistDialog">
+            <v-card>
+                <v-card-title class="text-xs-center">
+                    <v-btn @click="closePlaylistDialog" dark icon>
+                        <v-icon>close</v-icon>
+                    </v-btn>
+                    <span class="title">{{playlistDialogData.name}}</span>
+                </v-card-title>
+                <v-card-text>
+                    <v-flex>
+                        <v-layout justify-center>
+                            <v-flex class="text-xs-center">
+                                <img :src="playlistDialogData.artwork" class="elevation-20"
+                                     style="width:100%;max-width: 25vh;"/>
+                            </v-flex>
+                        </v-layout>
+                    </v-flex>
+                    <v-divider class="my-3"></v-divider>
+                    <v-list class="" two-line>
+                        <template v-for="(track, index) in playlistDialogData.tracks">
+                            <v-list-tile :key="`${track.id}${index}`" avatar>
+                                <v-list-tile-avatar tile>
+                                    <img :src="track.artwork">
+                                </v-list-tile-avatar>
+                                <v-list-tile-content>
+                                    <v-list-tile-title>{{ track.name }}</v-list-tile-title>
+                                    <v-list-tile-sub-title class="text--primary">{{ track.artist }}
+                                    </v-list-tile-sub-title>
+                                </v-list-tile-content>
+                                <v-list-tile-action>
+                                    <v-btn @click="addSongToPlaylist(track)" color="primary" flat icon>
+                                        <v-icon large>add</v-icon>
+                                    </v-btn>
+                                </v-list-tile-action>
+                            </v-list-tile>
+                            <v-divider
+                                    :key="index"
+                                    v-if="index + 1 < playlistDialogData.tracks.length"
+                            ></v-divider>
+                        </template>
+                    </v-list>
                 </v-card-text>
             </v-card>
         </v-dialog>
@@ -405,6 +453,8 @@
             albumSearchDialogData: {},
             artistDialog: false,
             artistSearchDialogData: {},
+            playlistDialog: false,
+            playlistDialogData: {}
         }),
         beforeDestroy() {
             this.socket.disconnect()
@@ -479,7 +529,6 @@
                     this.snackbarMessage = 'You have already voted!'
                 }
                 this.voteSkipDialog = false
-
                 this.snackbar = true
             })
             this.socket.on('give-search-results', (data) => {
@@ -511,7 +560,12 @@
                     }
                 })
                 this.searchResults.playlists = data.playlists.items.map((playlist) => {
-                    return playlist
+                    return {
+                        id: playlist.id,
+                        name: playlist.name,
+                        owner: playlist.owner.display_name,
+                        artwork: playlist.images[0].url
+                    }
                 })
             })
             this.socket.on('track-added-success', () => {
@@ -540,6 +594,7 @@
                 this.albumDialog = true
             })
             this.socket.on('got-artist-data', (data) => {
+                console.log(data)
                 this.artistSearchDialogData = {
                     name: data.general.name,
                     image: (data.general.images.length > 0 ? data.general.images[0].url : ""),
@@ -547,6 +602,9 @@
                         return {
                             id: track.id,
                             name: track.name,
+                            artwork: track.album.images.find((element) => {
+                                return element.height <= 64
+                            }).url,
                             artist: track.artists.map(e => e.name).reduce((a, b) => {
                                 return `${a}${b}, `
                             }, ``).slice(0, -2)
@@ -584,6 +642,28 @@
                         }),
                 }
                 this.artistDialog = true
+            })
+            this.socket.on('got-playlist-data', (data) => {
+                this.playlistDialogData = {
+                    name: data.general.name,
+                    owner: data.general.owner.display_name,
+                    artwork: data.general.images[0].url,
+                    tracks: data.tracks
+                        .filter((track) => track.is_local === false)
+                        .map((track) => {
+                            return {
+                                id: track.track.id,
+                                name: track.track.name,
+                                artwork: track.track.album.images.find((element) => {
+                                    return element.height <= 64
+                                }).url,
+                                artist: track.track.artists.map(e => e.name).reduce((a, b) => {
+                                    return `${a}${b}, `
+                                }, ``).slice(0, -2)
+                            }
+                        })
+                }
+                this.playlistDialog = true
             })
         },
         methods: {
@@ -646,6 +726,16 @@
             closeArtistDialog() {
                 this.artistDialog = false
                 this.artistSearchDialogData = {}
+            },
+            showPlaylistDialog(playlist) {
+                this.socket.emit('get-playlist-data', {
+                    partyid: this.partyID,
+                    playlist: playlist.id
+                })
+            },
+            closePlaylistDialog() {
+                this.playlistDialog = false
+                this.playlistDialogData = {}
             },
             nextSong() {
                 this.socket.emit('next-song', {
