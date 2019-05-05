@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimal-ui">
     <meta name="theme-color" content="#000000">
     <!--    <link href="<%= BASE_URL %>icon.ico" rel="icon">-->
-    <link href="manifest.json" rel="manifest">
+    <link href="/manifest.json" rel="manifest">
     <title>UpNext</title>
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-139275835-1"></script>
     <script>
@@ -24,7 +24,7 @@
             } else {
                 // Register the service worker
                 navigator.serviceWorker
-                    .register("sw.js", {
+                    .register("/sw.js", {
                         scope: "./"
                     })
                     .then(function (reg) {
