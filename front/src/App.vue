@@ -19,9 +19,12 @@
                     const fromDepth = from.path.split('/').length
                     let psp = to.path.split('/')
                     transitionName = toDepth < fromDepth || psp[psp.length - 1] === "" ? 'slide-right' : 'slide-left'
-                    console.log(to.path, from.path, this.transitionName, toDepth, fromDepth)
+                    this.transitionName = transitionName || DEFAULT_TRANSITION
+                } else if (transitionName === "none") {
+                    this.transitionName = ""
+                } else {
+                    this.transitionName = transitionName || DEFAULT_TRANSITION
                 }
-                this.transitionName = transitionName || DEFAULT_TRANSITION
                 next()
             })
         }

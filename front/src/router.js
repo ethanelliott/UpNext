@@ -33,6 +33,7 @@ export default new Router({
         {
             path: '/m',
             name: 'm',
+            meta: {transitionName: 'slide'},
             components: {
                 default: () => import('./views/Main.vue'),
                 content: () => import('./views/Home.vue')
@@ -42,6 +43,7 @@ export default new Router({
                 {
                     path: 'home',
                     name: 'Home',
+                    meta: {transitionName: 'slide'},
                     props: {default: false, content: true},
                     components: {
                         default: () => import('./views/Main.vue'),
@@ -49,30 +51,23 @@ export default new Router({
                     },
                 },
                 {
-                    path: 'home/:tqueue',
+                    path: 'home/queue',
                     name: 'Home',
+                    meta: {transitionName: 'slide'},
                     props: {default: false, content: true},
                     components: {
                         default: () => import('./views/Main.vue'),
-                        content: () => import('./views/Home.vue')
+                        content: () => import('./views/Queue.vue')
                     },
                 },
                 {
-                    path: 'home/:tqueue/:tadd',
+                    path: 'home/queue/search',
                     name: 'Home',
+                    meta: {transitionName: 'slide'},
                     props: {default: false, content: true},
                     components: {
                         default: () => import('./views/Main.vue'),
-                        content: () => import('./views/Home.vue')
-                    },
-                },
-                {
-                    path: 'home/:tqueue/:tadd/:taddtab',
-                    name: 'Home',
-                    props: {default: false, content: true},
-                    components: {
-                        default: () => import('./views/Main.vue'),
-                        content: () => import('./views/Home.vue')
+                        content: () => import('./views/Search.vue')
                     },
                 },
                 {
