@@ -1,11 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" style="">
-    <rect id="backgroundrect" width="100%" height="100%" x="0" y="0" fill="none" stroke="none"/>
-
-
-    <g class="currentLayer" style="">
-        <title>Layer 1</title>
-        <path fill="none" d="M0 0h24v24H0z" id="svg_1"/>
-        <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" id="svg_2"
-              class="" fill-opacity="1" fill="#1db954"/>
-    </g>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24">
+    <path fill="none" d="M0 0h24v24H0z"/>
+    <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"
+          fill-opacity="1" fill="#1db954"/>
 </svg>
