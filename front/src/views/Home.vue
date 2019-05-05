@@ -1,7 +1,13 @@
 <template>
     <v-container
-            :style="'transition:all 1s; background-image: linear-gradient(' + progressColourBackground + ' 10%, rgba(0,0,0,1) 90%);'"
+            :style="backgroundColourString"
+            class="back-style"
             fill-height fluid>
+        <v-dialog persistent v-model="loadingOverlay" width="300">
+            <v-card color="primary" dark>
+                <v-progress-linear class="mb-0" color="white" height="20" indeterminate></v-progress-linear>
+            </v-card>
+        </v-dialog>
         <v-dialog dark v-model="voteDialog" width="500">
             <v-card>
                 <v-card-actions>
@@ -423,7 +429,10 @@
             socket: null,
             loading: true,
             partyID: null,
+            backgroundColourString: '',
             albumArtwork: null,
+            defaultAlbumArtwork: "https://discussions.apple.com/content/attachment/881765040",
+            previousTrack: null,
             trackName: null,
             trackArtist: null,
             trackPos: 0,
@@ -454,7 +463,8 @@
             artistDialog: false,
             artistSearchDialogData: {},
             playlistDialog: false,
-            playlistDialogData: {}
+            playlistDialogData: {},
+            loadingOverlay: false
         }),
         beforeDestroy() {
             this.socket.disconnect()
@@ -502,9 +512,7 @@
                     t.trackPos = (d.progress_ms / d.item.duration_ms) * 100
                     t.albumArtwork = d.item.album.images[0].url
                     t.trackName = d.item.name
-                    t.trackArtist = d.item.artists.map(e => e.name).reduce((a, b) => {
-                        return `${a}${b}, `
-                    }, ``).slice(0, -2)
+                    t.trackArtist = d.item.artists.map(e => e.name).reduce((a, b) => `${a}${b}, `, ``).slice(0, -2)
                     if (t.previousTrack !== t.trackName) {
                         t.previousTrack = t.trackName
                         Vibrant.from(t.albumArtwork).getPalette().then(function (palette) {
@@ -515,6 +523,7 @@
                                 t.progressColour = 'white'
                                 t.progressColourBackground = 'rgba(0,0,0,0)'
                             }
+                            t.backgroundColourString = 'background-image: linear-gradient(' + t.progressColourBackground + ' 10%, rgba(0,0,0,1) 90%);'
                         })
                     }
                     if (this.trackName !== null) {
@@ -577,6 +586,7 @@
                 this.snackbar = true
             })
             this.socket.on('got-album-data', (data) => {
+                this.stopLoading()
                 this.albumSearchDialogData = {
                     name: data.name,
                     artist: data.artists[0].name,
@@ -594,7 +604,7 @@
                 this.albumDialog = true
             })
             this.socket.on('got-artist-data', (data) => {
-                console.log(data)
+                this.stopLoading()
                 this.artistSearchDialogData = {
                     name: data.general.name,
                     image: (data.general.images.length > 0 ? data.general.images[0].url : ""),
@@ -644,12 +654,13 @@
                 this.artistDialog = true
             })
             this.socket.on('got-playlist-data', (data) => {
+                this.stopLoading()
                 this.playlistDialogData = {
                     name: data.general.name,
                     owner: data.general.owner.display_name,
                     artwork: data.general.images[0].url,
                     tracks: data.tracks
-                        .filter((track) => track.is_local === false)
+                        .filter((track) => track.is_local === false && track.track.available_markets.length > 0)
                         .map((track) => {
                             return {
                                 id: track.track.id,
@@ -667,6 +678,12 @@
             })
         },
         methods: {
+            startLoading() {
+                this.loadingOverlay = true
+            },
+            stopLoading() {
+                this.loadingOverlay = false
+            },
             songsTab() {
                 this.$router.push("/m/home/queue/add/songs")
             },
@@ -708,6 +725,7 @@
                 this.$router.push("/m/home")
             },
             showAlbumDialog(album) {
+                this.startLoading()
                 this.socket.emit('get-album-data', {
                     partyid: this.partyID,
                     album: album.id
@@ -718,6 +736,7 @@
                 this.albumSearchDialogData = {}
             },
             showArtistDialog(artist) {
+                this.startLoading()
                 this.socket.emit('get-artist-data', {
                     partyid: this.partyID,
                     artist: artist.id
@@ -728,6 +747,7 @@
                 this.artistSearchDialogData = {}
             },
             showPlaylistDialog(playlist) {
+                this.startLoading()
                 this.socket.emit('get-playlist-data', {
                     partyid: this.partyID,
                     playlist: playlist.id
@@ -784,3 +804,9 @@
         }
     }
 </script>
+
+<style>
+    .back-style {
+        background-image: linear-gradient(rgba(0, 0, 0, 0) 10%, rgba(0, 0, 0, 1) 90%);
+    }
+</style>

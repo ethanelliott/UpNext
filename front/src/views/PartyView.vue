@@ -246,6 +246,7 @@
             background-position: left top;
         }
     }
+
     .big-text {
         font-size: 2.6em;
     }

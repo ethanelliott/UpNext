@@ -208,7 +208,7 @@ const app_post_authCallback = (req, res) => {
                 })
             }).catch((error) => {
             logger.error(error.stack)
-            })
+        })
     }
 }
 

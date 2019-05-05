@@ -36,6 +36,7 @@ class Database {
     find(jsonFind) {
         return this.database.party.find(jsonFind)
     }
+
     getDatabase() {
         return this.database
     }

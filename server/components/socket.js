@@ -168,9 +168,13 @@ const togglePlayback = (partyID, playback) => {
 }
 
 const sortPlaylistFromPartyID = partyID => {
-    let playlist = db.getParty(partyID).playlist
-    playlist.sort(playlistSort)
-    return playlist
+    let party = db.getParty(partyID)
+    if (party) {
+        let playlist = db.getParty(partyID).playlist
+        playlist.sort(playlistSort)
+        return playlist
+    }
+    return []
 }
 
 const getPlaylist = partyID => {
