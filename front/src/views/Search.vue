@@ -170,7 +170,7 @@
                 <v-icon>close</v-icon>
             </v-btn>
             <v-text-field @input="isTypingSearch = true" box clearable label="Search for music here"
-                          v-model="searchString"></v-text-field>
+                          :loading="searchLoading" v-model="searchString"></v-text-field>
             <template slot="extension">
                 <v-tabs color="darker" grow slider-color="primary" v-model="searchTabs">
                     <v-tab @click="songsTab" key="songs">Songs</v-tab>
@@ -325,6 +325,7 @@
                 albums: [],
                 playlists: []
             },
+            searchLoading: false,
             searchString: '',
             searchQueue: false,
             isTypingSearch: false,
@@ -360,6 +361,7 @@
                 })
             })
             this.socket.on('give-search-results', (data) => {
+                this.searchLoading = false
                 this.searchResults.tracks = data.tracks.items.map((track) => {
                     return {
                         id: track.id,
@@ -523,6 +525,7 @@
             },
             search() {
                 if (this.searchString !== "") {
+                    this.searchLoading = true
                     this.socket.emit('search', {
                         partyid: this.partyID,
                         searchstring: this.searchString
