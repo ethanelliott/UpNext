@@ -85,7 +85,7 @@
                     navigator.share({
                         title: 'UpNext Party Code',
                         text: 'Join the party!',
-                        url: `https://upnext.ml/#/join?c=${this.code}`,
+                        url: `https://upnext.ml/join?c=${this.code}`,
                     })
                         .then(() => console.log('Successful share'))
                         .catch((error) => console.log('Error sharing', error));
