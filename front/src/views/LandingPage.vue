@@ -1,21 +1,12 @@
 <template>
     <v-app dark>
-        <!--        Coming Soon, dialogs for join/start-->
-        <v-dialog fullscreen hide-overlay transition="scale-transition" v-model="dialog">
+        <v-dialog dark v-model="installDialog" width="500">
             <v-card>
-                <v-toolbar color="#424242" flat>
-                    <v-spacer></v-spacer>
-                    <v-btn @click="closeDialog" dark icon>
-                        <v-icon>close</v-icon>
+                <v-card-actions>
+                    <v-btn @click.prevent="install" color="primary" flat>
+                        INSTALL THE APP
                     </v-btn>
-                </v-toolbar>
-                <v-container fill-height fluid>
-                    <v-layout align-center justify-center>
-                        <v-flex lg8 md10 sm10 xl4 xs12>
-
-                        </v-flex>
-                    </v-layout>
-                </v-container>
+                </v-card-actions>
             </v-card>
         </v-dialog>
         <v-content>
@@ -50,14 +41,33 @@
     export default {
         name: "LandingPage",
         data: () => ({
-            dialog: false
+            installDialog: false,
+            deferredPrompt: null
         }),
         methods: {
-            closeDialog() {
-                this.dialog = false
+            install() {
+                let t = this
+                t.installDialog = false
+                t.deferredPrompt.prompt()
+                t.deferredPrompt.userChoice
+                    .then((choiceResult) => {
+                        if (choiceResult.outcome === 'accepted') {
+                            console.log('User accepted the A2HS prompt');
+                        } else {
+                            console.log('User dismissed the A2HS prompt');
+                        }
+                        t.deferredPrompt = null;
+                    });
             }
         },
+
         mounted() {
+            let t = this
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault()
+                t.deferredPrompt = e
+                t.installDialog = true
+            });
             if (session.getItem('partyID')) {
                 this.$router.push('/m/home')
             }
