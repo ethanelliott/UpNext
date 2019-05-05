@@ -14,17 +14,20 @@ export default new Router({
         {
             path: '/join',
             name: 'join',
+            meta: {transitionName: 'slide'},
             props: (route) => ({code: route.query.c}),
             component: () => import('./views/Join.vue')
         },
         {
             path: '/start',
             name: 'start',
+            meta: {transitionName: 'slide'},
             component: () => import('./views/Start.vue')
         },
         {
             path: '/logout',
             name: 'logout',
+            meta: {transitionName: 'slide'},
             component: () => import('./views/Logout.vue')
         },
         {
