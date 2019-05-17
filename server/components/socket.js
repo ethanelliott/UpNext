@@ -18,7 +18,7 @@ const get = async (url, token) => {
 
 const searchTracks = (partyID, searchTerms, callback) => {
     let party = db.getParty(partyID)
-    get('https://api.spotify.com/v1/search/?q=' + searchTerms + '&type=track%2Cartist%2Cplaylist%2Calbum&market=CA', party.token)
+    get('https://api.spotify.com/v1/search/?q=' + searchTerms + '&type=track%2Cartist%2Cplaylist%2Calbum&market=from_token', party.token)
         .then((data) => {
             callback(data)
         })
