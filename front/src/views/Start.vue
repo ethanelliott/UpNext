@@ -113,9 +113,3 @@
         }
     }
 </script>
-
-<style scoped>
-    .big-text {
-        font-size: 3em;
-    }
-</style>
