@@ -135,6 +135,10 @@ class UpNext {
                                             data: {uris: ["spotify:track:" + song.id]},
                                             headers: {'Authorization': 'Bearer ' + token}
                                         }).then(() => {
+                                            let playlist = party.playlist
+                                            playlist.splice(0, 1)
+                                            playlist.sort(playlistSort)
+                                            db.updateParty(party._id, {playlist: playlist, voteskiplist: []})
                                         }).catch((error) => {
                                             logger.error(error.stack)
                                         })
