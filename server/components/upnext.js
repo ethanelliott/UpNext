@@ -2,6 +2,7 @@
 
 const {logger} = require('./logger')
 const axios = require('axios')
+const Vibrant = require('node-vibrant')
 
 const {playlistSort} = require('./sorts')
 const {client_id, client_secret} = require('./creds')
@@ -105,29 +106,35 @@ class UpNext {
                                     party = db.getParty(party._id)
                                 }
                                 if (party.currenttrack === null) {
-                                    db.updateParty(party._id, {currenttrack: response.data.item.id})
+                                    db.updateParty(party._id, {currenttrack: track.item.id})
                                     party = db.getParty(party._id)
+                                }
+                                if (track.item.id !== party.currenttrack) {
+                                    db.updateParty(party._id, {currenttrack: track.item.id})
+                                    party = db.getParty(party._id)
+                                    Vibrant.from(track.item.album.images[0].url).getPalette().then(function (palette) {
+                                        let backC = '', progC = ''
+                                        if (palette && palette.Vibrant && palette.Muted) {
+                                            progC = palette.Muted.getHex()
+                                            backC = palette.Vibrant.getHex()
+                                        } else {
+                                            progC = 'white'
+                                            backC = 'rgba(0,0,0,0)'
+                                        }
+                                        db.updateParty(party._id, {backgroundcolour: backC, progresscolour: progC})
+                                    })
                                 }
                                 if (track.item.duration_ms - track.progress_ms <= 2000) {
                                     if (party.playlist.length === 0) {
                                         // No Next Song... Just wait
                                     } else {
+                                        const song = party.playlist[0]
                                         axios({
                                             method: 'put',
                                             url: 'https://api.spotify.com/v1/me/player/play',
-                                            data: {
-                                                uris: [
-                                                    "spotify:track:" + party.playlist[0].id
-                                                ]
-                                            },
-                                            headers: {
-                                                'Authorization': 'Bearer ' + token
-                                            }
+                                            data: {uris: ["spotify:track:" + song.id]},
+                                            headers: {'Authorization': 'Bearer ' + token}
                                         }).then(() => {
-                                            let playlist = party.playlist
-                                            playlist.splice(0, 1)
-                                            playlist.sort(playlistSort)
-                                            db.updateParty(party._id, {playlist: playlist, voteskiplist: []})
                                         }).catch((error) => {
                                             logger.error(error.stack)
                                         })

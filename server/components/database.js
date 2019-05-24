@@ -56,6 +56,10 @@ class Database {
     add(thingToAdd) {
         this.database.party.save(thingToAdd)
     }
+
+    deleteParty(partyID) {
+        this.database.party.remove({_id: partyID})
+    }
 }
 
 module.exports = {

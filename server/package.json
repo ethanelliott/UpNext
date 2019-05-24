@@ -15,6 +15,7 @@
     "diskdb": "^0.1.17",
     "express": "^4.16.4",
     "helmet": "^3.15.0",
+    "node-vibrant": "^3.2.0-alpha",
     "socket.io": "^2.2.0",
     "uuid": "^3.3.2",
     "winston": "^3.1.0"

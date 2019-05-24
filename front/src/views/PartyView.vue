@@ -108,10 +108,8 @@
 
 <script>
     import io from 'socket.io-client'
-    import axios from 'axios'
     import session from 'localStorage'
     import Jimp from 'jimp'
-    import * as Vibrant from 'node-vibrant'
 
     export default {
         name: "PartyView",
@@ -153,6 +151,10 @@
             t.socket.on('give-playlist', (data) => {
                 t.queue = data.playlist.slice(0, 5)
             })
+            t.socket.on('got-colours', (colours) => {
+                t.backStyle = "background-image: linear-gradient(" + colours.back + " 10%, rgba(0,0,0,1) 90%);'"
+                t.progressColour = colours.progress
+            })
             t.socket.on('event-loop', (data) => {
                 let d = data.data
                 t.trackPos = (d.progress_ms / d.item.duration_ms) * 100
@@ -164,37 +166,30 @@
                 t.isrc = d.item.external_ids.isrc
                 if (t.previousTrack !== t.trackName) {
                     t.previousTrack = t.trackName
-                    Vibrant.from(t.albumArtwork).getPalette().then(function (palette) {
-                        if (palette && (palette.DarkVibrant || palette.Vibrant)) {
-                            t.backStyle = "background-image: linear-gradient(" + (palette.Vibrant ? palette.Vibrant.getHex() : palette.DarkVibrant.getHex()) + " 10%, rgba(0,0,0,1) 90%);'"
-                            t.progressColour = (palette.Vibrant ? palette.Vibrant.getHex() : palette.DarkVibrant.getHex())
-                        } else {
-                            t.backStyle = "background-image: linear-gradient(rgba(0,0,0,0) 10%, rgba(0,0,0,1) 90%);'"
-                            t.progressColour = 'white'
-                        }
-                        // I just run both promises at the same time, and the one that succeeds gets to change the image
-                        axios.get(`https://musicbrainz.org/ws/2/recording/?fmt=json&limit=10&query=isrc:${t.isrc}`).then(artist_id => {
-                            if (artist_id.data.recordings.length > 0) {
-                                let artistID = artist_id.data.recordings[0]["artist-credit"][0].artist.id
-                                axios.get(`https://webservice.fanart.tv/v3/music/${artistID}?api_key=a71da8227d775ecbfc7e50c9fc87ef37`).then(images => {
-                                    if (images.data.artistbackground) {
-                                        t.loadBackgroundImage(images.data.artistbackground[Math.floor(Math.random() * images.data.artistbackground.length)].url)
-                                    } else {
-                                        axios.get(`https://musicbrainz.org/ws/2/recording/?fmt=json&limit=10&query=${t.artist}`).then(artist_id_name => {
-                                            if (artist_id_name.data.recordings.length > 0) {
-                                                let artistID = artist_id_name.data.recordings[0]["artist-credit"][0].artist.id
-                                                axios.get(`https://webservice.fanart.tv/v3/music/${artistID}?api_key=a71da8227d775ecbfc7e50c9fc87ef37 `).then(images_Artist => {
-                                                    if (images_Artist.data.artistbackground) {
-                                                        t.loadBackgroundImage(images_Artist.data.artistbackground[Math.floor(Math.random() * images_Artist.data.artistbackground.length)].url)
-                                                    }
-                                                })
-                                            }
-                                        })
-                                    }
-                                })
-                            }
-                        })
-                    })
+                    t.socket.emit('get-colours', t.partyID)
+                    // TODO: There has to be a better way to do this on the server
+                    // I just run both promises at the same time, and the one that succeeds gets to change the image
+                    // axios.get(`https://musicbrainz.org/ws/2/recording/?fmt=json&limit=10&query=isrc:${t.isrc}`).then(artist_id => {
+                    //     if (artist_id.data.recordings.length > 0) {
+                    //         let artistID = artist_id.data.recordings[0]["artist-credit"][0].artist.id
+                    //         axios.get(`https://webservice.fanart.tv/v3/music/${artistID}?api_key=a71da8227d775ecbfc7e50c9fc87ef37`).then(images => {
+                    //             if (images.data.artistbackground) {
+                    //                 t.loadBackgroundImage(images.data.artistbackground[Math.floor(Math.random() * images.data.artistbackground.length)].url)
+                    //             } else {
+                    //                 axios.get(`https://musicbrainz.org/ws/2/recording/?fmt=json&limit=10&query=${t.artist}`).then(artist_id_name => {
+                    //                     if (artist_id_name.data.recordings.length > 0) {
+                    //                         let artistID = artist_id_name.data.recordings[0]["artist-credit"][0].artist.id
+                    //                         axios.get(`https://webservice.fanart.tv/v3/music/${artistID}?api_key=a71da8227d775ecbfc7e50c9fc87ef37 `).then(images_Artist => {
+                    //                             if (images_Artist.data.artistbackground) {
+                    //                                 t.loadBackgroundImage(images_Artist.data.artistbackground[Math.floor(Math.random() * images_Artist.data.artistbackground.length)].url)
+                    //                             }
+                    //                         })
+                    //                     }
+                    //                 })
+                    //             }
+                    //         })
+                    //     }
+                    // })
                 }
                 if (t.albumArtwork !== null) {
                     t.loading = false

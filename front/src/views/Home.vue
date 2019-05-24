@@ -59,7 +59,6 @@
 <script>
     import io from 'socket.io-client'
     import session from 'localStorage'
-    import * as Vibrant from 'node-vibrant'
 
     export default {
         name: "Home",
@@ -105,30 +104,26 @@
                     t.trackArtist = d.item.artists.map(e => e.name).reduce((a, b) => `${a}${b}, `, ``).slice(0, -2)
                     if (t.previousTrack !== t.trackName) {
                         t.previousTrack = t.trackName
-                        Vibrant.from(t.albumArtwork).getPalette().then(function (palette) {
-                            if (palette && palette.DarkVibrant) {
-                                t.progressColour = palette.Muted.getHex()
-                                t.progressColourBackground = palette.DarkVibrant.getHex()
-                            } else {
-                                t.progressColour = 'white'
-                                t.progressColourBackground = 'rgba(0,0,0,0)'
-                            }
-                            t.backgroundColourString = 'background-image: linear-gradient(' + t.progressColourBackground + ' 10%, rgba(0,0,0,1) 90%);'
-                        })
+                        t.socket.emit('get-colours', t.partyID)
                     }
                     if (this.trackName !== null) {
                         this.loading = false
                     }
                 }
             })
-            this.socket.on('vote-voted', (data) => {
+            t.socket.on('got-colours', (colours) => {
+                t.progressColour = colours.progress
+                t.progressColourBackground = colours.back
+                t.backgroundColourString = 'background-image: linear-gradient(' + t.progressColourBackground + ' 10%, rgba(0,0,0,1) 90%);'
+            })
+            t.socket.on('vote-voted', (data) => {
                 if (data.success) {
-                    this.snackbarMessage = 'Skip vote has been added'
+                    t.snackbarMessage = 'Skip vote has been added'
                 } else {
-                    this.snackbarMessage = 'You have already voted!'
+                    t.snackbarMessage = 'You have already voted!'
                 }
-                this.voteSkipDialog = false
-                this.snackbar = true
+                t.voteSkipDialog = false
+                t.snackbar = true
             })
         },
         methods: {

@@ -39,6 +39,9 @@ const app_post_newParty = (req, res) => {
     db.add({
         name: pd.name,
         code: partyCode,
+        start: (new Date()).toISOString(),
+        backgroundcolour: 'rgba(0,0,0,0)',
+        progresscolour: 'primary',
         adminpassword: pd.password,
         token: null,
         refreshtoken: null,

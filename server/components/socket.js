@@ -1,6 +1,7 @@
 "use strict"
 const {logger} = require('./logger')
 const axios = require('axios')
+const Vibrant = require('node-vibrant')
 const {playlistSort, userSort} = require('./sorts')
 
 const upnext = require('./upnext').UpNext.getInstance()
@@ -328,8 +329,40 @@ const downvoteSong = (partyID, songID, userID) => {
     db.updateParty(partyID, {playlist: playlist, users: users})
 }
 
+const fixChromeCastBug = (partyID) => {
+    let party = db.getParty(partyID)
+    playSong(partyID, party.currenttrack, () => {
+
+    })
+}
+
+const getColours = (partyID) => {
+    let party = db.getParty(partyID)
+    return {
+        progress: party.backgroundcolour,
+        back: party.progresscolour
+    }
+}
+
+const getAdminData = () => {
+    const allParties = db.getAllParties()
+    return allParties.map(e => ({
+        id: e._id,
+        name: e.name,
+        code: e.code,
+        queue: e.playlist.length,
+        user: e.users.length,
+        skip: e.voteskiplist.length,
+        start: e.start
+    }))
+}
+
 const getParties = () => {
     return db.getAllParties()
+}
+
+const deleteParty = (partyID) => {
+    return db.deleteParty(partyID)
 }
 
 const getPartyData = (partyID) => {
@@ -342,6 +375,9 @@ const socket_connection_callback = (client) => {
         // Forced garbage collection
         clearInterval(client.eventLoop)
     })
+    client.on('get-admin-data', () => {
+        client.emit('got-admin-data', {data: getAdminData()})
+    })
     client.on('start-player-loop', (data) => {
         client.eventLoop = setInterval(function () {
             let j
@@ -352,6 +388,15 @@ const socket_connection_callback = (client) => {
             }
             client.emit('event-loop', upnext.currentPartyEventLoopData[j])
         }, 1000)
+    })
+    client.on('admin-fix-cast', (partyID) => {
+        fixChromeCastBug(partyID)
+    })
+    client.on('admin-delete-party', (partyID) => {
+        deleteParty(partyID)
+    })
+    client.on('get-colours', (partyID) => {
+        client.emit('got-colours', getColours(partyID))
     })
     client.on('toggle-playback', (data) => {
         togglePlayback(data.id, data.playback)

@@ -19,6 +19,38 @@ export default new Router({
             component: () => import('./views/Join.vue')
         },
         {
+            path: '/a',
+            name: 'a',
+            meta: {transitionName: 'slide'},
+            components: {
+                default: () => import('./views/Admin.vue'),
+                content: () => import('./views/Admin/Home.vue')
+            },
+            redirect: '/a/login',
+            children: [
+                {
+                    path: 'home',
+                    name: 'aHome',
+                    meta: {transitionName: 'slide'},
+                    props: {default: false, content: true},
+                    components: {
+                        default: () => import('./views/Admin.vue'),
+                        content: () => import('./views/Admin/Home.vue')
+                    }
+                },
+                {
+                    path: 'login',
+                    name: 'aLogin',
+                    meta: {transitionName: 'slide'},
+                    props: {default: false, content: true},
+                    components: {
+                        default: () => import('./views/Admin.vue'),
+                        content: () => import('./views/Admin/Login.vue')
+                    }
+                }
+            ]
+        },
+        {
             path: '/start',
             name: 'start',
             meta: {transitionName: 'slide'},
@@ -42,7 +74,7 @@ export default new Router({
             children: [
                 {
                     path: 'home',
-                    name: 'Home',
+                    name: 'mHome',
                     meta: {transitionName: 'slide'},
                     props: {default: false, content: true},
                     components: {
@@ -52,7 +84,7 @@ export default new Router({
                 },
                 {
                     path: 'home/queue',
-                    name: 'Home',
+                    name: 'mQueue',
                     meta: {transitionName: 'slide'},
                     props: {default: false, content: true},
                     components: {
@@ -62,7 +94,7 @@ export default new Router({
                 },
                 {
                     path: 'home/queue/search',
-                    name: 'Home',
+                    name: 'mSearch',
                     meta: {transitionName: 'slide'},
                     props: {default: false, content: true},
                     components: {

@@ -84,6 +84,7 @@
             },
             checkFormValid() {
                 this.isFormValid = this.$refs.form.validate()
+                this.partyCode = this.partyCode.toUpperCase()
             },
             validateCode(event) {
                 event.preventDefault()
