@@ -33,8 +33,7 @@ try {
     logger.info("Socketio setup complete")
 
     logger.info("Start Event Loop...")
-    upnext.startGlobalEventLoop()
-    logger.info(`Number of Parties: ${upnext.currentPartyEventLoop.length}`)
+    upnext.startPartyEventLoop()
     logger.info("Event Loop started")
 
     logger.info(`Listening on port ${PORT}`)

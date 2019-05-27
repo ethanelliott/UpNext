@@ -1,4 +1,5 @@
 "use strict"
+const {PROD} = require('../creds')
 const winston = require('winston')
 const {createLogger, format, transports} = winston
 const {combine, timestamp, printf, colorize} = format
@@ -22,6 +23,7 @@ const fileLogFormat = () => {
 }
 
 const logger = createLogger({
+    level: (PROD ? 'info' : 'debug'),
     levels: {
         emerg: 0,
         alert: 1,

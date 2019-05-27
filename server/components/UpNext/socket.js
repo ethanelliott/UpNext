@@ -1,7 +1,6 @@
 "use strict"
 const {logger} = require('../general/logger')
 const axios = require('axios/index')
-const Vibrant = require('node-vibrant')
 const {playlistSort, userSort} = require('./sorts')
 
 const upnext = require('./upnext').UpNext.getInstance()
