@@ -2,7 +2,7 @@
 const PORT = 8888
 
 // libs
-const {logger} = require('./components/logger')
+const {logger} = require('./components/general/logger')
 const express = require('express')
 const bodyParser = require('body-parser')
 const helmet = require('helmet')
@@ -12,9 +12,9 @@ const http = require('http').Server(app)
 const io = require('socket.io')(http)
 
 const index = require('./routes/index')
-const upnext = require('./components/upnext').UpNext.getInstance()
-const {cors} = require('./components/cors')
-const {socket_connection_callback} = require('./components/socket')
+const upnext = require('./components/UpNext/upnext').UpNext.getInstance()
+const {cors} = require('./components/general/cors')
+const {socket_connection_callback} = require('./components/UpNext/socket')
 
 try {
     const profiler = logger.startTimer()

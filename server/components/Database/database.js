@@ -1,12 +1,14 @@
 "use strict"
 
-const {logger} = require('./logger')
+const {logger} = require('../general/logger')
 const path = require("path")
 const homedir = require('os').homedir()
 const fs = require('fs')
 const storeDir = path.join(homedir, 'upnext')
 const dbDir = path.join(homedir, 'upnext', 'db')
 const db = require('diskdb')
+
+let _instance = null
 
 class Database {
     constructor() {
@@ -27,10 +29,10 @@ class Database {
     }
 
     static getInstance() {
-        if (!!!this.instance) {
-            this.instance = new Database()
+        if (!!!_instance) {
+            _instance = new Database()
         }
-        return this.instance
+        return _instance
     }
 
     find(jsonFind) {

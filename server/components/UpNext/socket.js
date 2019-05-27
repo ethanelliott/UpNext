@@ -1,11 +1,11 @@
 "use strict"
-const {logger} = require('./logger')
-const axios = require('axios')
+const {logger} = require('../general/logger')
+const axios = require('axios/index')
 const Vibrant = require('node-vibrant')
 const {playlistSort, userSort} = require('./sorts')
 
 const upnext = require('./upnext').UpNext.getInstance()
-const db = require('./database').Database.getInstance()
+const db = require('../Database/database').Database.getInstance()
 
 const get = async (url, token) => {
     return await axios({

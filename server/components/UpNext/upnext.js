@@ -1,13 +1,13 @@
 "use strict"
 
-const {logger} = require('./logger')
-const axios = require('axios')
+const {logger} = require('../general/logger')
+const axios = require('axios/index')
 const Vibrant = require('node-vibrant')
 
 const {playlistSort} = require('./sorts')
-const {client_id, client_secret} = require('./creds')
+const {client_id, client_secret} = require('../creds')
 
-const db = require('./database').Database.getInstance()
+const db = require('../Database/database').Database.getInstance()
 
 const checkForValidToken = (partyID, expiresAt, refreshToken, callback) => {
     let now = (new Date()).valueOf()
@@ -40,6 +40,8 @@ const checkForValidToken = (partyID, expiresAt, refreshToken, callback) => {
     }
 }
 
+let _instance = null
+
 class UpNext {
     constructor() {
         this._currentPartyEventLoop = []
@@ -63,10 +65,10 @@ class UpNext {
     }
 
     static getInstance() {
-        if (!!!this.instance) {
-            this.instance = new UpNext()
+        if (!!!_instance) {
+            _instance = new UpNext()
         }
-        return this.instance
+        return _instance
     }
 
     //TODO: Figure out how to kill a dead party

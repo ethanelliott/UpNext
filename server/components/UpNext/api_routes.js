@@ -1,13 +1,13 @@
 "use strict"
 
-const {logger} = require('./logger')
+const {logger} = require('../general/logger')
 const axios = require('axios')
 const uuid = require('uuid/v4')
 
-const {client_id, client_secret, base_uri_api, base_uri_main} = require('./creds')
+const {client_id, client_secret, base_uri_api, base_uri_main} = require('../creds')
 
 const upnext = require('./upnext').UpNext.getInstance()
-const db = require('./database').Database.getInstance()
+const db = require('../Database/database').Database.getInstance()
 
 function generateCode() {
     let ALL = "abcdefghijklmnpqrstuvwxyz1234567890".toUpperCase();
@@ -99,15 +99,6 @@ const app_post_leaveParty = (req, res) => {
     return res.json({valid: false})
 }
 
-const app_post_adminLogin = (req, res) => {
-    let pd = req.body
-    if (pd.password === "35da0078d3198d3b774b87c9a28b99b76c4f59ff9a5dc400f1aa9cdcd24d2291913c308532926088292e436779b0583c6cd39011b26d307df2ca2f884856c38f") {
-        return res.json({valid: true})
-    } else {
-        return res.json({valid: false})
-    }
-}
-
 const app_post_authAdminCode = (req, res) => {
     let pd = req.body
     let lookupRes = db.find({code: pd.partyCode})
@@ -132,15 +123,6 @@ const app_post_authAdminCode = (req, res) => {
                 name: null
             })
         }
-    }
-}
-
-const app_post_adminSudoLogin = (req, res) => {
-    let p = req.body.sudopass || null
-    if (p === "35da0078d3198d3b774b87c9a28b99b76c4f59ff9a5dc400f1aa9cdcd24d2291913c308532926088292e436779b0583c6cd39011b26d307df2ca2f884856c38f") {
-        return res.json({valid: true})
-    } else {
-        return res.json({valid: false})
     }
 }
 
@@ -220,7 +202,5 @@ module.exports = {
     app_post_authAdminCode,
     app_post_leaveParty,
     app_post_authCode,
-    app_post_newParty,
-    app_post_adminLogin,
-    app_post_adminSudoLogin
+    app_post_newParty
 }
