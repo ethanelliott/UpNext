@@ -204,7 +204,7 @@ class SPOTIFY_API {
         })
     }
 
-    getPLaylistTracks(token, playlistID) {
+    getPlaylistTracks(token, playlistID) {
         return new Promise((resolve, reject) => {
             let track_array = []
             this.recursiveGetItems(
