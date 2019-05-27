@@ -180,7 +180,7 @@ const app_post_authCallback = (req, res) => {
                                 userid: userID,
                                 playlistid: playlistID
                             })
-                            upnext.startGlobalEventLoop()
+                            upnext.startPartyEventLoop()
                             return res.redirect(base_uri_main + '/m')
                         }).catch((error) => {
                             logger.error(error.stack)

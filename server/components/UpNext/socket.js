@@ -1,5 +1,5 @@
-"use strict"
-const {logger} = require('../general/logger')
+'use strict'
+
 const upnext = require('./upnext').UpNext.getInstance()
 
 const socket_connection_callback = (client) => {
@@ -11,7 +11,6 @@ const socket_connection_callback = (client) => {
     client.on('get-admin-data', () => {
         client.emit('got-admin-data', {data: upnext.getAdminData()})
     })
-    // TODO: This needs work
     client.on('start-player-loop', (data) => {
         client.eventLoop = setInterval(function () {
             let j

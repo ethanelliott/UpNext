@@ -6,6 +6,7 @@ const API_URLS = {
     'get_auth_token': () => `https://accounts.spotify.com/api/token`,
     'renew_auth_token': () => `https://accounts.spotify.com/api/token`,
     'get_user_data_me': () => `https://api.spotify.com/v1/me`,
+    'get_player_data': () => `https://api.spotify.com/v1/me/player`,
     'search': (searchTerms) => `https://api.spotify.com/v1/search/?q=${encodeURI(searchTerms)}&type=track%2Cartist%2Cplaylist%2Calbum&market=from_token`,
     'get_track': (trackID) => `https://api.spotify.com/v1/tracks/${trackID}`,
     'get_album': (albumID) => `https://api.spotify.com/v1/albums/${albumID}`,
@@ -115,6 +116,20 @@ class SPOTIFY_API {
             })
         })
 
+    }
+
+    getPlayerData(token) {
+        return new Promise((resolve, reject) => {
+            get(
+                API_URLS.get_player_data(),
+                SPOTIFY_API.getHeader(token)
+            ).then((response) => {
+                resolve(response.data)
+            }).catch((error) => {
+                logger.error(error)
+                reject(error)
+            })
+        })
     }
 
     search(token, searchTerms) {

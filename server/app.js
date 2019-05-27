@@ -18,7 +18,7 @@ const {socket_connection_callback} = require('./components/UpNext/socket')
 
 try {
     const profiler = logger.startTimer()
-    logger.info("Setup Server...")
+    logger.info("[SERVER] Setup Server...")
     app.use(cors())
     app.use(new DDoS({maxWeight: 5, errorData: {"response": 429, "message": "slow down"}}).express())
     app.use(helmet())
@@ -26,20 +26,18 @@ try {
     app.use(bodyParser.urlencoded({limit: '512mb', extended: true}))
     app.use('/', index)
     app.set('port', PORT)
-    logger.info("Server setup complete!")
+    logger.info("[SERVER] Server setup complete!")
 
-    logger.info("Setup SocketIO...")
+    logger.info("[SOCKET] Setup SocketIO...")
     io.on('connection', socket_connection_callback)
-    logger.info("Socketio setup complete")
+    logger.info("[SOCKET] Socketio setup complete")
 
-    logger.info("Start Event Loop...")
     upnext.startPartyEventLoop()
-    logger.info("Event Loop started")
 
-    logger.info(`Listening on port ${PORT}`)
+    logger.info(`[SERVER] Listening on port ${PORT}`)
     http.listen(PORT)
-    logger.info(`Server setup complete`)
-    profiler.done({message: `Startup`})
+    logger.info(`[SERVER] Server setup complete`)
+    profiler.done({message: `[SERVER] Startup`})
 } catch (e) {
     logger.error(e.stack)
 }
