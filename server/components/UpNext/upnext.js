@@ -58,7 +58,6 @@ class UpNext {
                                     }
                                     if (track.item.duration_ms - track.progress_ms <= 2000) {
                                         if (party.playlist.length === 0) {
-                                            // TODO: Something when the playlist is empty
                                             ref.getRecommendations(party._id, ref.getHistory(party._id)).then(res => {
                                                 ref.playSong(party._id, res.tracks[0].id)
                                                 ref.addSongToArchive(party._id, res.tracks[0].id)
