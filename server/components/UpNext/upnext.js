@@ -8,7 +8,6 @@ const Spotify = require('../Spotify/spotifyAPI').SPOTIFY_API.getInstance()
 const db = require('../Database/database').Database.getInstance()
 
 let _instance = null
-
 class UpNext {
     constructor() {
         this.currentPartyEventLoop = []
@@ -41,45 +40,51 @@ class UpNext {
                     id: allParties[i]._id,
                     eventLoop: setInterval(function () {
                         let party = db.getParty(allParties[i]._id)
-                        ref.checkForValidToken(party._id, party.expiresat, party.refreshtoken, () => {
-                            ref.getPlayerData(party._id).then((response) => {
-                                let track = response
-                                if (track.item === undefined) {
-                                    return;
-                                }
-                                if (party.playstate !== track.is_playing) {
-                                    db.updateParty(party._id, {playstate: track.is_playing})
-                                    party = db.getParty(party._id)
-                                }
-                                if (track.item.id !== party.currenttrack || party.currenttrack === null) {
-                                    db.updateParty(party._id, {currenttrack: track.item.id})
-                                    party = db.getParty(party._id)
-                                    ref.calculateColours(party._id, track.item.album.images[0].url)
-                                }
-                                if (track.item.duration_ms - track.progress_ms <= 2000) {
-                                    if (party.playlist.length === 0) {
-                                        // TODO: Something when the playlist is empty
-                                    } else {
-                                        ref.nextSong(party._id)
+                        if (party) {
+                            ref.checkForValidToken(party._id, party.expiresat, party.refreshtoken, () => {
+                                ref.getPlayerData(party._id).then((response) => {
+                                    let track = response
+                                    if (track.item === undefined) {
+                                        return;
                                     }
-                                }
-                                let thisEventLoopDataID = null
-                                for (let k = 0; k < ref.currentPartyEventLoopData.length; k++) {
-                                    if (ref.currentPartyEventLoopData[k].id === party._id) {
-                                        thisEventLoopDataID = k
+                                    if (party.playstate !== track.is_playing) {
+                                        db.updateParty(party._id, {playstate: track.is_playing})
+                                        party = db.getParty(party._id)
                                     }
-                                }
-                                if (thisEventLoopDataID !== null) {
-                                    ref.currentPartyEventLoopData.splice(thisEventLoopDataID, 1)
-                                }
-                                ref.currentPartyEventLoopData.push({
-                                    id: party._id,
-                                    data: response
+                                    if (track.item.id !== party.currenttrack || party.currenttrack === null) {
+                                        db.updateParty(party._id, {currenttrack: track.item.id})
+                                        party = db.getParty(party._id)
+                                        ref.calculateColours(party._id, track.item.album.images[0].url)
+                                    }
+                                    if (track.item.duration_ms - track.progress_ms <= 2000) {
+                                        if (party.playlist.length === 0) {
+                                            // TODO: Something when the playlist is empty
+                                            ref.getRecommendations(party._id, ref.getHistory(party._id)).then(res => {
+                                                ref.playSong(party._id, res.tracks[0].id)
+                                                ref.addSongToArchive(party._id, res.tracks[0].id)
+                                            })
+                                        } else {
+                                            ref.nextSong(party._id)
+                                        }
+                                    }
+                                    let thisEventLoopDataID = null
+                                    for (let k = 0; k < ref.currentPartyEventLoopData.length; k++) {
+                                        if (ref.currentPartyEventLoopData[k].id === party._id) {
+                                            thisEventLoopDataID = k
+                                        }
+                                    }
+                                    if (thisEventLoopDataID !== null) {
+                                        ref.currentPartyEventLoopData.splice(thisEventLoopDataID, 1)
+                                    }
+                                    ref.currentPartyEventLoopData.push({
+                                        id: party._id,
+                                        data: response
+                                    })
+                                }).catch((error) => {
+                                    logger.error(error.stack)
                                 })
-                            }).catch((error) => {
-                                logger.error(error.stack)
                             })
-                        })
+                        }
                     }, 1000)
                 })
             }
@@ -160,6 +165,9 @@ class UpNext {
     addSongToArchive(partyID, songID) {
         logger.debug(`[UPNEXT] Add Song To Playlist`)
         const party = db.getParty(partyID)
+        let history = party.history
+        history.push(songID)
+        db.updateParty(partyID, {history: history})
         return Spotify.addTrackToPlaylist(party.token, party.playlistid, songID)
     }
 
@@ -177,6 +185,7 @@ class UpNext {
             playlist.splice(0, 1)
             playlist.sort(playlistSort)
             db.updateParty(partyID, {playlist: playlist})
+            this.addSongToArchive(partyID, party.playlist[0].id)
             this.playSong(partyID, party.playlist[0].id).then(() => {
             })
         }
@@ -199,6 +208,15 @@ class UpNext {
             id: partyID,
             playlist: this.sortPlaylistFromPartyID(partyID)
         }
+    }
+
+    getHistory(partyID) {
+        logger.debug(`[UPNEXT] Get History`)
+        const party = db.getParty(partyID)
+        if (party) {
+            return JSON.parse(JSON.stringify(party.history))
+        }
+        return []
     }
 
     getLeaderboard(partyID) {
@@ -273,9 +291,9 @@ class UpNext {
                         }
                     }
                     if (!dupeCheck) {
-                        this.addSongToArchive(partyID, track.id)
                         if (playlist.length === 0 && !party.playstate) {
                             this.playSong(partyID, track.id)
+                            this.addSongToArchive(partyID, track.id)
                         } else {
                             playlist.push(trackObject)
                             playlist.sort(playlistSort)
@@ -288,6 +306,15 @@ class UpNext {
                         reject()
                     }
                 })
+        })
+    }
+
+    removeSongFromPlaylist(partyID, userID, songID) {
+        logger.debug(`[UPNEXT] Remove Song From Queue`)
+        return new Promise((resolve, reject) => {
+            const party = db.getParty(partyID)
+            let playlist = party.playlist.filter(e => e.id !== songID)
+            db.updateParty(partyID, {playlist: playlist})
         })
     }
 
@@ -409,6 +436,12 @@ class UpNext {
     getPartyData(partyID) {
         logger.debug(`[UPNEXT] Get Party Data`)
         return db.getParty(partyID)
+    }
+
+    getRecommendations(partyID, seedTracks) {
+        logger.debug(`[UPNEXT] Get Recommendations`)
+        const party = db.getParty(partyID)
+        return Spotify.getRecommendations(party.token, seedTracks)
     }
 }
 

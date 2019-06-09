@@ -63,6 +63,11 @@ const socket_connection_callback = (client) => {
             client.emit('track-added-duplicate')
         })
     })
+    client.on('playlist-undo-add-song', (data) => {
+        upnext.removeSongFromPlaylist(data.partyid, data.uuid, data.track.id).then(() => {
+            client.emit('track-undo-add-success')
+        })
+    })
     client.on('playlist-upvote-song', (data) => {
         upnext.upvoteSong(data.partyid, data.track, data.uuid)
     })
@@ -72,6 +77,12 @@ const socket_connection_callback = (client) => {
     client.on('get-album-data', (data) => {
         upnext.getAlbumData(data.partyid, data.album).then((response) => {
             client.emit('got-album-data', response)
+        })
+    })
+    client.on('get-recommendations', (data) => {
+        //Get Seed tracks
+        upnext.getRecommendations(data.partyid, upnext.getHistory(data.partyid)).then((response) => {
+            client.emit('got-recommendations', response)
         })
     })
     client.on('get-artist-data', (data) => {

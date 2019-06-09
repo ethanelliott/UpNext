@@ -3,6 +3,7 @@
 const {logger} = require('../general/logger')
 const axios = require('axios')
 const uuid = require('uuid/v4')
+const {Party} = require('../Party/party')
 
 const {client_id, client_secret, base_uri_api, base_uri_main} = require('../creds')
 
@@ -36,24 +37,9 @@ const app_post_newParty = (req, res) => {
     do {
         partyCode = generateCode()
     } while (db.find({code: partyCode}).length !== 0)
-    db.add({
-        name: pd.name,
-        code: partyCode,
-        start: (new Date()).toISOString(),
-        backgroundcolour: 'rgba(0,0,0,0)',
-        progresscolour: 'primary',
-        adminpassword: pd.password,
-        token: null,
-        refreshtoken: null,
-        expiresat: null,
-        userid: null,
-        playlistid: null,
-        playlist: [],
-        currenttrack: null,
-        playstate: false,
-        users: [],
-        voteskiplist: []
-    })
+    let p = new Party(partyCode, pd.name, pd.password)
+    console.log(p)
+    db.add(p)
     let party = db.find({code: partyCode})[0]
     return res.json({
         id: party._id,
@@ -61,6 +47,15 @@ const app_post_newParty = (req, res) => {
         name: pd.name,
         uuid: addNewUser(party._id, "admin")
     })
+}
+
+const app_get_testCode = (req, res) => {
+    const partyID = req.params.id
+    if (db.find({_id: partyID}).length > 0) {
+        res.json({valid: true})
+    } else {
+        res.json({valid: false})
+    }
 }
 
 const app_post_authCode = (req, res) => {
@@ -126,7 +121,7 @@ const app_post_authAdminCode = (req, res) => {
     }
 }
 
-const app_post_authCallback = (req, res) => {
+const app_get_authCallback = (req, res) => {
     let code = req.query.code || null
     let id = req.query.state || null
     let lookupRes = db.getParty(id)
@@ -198,9 +193,10 @@ const app_post_authCallback = (req, res) => {
 }
 
 module.exports = {
-    app_post_authCallback,
+    app_get_authCallback,
     app_post_authAdminCode,
     app_post_leaveParty,
     app_post_authCode,
-    app_post_newParty
+    app_post_newParty,
+    app_get_testCode
 }

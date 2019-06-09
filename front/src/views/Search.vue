@@ -181,12 +181,37 @@
             </template>
         </v-toolbar>
         <v-flex align-center height="100%" justify-center v-if="searchString.length <= 0">
-            <p class="my-5">&nbsp;</p>
-            <v-flex class="text-xs-center">
-                <v-icon color="primary" size="120">music_note</v-icon>
-                <p class="pt-5 title">Search!</p>
-                <p class="pt-2 subheading">search for some tunes</p>
+            <v-flex class="pt-5 text-xs-center">
+                <span class="title">Recommendations</span>
+                <v-btn @click="refreshRecommendations" fab flat>
+                    <v-icon>refresh</v-icon>
+                </v-btn>
             </v-flex>
+            <v-card flat>
+                <v-list class="" two-line>
+                    <template v-for="(track, index) in recommendations">
+                        <v-list-tile :key="track.id" avatar>
+                            <v-list-tile-avatar tile>
+                                <img :src="track.artwork">
+                            </v-list-tile-avatar>
+                            <v-list-tile-content>
+                                <v-list-tile-title>{{ track.name }}</v-list-tile-title>
+                                <v-list-tile-sub-title class="text--primary">{{ track.artist }}
+                                </v-list-tile-sub-title>
+                            </v-list-tile-content>
+                            <v-list-tile-action>
+                                <v-btn @click="addSongToPlaylist(track)" color="primary" flat icon>
+                                    <v-icon large>add</v-icon>
+                                </v-btn>
+                            </v-list-tile-action>
+                        </v-list-tile>
+                        <v-divider
+                                :key="index"
+                                v-if="index + 1 < searchResults.tracks.length"
+                        ></v-divider>
+                    </template>
+                </v-list>
+            </v-card>
         </v-flex>
         <v-flex offset-sm3 sm6 v-else xs12>
             <p class="my-3">&nbsp;</p>
@@ -292,6 +317,12 @@
                 Close
             </v-btn>
         </v-snackbar>
+        <v-snackbar :timeout="5000" bottom color="secondary" v-model="addSongSnackbar">
+            {{ addSongSnackbarMessage }}
+            <v-btn @click="undoSongAdd" color="primary" dark flat>
+                Undo
+            </v-btn>
+        </v-snackbar>
     </v-container>
 </template>
 
@@ -310,7 +341,7 @@
     }
 
     export default {
-        name: "Home",
+        name: "Search",
         data: () => ({
             socket: null,
             loading: true,
@@ -318,6 +349,9 @@
             defaultAlbumArtwork: "https://discussions.apple.com/content/attachment/881765040",
             snackbar: null,
             snackbarMessage: 'Hello',
+            undoSongTempHistory: null,
+            addSongSnackbar: null,
+            addSongSnackbarMessage: '',
             searchDialog: false,
             searchResults: {
                 tracks: [],
@@ -336,7 +370,8 @@
             artistSearchDialogData: {},
             playlistDialog: false,
             playlistDialogData: {},
-            loadingOverlay: false
+            loadingOverlay: false,
+            recommendations: []
         }),
         beforeDestroy() {
             this.socket.disconnect()
@@ -354,9 +389,13 @@
         mounted() {
             window.scrollTo(0, 0)
             let t = this
+            t.undoSongTempHistory = null
             t.partyID = session.getItem('partyID')
             t.socket = io(t.$socketPath)
             t.socket.on('connect', () => {
+                t.socket.emit('get-recommendations', {
+                    partyid: t.partyID,
+                })
                 t.socket.on('disconnect', () => {
                 })
             })
@@ -398,9 +437,23 @@
                     }
                 })
             })
+            this.socket.on('got-recommendations', (data) => {
+                this.recommendations = data.tracks.map((track) => {
+                    return {
+                        id: track.id,
+                        name: track.name,
+                        artwork: track.album.images.find((element) => {
+                            return element.height <= 64
+                        }).url,
+                        artist: track.artists.map(e => e.name).reduce((a, b) => {
+                            return `${a}${b}, `
+                        }, ``).slice(0, -2)
+                    }
+                })
+            })
             this.socket.on('track-added-success', () => {
-                this.snackbarMessage = 'Song added to Queue!'
-                this.snackbar = true
+                this.addSongSnackbarMessage = 'Song added to Queue!'
+                this.addSongSnackbar = true
             })
             this.socket.on('track-added-duplicate', () => {
                 this.snackbarMessage = 'Song already in Queue!'
@@ -576,12 +629,27 @@
                 this.playlistDialogData = {}
             },
             addSongToPlaylist(track) {
+                this.undoSongTempHistory = track
                 this.socket.emit('playlist-add-song', {
                     partyid: this.partyID,
                     uuid: session.getItem('uuid'),
                     track: track
                 })
             },
+            undoSongAdd() {
+                this.socket.emit('playlist-undo-add-song', {
+                    partyid: this.partyID,
+                    uuid: session.getItem('uuid'),
+                    track: this.undoSongTempHistory
+                })
+                this.undoSongTempHistory = null
+                this.addSongSnackbar = false
+            },
+            refreshRecommendations() {
+                this.socket.emit('get-recommendations', {
+                    partyid: this.partyID,
+                })
+            }
         }
     }
 </script>

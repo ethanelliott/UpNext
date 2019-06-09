@@ -19,6 +19,7 @@ const API_URLS = {
     'add_track_playlist': (playlistID) => `https://api.spotify.com/v1/playlists/${playlistID}/tracks`,
     'player_play': () => `https://api.spotify.com/v1/me/player/play`,
     'player_pause': () => `https://api.spotify.com/v1/me/player/pause`,
+    'get_recommendations': (seedTracks) => `https://api.spotify.com/v1/recommendations?market=from_token&seed_tracks=${encodeURI(seedTracks)}&limit=5&min_popularity=50`
 }
 
 let _instance = null
@@ -330,17 +331,24 @@ class SPOTIFY_API {
             })
         })
     }
+
+    getRecommendations(token, seedTracks) {
+        let seedTracksString = seedTracks.slice(Math.max(seedTracks.length - 5, 1)).join(`,`)
+        console.log(seedTracksString)
+        return new Promise((resolve, reject) => {
+            get(
+                API_URLS.get_recommendations(seedTracksString),
+                SPOTIFY_API.getHeader(token)
+            ).then((response) => {
+                resolve(response.data)
+            }).catch((error) => {
+                logger.error(error)
+                reject(error)
+            })
+        })
+    }
 }
 
 module.exports = {
     SPOTIFY_API
 }
-
-
-// get(
-//
-// ).then((response) => {
-//
-// }).catch((error) => {
-//     logger.error(error)
-// })
