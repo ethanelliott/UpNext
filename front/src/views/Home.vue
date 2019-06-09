@@ -59,6 +59,7 @@
 <script>
     import io from 'socket.io-client'
     import session from 'localStorage'
+    import axios from 'axios'
 
     export default {
         name: "Home",
@@ -88,6 +89,14 @@
             window.scrollTo(0, 0)
             let t = this
             t.partyID = session.getItem('partyID')
+            console.log(t.partyID)
+            axios.get(`/party/test/${t.partyID}`).then((response) => {
+                console.log('HELLO', response.data)
+                if (response.data.valid === false) {
+                    t.$router.push(`/logout`)
+                }
+            }).catch(error => {
+            })
             t.socket = io(t.$socketPath)
             t.socket.on('connect', () => {
                 t.socket.on('disconnect', () => {

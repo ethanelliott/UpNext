@@ -1,13 +1,14 @@
 "use strict"
 
-const {logger} = require('./logger')
+const {logger} = require('../general/logger')
 const axios = require('axios')
 const uuid = require('uuid/v4')
+const {Party} = require('../Party/party')
 
-const {client_id, client_secret, base_uri_api, base_uri_main} = require('./creds')
+const {client_id, client_secret, base_uri_api, base_uri_main} = require('../creds')
 
 const upnext = require('./upnext').UpNext.getInstance()
-const db = require('./database').Database.getInstance()
+const db = require('../Database/database').Database.getInstance()
 
 function generateCode() {
     let ALL = "abcdefghijklmnpqrstuvwxyz1234567890".toUpperCase();
@@ -36,24 +37,9 @@ const app_post_newParty = (req, res) => {
     do {
         partyCode = generateCode()
     } while (db.find({code: partyCode}).length !== 0)
-    db.add({
-        name: pd.name,
-        code: partyCode,
-        start: (new Date()).toISOString(),
-        backgroundcolour: 'rgba(0,0,0,0)',
-        progresscolour: 'primary',
-        adminpassword: pd.password,
-        token: null,
-        refreshtoken: null,
-        expiresat: null,
-        userid: null,
-        playlistid: null,
-        playlist: [],
-        currenttrack: null,
-        playstate: false,
-        users: [],
-        voteskiplist: []
-    })
+    let p = new Party(partyCode, pd.name, pd.password)
+    console.log(p)
+    db.add(p)
     let party = db.find({code: partyCode})[0]
     return res.json({
         id: party._id,
@@ -61,6 +47,15 @@ const app_post_newParty = (req, res) => {
         name: pd.name,
         uuid: addNewUser(party._id, "admin")
     })
+}
+
+const app_get_testCode = (req, res) => {
+    const partyID = req.params.id
+    if (db.find({_id: partyID}).length > 0) {
+        res.json({valid: true})
+    } else {
+        res.json({valid: false})
+    }
 }
 
 const app_post_authCode = (req, res) => {
@@ -99,15 +94,6 @@ const app_post_leaveParty = (req, res) => {
     return res.json({valid: false})
 }
 
-const app_post_adminLogin = (req, res) => {
-    let pd = req.body
-    if (pd.password === "35da0078d3198d3b774b87c9a28b99b76c4f59ff9a5dc400f1aa9cdcd24d2291913c308532926088292e436779b0583c6cd39011b26d307df2ca2f884856c38f") {
-        return res.json({valid: true})
-    } else {
-        return res.json({valid: false})
-    }
-}
-
 const app_post_authAdminCode = (req, res) => {
     let pd = req.body
     let lookupRes = db.find({code: pd.partyCode})
@@ -135,16 +121,7 @@ const app_post_authAdminCode = (req, res) => {
     }
 }
 
-const app_post_adminSudoLogin = (req, res) => {
-    let p = req.body.sudopass || null
-    if (p === "35da0078d3198d3b774b87c9a28b99b76c4f59ff9a5dc400f1aa9cdcd24d2291913c308532926088292e436779b0583c6cd39011b26d307df2ca2f884856c38f") {
-        return res.json({valid: true})
-    } else {
-        return res.json({valid: false})
-    }
-}
-
-const app_post_authCallback = (req, res) => {
+const app_get_authCallback = (req, res) => {
     let code = req.query.code || null
     let id = req.query.state || null
     let lookupRes = db.getParty(id)
@@ -198,7 +175,7 @@ const app_post_authCallback = (req, res) => {
                                 userid: userID,
                                 playlistid: playlistID
                             })
-                            upnext.startGlobalEventLoop()
+                            upnext.startPartyEventLoop()
                             return res.redirect(base_uri_main + '/m')
                         }).catch((error) => {
                             logger.error(error.stack)
@@ -216,11 +193,10 @@ const app_post_authCallback = (req, res) => {
 }
 
 module.exports = {
-    app_post_authCallback,
+    app_get_authCallback,
     app_post_authAdminCode,
     app_post_leaveParty,
     app_post_authCode,
     app_post_newParty,
-    app_post_adminLogin,
-    app_post_adminSudoLogin
+    app_get_testCode
 }
