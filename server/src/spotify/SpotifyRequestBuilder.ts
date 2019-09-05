@@ -1,6 +1,7 @@
 'use strict';
 
-import SpotifyRequest from "./spotifyRequest";
+import SpotifyRequest from "./SpotifyRequest";
+import { AxiosMethod } from "AxiosMethod";
 
 class SpotifyRequestBuilder {
     constructor() {

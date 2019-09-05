@@ -1,8 +1,9 @@
 'use strict';
-import { Credentials } from "./types/credentials";
+import { Credentials } from "credentials";
 import { AxiosResponse } from "axios";
 import WebApiRequestBuilder from "./WebApiRequestBuilder";
 import AuthenticationRequestBuilder from "./AuthenticationRequestBuilder";
+import { AxiosMethod } from "AxiosMethod";
 
 class SpotifyApi {
     private _credentials: Credentials;
@@ -24,7 +25,7 @@ class SpotifyApi {
             .execute();
     }
 
-    getTracks(trackIDs: string[], options?: object): Promise<AxiosResponse> {
+    getTracks(trackIDs: Array<string>, options?: object): Promise<AxiosResponse> {
         return WebApiRequestBuilder.make(this._credentials.accessToken)
             .withMethod(AxiosMethod.GET)
             .withPath(`/v1/tracks`)
@@ -47,7 +48,7 @@ class SpotifyApi {
             .execute();
     }
 
-    getAlbums(albumIDs: string[], options?: object): Promise<AxiosResponse> {
+    getAlbums(albumIDs: Array<string>, options?: object): Promise<AxiosResponse> {
         return WebApiRequestBuilder.make(this._credentials.accessToken)
             .withMethod(AxiosMethod.GET)
             .withPath(`/v1/albums`)
@@ -70,7 +71,7 @@ class SpotifyApi {
             .execute();
     }
 
-    getArtists(artistIDs: string[], options?: object): Promise<AxiosResponse> {
+    getArtists(artistIDs: Array<string>, options?: object): Promise<AxiosResponse> {
         return WebApiRequestBuilder.make(this._credentials.accessToken)
             .withMethod(AxiosMethod.GET)
             .withPath(`/v1/artists`)
@@ -84,7 +85,7 @@ class SpotifyApi {
             .execute();
     }
 
-    search(query: string, types: string[], options?: object): Promise<AxiosResponse> {
+    search(query: string, types: Array<string>, options?: object): Promise<AxiosResponse> {
         return WebApiRequestBuilder.make(this._credentials.accessToken)
             .withMethod(AxiosMethod.GET)
             .withPath(`/v1/search`)
@@ -257,7 +258,7 @@ class SpotifyApi {
             .execute();
     }
 
-    addTracksToPlaylist(playlistID: string, tracks: string[], options?: object): Promise<AxiosResponse> {
+    addTracksToPlaylist(playlistID: string, tracks: Array<string>, options?: object): Promise<AxiosResponse> {
         return WebApiRequestBuilder.make(this._credentials.accessToken)
             .withMethod(AxiosMethod.POST)
             .withHeaders({'Content-Type': 'application/json'})
@@ -270,7 +271,7 @@ class SpotifyApi {
             .execute();
     }
 
-    removeTracksFromPlaylist(playlistID: string, tracks: string[], options?: object): Promise<AxiosResponse> {
+    removeTracksFromPlaylist(playlistID: string, tracks: Array<string>, options?: object): Promise<AxiosResponse> {
         return WebApiRequestBuilder.make(this._credentials.accessToken)
             .withMethod(AxiosMethod.DELETE)
             .withHeaders({'Content-Type': 'application/json'})
@@ -284,7 +285,7 @@ class SpotifyApi {
             .execute();
     }
 
-    removeTracksFromPlaylistByPosition(playlistID: string, positions: number[], snapshot_id: string): Promise<AxiosResponse> {
+    removeTracksFromPlaylistByPosition(playlistID: string, positions: Array<number>, snapshot_id: string): Promise<AxiosResponse> {
         return WebApiRequestBuilder.make(this._credentials.accessToken)
             .withMethod(AxiosMethod.DELETE)
             .withHeaders({'Content-Type': 'application/json'})
@@ -297,7 +298,7 @@ class SpotifyApi {
             .execute();
     }
 
-    replaceTracksInPlaylist(playlistID: string, uris: string[]): Promise<AxiosResponse> {
+    replaceTracksInPlaylist(playlistID: string, uris: Array<string>): Promise<AxiosResponse> {
         return WebApiRequestBuilder.make(this._credentials.accessToken)
             .withMethod(AxiosMethod.PUT)
             .withHeaders({'Content-Type': 'application/json'})
@@ -343,7 +344,7 @@ class SpotifyApi {
             .execute();
     }
 
-    getAudioFeaturesForTracks(trackIDs: string[]): Promise<AxiosResponse> {
+    getAudioFeaturesForTracks(trackIDs: Array<string>): Promise<AxiosResponse> {
         return WebApiRequestBuilder.make(this._credentials.accessToken)
             .withMethod(AxiosMethod.GET)
             .withPath(`/v1/audio-features`)
@@ -391,7 +392,7 @@ class SpotifyApi {
             .execute();
     }
 
-    containsMySavedTracks(trackIDs: string[]): Promise<AxiosResponse> {
+    containsMySavedTracks(trackIDs: Array<string>): Promise<AxiosResponse> {
         return WebApiRequestBuilder.make(this._credentials.accessToken)
             .withMethod(AxiosMethod.GET)
             .withPath(`/v1/me/tracks`)
@@ -402,7 +403,7 @@ class SpotifyApi {
             .execute();
     }
 
-    removeFromMySavedTracks(trackIDs: string[]): Promise<AxiosResponse> {
+    removeFromMySavedTracks(trackIDs: Array<string>): Promise<AxiosResponse> {
         return WebApiRequestBuilder.make(this._credentials.accessToken)
             .withMethod(AxiosMethod.DELETE)
             .withPath(`/v1/me/tracks`)
@@ -414,7 +415,7 @@ class SpotifyApi {
             .execute();
     }
 
-    addToMySavedTracks(trackIDs: string[]): Promise<AxiosResponse> {
+    addToMySavedTracks(trackIDs: Array<string>): Promise<AxiosResponse> {
         return WebApiRequestBuilder.make(this._credentials.accessToken)
             .withMethod(AxiosMethod.PUT)
             .withPath(`/v1/me/tracks`)
@@ -426,7 +427,7 @@ class SpotifyApi {
             .execute();
     }
 
-    removeFromMySavedAlbums(albumIDs: string[]): Promise<AxiosResponse> {
+    removeFromMySavedAlbums(albumIDs: Array<string>): Promise<AxiosResponse> {
         return WebApiRequestBuilder.make(this._credentials.accessToken)
             .withMethod(AxiosMethod.DELETE)
             .withPath(`/v1/me/albums`)
@@ -436,7 +437,7 @@ class SpotifyApi {
             .execute();
     }
 
-    addToMySavedAlbums(): Promise<AxiosResponse> {
+    addToMySavedAlbums(albumIDs: Array<string>): Promise<AxiosResponse> {
         return WebApiRequestBuilder.make(this._credentials.accessToken)
             .withMethod(AxiosMethod.PUT)
             .withPath(`/v1/me/albums`)
@@ -446,127 +447,245 @@ class SpotifyApi {
             .execute();
     }
 
-    getMySavedAlbums(): Promise<AxiosResponse> {
-
+    getMySavedAlbums(options?: object): Promise<AxiosResponse> {
+        return WebApiRequestBuilder.make(this._credentials.accessToken)
+            .withMethod(AxiosMethod.GET)
+            .withPath(`/v1/me/albums`)
+            .withQueryParameters(options)
+            .build()
+            .execute();
     }
 
-    containsMySavedAlbums(): Promise<AxiosResponse> {
-
+    containsMySavedAlbums(albumIdDs: Array<string>): Promise<AxiosResponse> {
+        return WebApiRequestBuilder.make(this._credentials.accessToken)
+            .withMethod(AxiosMethod.GET)
+            .withPath(`/v1/me/albums/contains`)
+            .withQueryParameters({
+                'ids': albumIdDs.join(',')
+            })
+            .build()
+            .execute();
     }
 
-    getMyTopArtists(): Promise<AxiosResponse> {
-
+    getMyTopArtists(options?: object): Promise<AxiosResponse> {
+        return WebApiRequestBuilder.make(this._credentials.accessToken)
+            .withMethod(AxiosMethod.GET)
+            .withPath(`/v1/me/top/artists`)
+            .withQueryParameters(options)
+            .build()
+            .execute();
     }
 
-    getMyTopTracks(): Promise<AxiosResponse> {
-
+    getMyTopTracks(options?: object): Promise<AxiosResponse> {
+        return WebApiRequestBuilder.make(this._credentials.accessToken)
+            .withMethod(AxiosMethod.GET)
+            .withPath(`/v1/me/top/tracks`)
+            .withQueryParameters(options)
+            .build()
+            .execute();
     }
 
-    getMyRecentlyPlayedTracks(): Promise<AxiosResponse> {
-
+    getMyRecentlyPlayedTracks(options?: object): Promise<AxiosResponse> {
+        return WebApiRequestBuilder.make(this._credentials.accessToken)
+            .withMethod(AxiosMethod.GET)
+            .withPath(`/v1/me/player/recently-played`)
+            .withQueryParameters(Object.assign(
+                options,
+                {
+                    type: 'track'
+                }
+            ))
+            .build()
+            .execute();
     }
 
     getMyDevices(): Promise<AxiosResponse> {
-
+        return WebApiRequestBuilder.make(this._credentials.accessToken)
+            .withMethod(AxiosMethod.GET)
+            .withPath(`/v1/me/player/devices`)
+            .build()
+            .execute();
     }
 
     getMyCurrentPlayingTrack(): Promise<AxiosResponse> {
-
+        return WebApiRequestBuilder.make(this._credentials.accessToken)
+            .withMethod(AxiosMethod.GET)
+            .withPath(`/v1/me/player/currently-playing`)
+            .withQueryParameters({
+                'market': 'from_token'
+            })
+            .build()
+            .execute();
     }
 
     getMyCurrentPlaybackState(): Promise<AxiosResponse> {
-
+        return WebApiRequestBuilder.make(this._credentials.accessToken)
+            .withMethod(AxiosMethod.GET)
+            .withPath(`/v1/me/player`)
+            .withQueryParameters({
+                'market': 'from_token'
+            })
+            .build()
+            .execute();
     }
 
-    transferMyPlayback(): Promise<AxiosResponse> {
-
+    transferMyPlayback(options?: any): Promise<AxiosResponse> {
+        return WebApiRequestBuilder.make(this._credentials.accessToken)
+            .withMethod(AxiosMethod.PUT)
+            .withHeaders({'Content-Type': 'application/json'})
+            .withPath(`/v1/me/player`)
+            .withBodyParameters(options)
+            .build()
+            .execute();
     }
 
-    play(): Promise<AxiosResponse> {
-
+    play(queryOptions?: any, bodyOptions?: any): Promise<AxiosResponse> {
+        return WebApiRequestBuilder.make(this._credentials.accessToken)
+            .withMethod(AxiosMethod.PUT)
+            .withPath(`/v1/me/player/play`)
+            .withQueryParameters(queryOptions)
+            .withHeaders({'Content-Type': 'application/json'})
+            .withBodyParameters(bodyOptions)
+            .build()
+            .execute();
     }
 
-    pause(): Promise<AxiosResponse> {
-
+    pause(options?: any): Promise<AxiosResponse> {
+        return WebApiRequestBuilder.make(this._credentials.accessToken)
+            .withMethod(AxiosMethod.PUT)
+            .withPath(`/v1/me/player/pause`)
+            .withQueryParameters(options)
+            .build()
+            .execute();
     }
 
     skipToPrevious(): Promise<AxiosResponse> {
-
+        return WebApiRequestBuilder.make(this._credentials.accessToken)
+            .withMethod(AxiosMethod.POST)
+            .withPath(`/v1/me/player/previous`)
+            .withHeaders({'Content-Type': 'application/json'})
+            .build()
+            .execute();
     }
 
     skipToNext(): Promise<AxiosResponse> {
-
+        return WebApiRequestBuilder.make(this._credentials.accessToken)
+            .withMethod(AxiosMethod.POST)
+            .withPath(`/v1/me/player/next`)
+            .withHeaders({'Content-Type': 'application/json'})
+            .build()
+            .execute();
     }
 
-    seek(): Promise<AxiosResponse> {
-
+    seek(positionMs: number, options?: any): Promise<AxiosResponse> {
+        let params: { position_ms: number; device_id: undefined };
+        params = {
+            position_ms: positionMs,
+            device_id: undefined
+        };
+        if (options && 'device_id' in options) {
+            params.device_id = options.device_id;
+        }
+        return WebApiRequestBuilder.make(this._credentials.accessToken)
+            .withMethod(AxiosMethod.PUT)
+            .withPath(`/v1/me/player/seek`)
+            .withQueryParameters(params)
+            .build()
+            .execute();
     }
 
-    setRepeat(): Promise<AxiosResponse> {
-
+    setRepeat(options?: any): Promise<AxiosResponse> {
+        return WebApiRequestBuilder.make(this._credentials.accessToken)
+            .withMethod(AxiosMethod.PUT)
+            .withPath(`/v1/me/player/seek`)
+            .withQueryParameters({
+                state: options.state || 'off'
+            })
+            .build()
+            .execute();
     }
 
-    setShuffle(): Promise<AxiosResponse> {
-
+    setShuffle(options?: any): Promise<AxiosResponse> {
+        return WebApiRequestBuilder.make(this._credentials.accessToken)
+            .withMethod(AxiosMethod.PUT)
+            .withPath(`/v1/me/player/seek`)
+            .withQueryParameters({
+                state: options.state || 'false'
+            })
+            .build()
+            .execute();
     }
 
-    setVolume(): Promise<AxiosResponse> {
-
+    setVolume(volumePercent: number, options?: any): Promise<AxiosResponse> {
+        let params: { volume_percent: number, device_id: string };
+        params = {
+            volume_percent: volumePercent,
+            device_id: undefined
+        };
+        if (options && 'device_id' in options) {
+            params.device_id = options.device_id;
+        }
+        return WebApiRequestBuilder.make(this._credentials.accessToken)
+            .withMethod(AxiosMethod.PUT)
+            .withPath(`/v1/me/player/seek`)
+            .withQueryParameters(params)
+            .build()
+            .execute();
     }
 
-    followUsers(): Promise<AxiosResponse> {
+    // followUsers(): Promise<AxiosResponse> {
+    //
+    // }
+    //
+    // followArtists(): Promise<AxiosResponse> {
+    //
+    // }
+    //
+    // unfollowUsers(): Promise<AxiosResponse> {
+    //
+    // }
+    //
+    // unfollowArtists(): Promise<AxiosResponse> {
+    //
+    // }
+    //
+    // isFollowingUsers(): Promise<AxiosResponse> {
+    //
+    // }
+    //
+    // getFollowedArtists(): Promise<AxiosResponse> {
+    //
+    // }
+    //
+    // areFollowingPlaylist(): Promise<AxiosResponse> {
+    //
+    // }
+    //
+    // isFollowingArtists(): Promise<AxiosResponse> {
+    //
+    // }
+    //
+    // getNewReleases(): Promise<AxiosResponse> {
+    //
+    // }
+    //
+    // getFeaturedPlaylists(): Promise<AxiosResponse> {
+    //
+    // }
+    //
+    // getCategories(): Promise<AxiosResponse> {
+    //
+    // }
+    //
+    // getCategory(): Promise<AxiosResponse> {
+    //
+    // }
+    //
+    // getPlaylistForCategory(): Promise<AxiosResponse> {
+    //
+    // }
 
-    }
-
-    followArtists(): Promise<AxiosResponse> {
-
-    }
-
-    unfollowUsers(): Promise<AxiosResponse> {
-
-    }
-
-    unfollowArtists(): Promise<AxiosResponse> {
-
-    }
-
-    isFollowingUsers(): Promise<AxiosResponse> {
-
-    }
-
-    getFollowedArtists(): Promise<AxiosResponse> {
-
-    }
-
-    areFollowingPlaylist(): Promise<AxiosResponse> {
-
-    }
-
-    isFollowingArtists(): Promise<AxiosResponse> {
-
-    }
-
-    getNewReleases(): Promise<AxiosResponse> {
-
-    }
-
-    getFeaturedPlaylists(): Promise<AxiosResponse> {
-
-    }
-
-    getCategories(): Promise<AxiosResponse> {
-
-    }
-
-    getCategory(): Promise<AxiosResponse> {
-
-    }
-
-    getPlaylistForCategory(): Promise<AxiosResponse> {
-
-    }
-
-    createAuthorizeURL(scopes: string[], state: string, showDialog: boolean): string {
+    createAuthorizeURL(scopes: Array<string>, state: string, showDialog: boolean): string {
         return AuthenticationRequestBuilder.make()
             .withPath('/authorize')
             .withQueryParameters({
@@ -581,17 +700,17 @@ class SpotifyApi {
             .getURI();
     }
 
-    clientCredentialsGrant(): Promise<AxiosResponse> {
-
-    }
-
-    authorizationCodeGrant(): Promise<AxiosResponse> {
-
-    }
-
-    refreshAuthToken(): Promise<AxiosResponse> {
-
-    }
+    // clientCredentialsGrant(): Promise<AxiosResponse> {
+    //
+    // }
+    //
+    // authorizationCodeGrant(): Promise<AxiosResponse> {
+    //
+    // }
+    //
+    // refreshAuthToken(): Promise<AxiosResponse> {
+    //
+    // }
 }
 
 export default SpotifyApi;

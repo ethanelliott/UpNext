@@ -1,1 +1,3 @@
-export type User = {}
+export interface User {
+
+}

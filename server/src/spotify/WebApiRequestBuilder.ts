@@ -1,5 +1,5 @@
 'use strict';
-import SpotifyRequestBuilder from "./spotifyRequestBuilder";
+import SpotifyRequestBuilder from "./SpotifyRequestBuilder";
 
 const DEFAULT_HOST = 'api.spotify.com';
 const DEFAULT_SCHEME = 'https';
