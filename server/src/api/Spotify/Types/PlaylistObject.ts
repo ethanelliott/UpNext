@@ -1,0 +1,21 @@
+import ImageObject from "./ImageObject";
+import PublicUserObject from "./PublicUserObject";
+import PlaylistTrackObject from "./PlaylistTrackObject";
+
+export default class PlaylistObject {
+    public collaborative: boolean;
+    public external_urls: any;
+    public href: string;
+    public id: string;
+    public images: Array<ImageObject>;
+    public name: string;
+    public owner: PublicUserObject;
+    public _public: boolean;
+    public snapshot_id: string;
+    public tracks: Array<PlaylistTrackObject>;
+    public type: string;
+    public uri: string;
+
+    public constructor() {
+    }
+}

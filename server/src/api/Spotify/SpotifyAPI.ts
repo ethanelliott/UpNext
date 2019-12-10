@@ -19,20 +19,17 @@ export default class SpotifyAPI {
     public search: SearchAPI;
     public tracks: TracksAPI;
     public users: UsersAPI;
-    private accessToken: string;
 
-    constructor(accessToken: string) {
-        this.accessToken = accessToken;
-
-        this.albums = new AlbumsAPI(accessToken);
-        this.artists = new ArtistsAPI(accessToken);
-        this.browse = new BrowseAPI(accessToken);
-        this.library = new LibraryAPI(accessToken);
-        this.player = new PlayerAPI(accessToken);
-        this.playlist = new PlaylistAPI(accessToken);
-        this.search = new SearchAPI(accessToken);
-        this.tracks = new TracksAPI(accessToken);
-        this.users = new UsersAPI(accessToken);
+    constructor() {
+        this.albums = new AlbumsAPI();
+        this.artists = new ArtistsAPI();
+        this.browse = new BrowseAPI();
+        this.library = new LibraryAPI();
+        this.player = new PlayerAPI();
+        this.playlist = new PlaylistAPI();
+        this.search = new SearchAPI();
+        this.tracks = new TracksAPI();
+        this.users = new UsersAPI();
     }
 
 }
