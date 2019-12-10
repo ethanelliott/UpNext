@@ -10,6 +10,7 @@ function devFormat() {
     const selectFormat = (info: { timestamp: any; level: any; message: any; durationMs: any; }) => {
         return info instanceof Error ? formatError(info) : formatMessage(info);
     };
+    // @ts-ignore
     return printf(selectFormat);
 }
 
@@ -55,9 +56,5 @@ const logger = createLogger({
 winston.addColors({
     info: 'yellow'
 });
-
-if (process.env.NODE_ENV !== "production") {
-    logger.debug("Logging initialized at debug level");
-}
 
 export default logger;
