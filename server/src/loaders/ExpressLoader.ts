@@ -4,12 +4,13 @@ import { createExpressServer } from 'routing-controllers';
 
 import { env } from '../env';
 import logger from "../util/Log";
-// Controllers
-import { TestController } from "../api/Controllers/TestController";
 // Middleware
 import { LogMiddleware } from "../Middleware/LogMiddleware";
 import { SecurityMiddleware } from "../Middleware/SecurityMiddleware";
 import { ErrorMiddleware } from "../Middleware/ErrorMiddleware";
+// Controllers
+import { PartyController } from "../api/Controllers/PartyController";
+import { SpotifyOAuthController } from "../api/Controllers/SpotifyOAuthController";
 
 export const ExpressLoader: MicroframeworkLoader = (settings: MicroframeworkSettings | undefined) => {
     if (settings) {
@@ -21,7 +22,8 @@ export const ExpressLoader: MicroframeworkLoader = (settings: MicroframeworkSett
             routePrefix: env.app.routePrefix,
             defaultErrorHandler: false,
             controllers: [
-                TestController
+                PartyController,
+                SpotifyOAuthController
             ],
             middlewares: [
                 LogMiddleware,

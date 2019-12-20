@@ -16,14 +16,13 @@ export class ErrorMiddleware implements ExpressErrorMiddlewareInterface {
         res.status(error.httpCode || 500);
         res.json({
             name: error.name,
-            message: error.message,
-            errors: error[`errors`] || [],
+            message: error.message
         });
 
         if (this.isProduction) {
-            logger.error(error.name, error.message);
+            logger.error(`${error.name} ${error.message}`);
         } else {
-            logger.error(error.name, error.stack);
+            logger.error(`${error.name} ${error.message}\n${error.stack}`);
         }
 
     }

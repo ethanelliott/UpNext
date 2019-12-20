@@ -1,6 +1,7 @@
 import { HttpMethods } from "../Types/HttpMethods";
 import RequestBuilder from "./RequestBuilder";
 import axios, { AxiosResponse } from 'axios';
+import GenericError from "../error/GenericError";
 
 export default class Request {
     private readonly method: HttpMethods;
@@ -22,32 +23,60 @@ export default class Request {
     }
 
     public async execute(): Promise<string> {
-        let response: AxiosResponse = await axios({
-            method: this.httpMethodString(),
-            url: this.getURI(),
-            headers: this.headers,
-            params: this.queryParameters,
-            data: this.bodyParameters
-        });
-        return response.data;
+        try {
+            let d = await this.makeAxios();
+            return d.data;
+        } catch (e) {
+            throw new GenericError(e.response.data.error.status, e.response.data.error.message, e.stack);
+        }
     }
 
     private getURI(): string {
         return `${this.scheme}://${this.host}${this.path}`;
     }
 
-    private httpMethodString(): 'GET' | 'DELETE' | 'POST' | 'PUT' {
+    private makeAxios(): Promise<AxiosResponse> {
         switch (this.method) {
             case HttpMethods.DELETE:
-                return "DELETE";
+                return axios.request({
+                    method: 'delete',
+                    url: this.getURI(),
+                    headers: this.headers,
+                    params: this.queryParameters
+                });
             case HttpMethods.GET:
-                return "GET";
+                return axios.request({
+                    method: 'get',
+                    url: this.getURI(),
+                    headers: this.headers,
+                    params: this.queryParameters
+                });
             case HttpMethods.POST:
-                return "POST";
+                if (this.bodyParameters) {
+                    return axios.request({
+                        method: 'post',
+                        url: this.getURI(),
+                        headers: this.headers,
+                        params: this.queryParameters,
+                        data: this.bodyParameters
+                    });
+                } else {
+                    return axios.request({
+                        method: 'post',
+                        url: this.getURI(),
+                        headers: this.headers,
+                        params: this.queryParameters
+                    });
+                }
+
             case HttpMethods.PUT:
-                return "PUT";
-            default:
-                return "GET";
+                return axios.request({
+                    method: 'put',
+                    url: this.getURI(),
+                    headers: this.headers,
+                    params: this.queryParameters,
+                    data: this.bodyParameters
+                });
         }
     }
 

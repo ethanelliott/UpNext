@@ -3,6 +3,7 @@ import ExternalIdObject from "./ExternalIdObject";
 import SimplifiedTrackObject from "./SimplifiedTrackObject";
 import CopyrightObject from "./CopyrightObject";
 import ImageObject from "./ImageObject";
+import PagingObject from "./PagingObject";
 
 export default class AlbumObject {
     public album_type: string;
@@ -20,7 +21,7 @@ export default class AlbumObject {
     public popularity: number;
     public release_date: string;
     public release_date_precision: string;
-    public tracks: Array<SimplifiedTrackObject>;
+    public tracks: PagingObject<SimplifiedTrackObject>;
     public type: string;
     public uri: string;
 

@@ -4,40 +4,13 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimal-ui">
+    <link href="<%= BASE_URL %>favicon.ico" rel="icon">
     <meta name="theme-color" content="#000000">
     <!--    <link href="<%= BASE_URL %>icon.ico" rel="icon">-->
     <link href="/manifest.json" rel="manifest">
     <title>UpNext</title>
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-139275835-1"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag() {
-            dataLayer.push(arguments);
-        }
-        gtag('js', new Date());
-        gtag('config', 'UA-139275835-1');
-    </script>
-    <script>
-        if ("serviceWorker" in navigator) {
-            if (navigator.serviceWorker.controller) {
-                console.log("active service worker found, no need to register");
-            } else {
-                // Register the service worker
-                navigator.serviceWorker
-                    .register("/sw.js", {
-                        scope: "./"
-                    })
-                    .then(function (reg) {
-                        console.log("Service worker has been registered for scope: " + reg.scope);
-                    });
-            }
-        }
-    </script>
-    <style>
-        body {
-            background: #212121;
-        }
-    </style>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@latest/css/materialdesignicons.min.css" rel="stylesheet">
 </head>
 <body>
 <noscript>
@@ -45,5 +18,6 @@
         continue.</strong>
 </noscript>
 <div id="app"></div>
+<!-- built files will be auto injected -->
 </body>
 </html>

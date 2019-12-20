@@ -10,6 +10,9 @@ import { FileLoader } from "./loaders/FileLoader";
 import { SocketLoader } from "./loaders/SocketLoader";
 
 bootstrapMicroframework({
+    config: {
+        showBootstrapTime: true
+    },
     loaders: [
         IocLoader,
         ExpressLoader,

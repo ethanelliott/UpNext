@@ -3,17 +3,17 @@ import Request from "./Request";
 
 export default class RequestBuilder {
     method: HttpMethods;
-    host: string;
-    scheme: string;
-    path: string;
-    headers: object;
-    queryParameters: object;
-    bodyParameters: object;
+    host: string = "";
+    scheme: string = "";
+    path: string = "";
+    headers: object = null;
+    queryParameters: object = null;
+    bodyParameters: object = null;
 
     private constructor() {
-        this.headers = {};
-        this.queryParameters = {};
-        this.bodyParameters = {};
+        this.headers = null;
+        this.queryParameters = null;
+        this.bodyParameters = null;
     }
 
     public static builder(): RequestBuilder {
@@ -56,6 +56,9 @@ export default class RequestBuilder {
     }
 
     public withAuth(token: string): RequestBuilder {
+        if (this.headers) {
+            this.headers = {};
+        }
         this.headers['Authorization'] = `Bearer ${token}`;
         return this;
     }

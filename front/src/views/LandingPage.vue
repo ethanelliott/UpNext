@@ -1,35 +1,82 @@
 <template>
-    <v-app dark>
+    <v-app>
         <v-dialog dark v-model="installDialog" width="500">
-            <v-card>
+            <v-card class="pa-2">
+                <v-card-title>
+                    Install UpNext
+                </v-card-title>
+                <v-card-text>
+                    <p class="my-2 subheading">Looks like you don't have UpNext installed... click the button below to
+                        install it!</p>
+                </v-card-text>
                 <v-card-actions>
+                    <v-spacer/>
+                    <v-btn @click="installDialog = false" color="primary" flat outlined>
+                        CANCEL
+                    </v-btn>
                     <v-btn @click.prevent="install" color="primary" flat>
                         INSTALL THE APP
                     </v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
-        <v-content>
-            <v-container fill-height fluid>
-                <v-layout align-center justify-center>
-                    <v-flex lg8 md10 sm10 xl4 xs12>
-                        <v-flex class="text-xs-center">
-                            <v-icon color="primary" size="120">music_note</v-icon>
-                            <p class="display-2 text-uppercase mb-5">
+        <v-dialog dark v-model="aboutDialog" width="500">
+            <v-card>
+                <v-container align="center" justify="center">
+                    <v-row>
+                        <v-col align="center" justify="center">
+                            <v-icon class="mt-6" color="primary" size="120">mdi-music-note-plus</v-icon>
+                            <p class="display-2 text-uppercase mb-0">
                                 <span class="font-weight-bold">Up</span>
                                 <span class="font-weight-light">Next</span>
                             </p>
-                            <p class="my-2 subheading">Join a party, or start your own!</p>
-                            <span class="my-5">&nbsp;</span>
-                            <v-btn block class="my-5" color="primary" dark large to="/join">
+                        </v-col>
+                    </v-row>
+                </v-container>
+                <v-card-title>
+                    Welcome to UpNext
+                </v-card-title>
+                <v-card-text>
+                    UpNext is a party oriented, real-time, vote-based playlist generation application
+                    with spotify integration.
+                    <br><br>
+                    It is designed to help make your next party a little easier. We take the party
+                    playlist and distribute it across everyone at the party, so that everyone can get
+                    the music they want.
+                </v-card-text>
+                <v-card-actions>
+                    <v-spacer/>
+                    <v-btn @click="aboutDialog=false">
+                        Very Cool
+                    </v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
+        <v-content>
+            <v-container class="fill-height">
+                <v-container>
+                    <v-row align="center" justify="center">
+                        <v-col align="center" cols="12" justify="center" md="4" sm="2">
+                            <v-icon color="primary" size="120">mdi-music-note-plus</v-icon>
+                            <p class="display-2 text-uppercase mb-10">
+                                <span class="font-weight-bold">Up</span>
+                                <span class="font-weight-light">Next</span>
+                            </p>
+                            <p class="my-10 subheading">Join a party, or start your own!</p>
+                            <v-btn @click="aboutDialog=true" block class="my-10" color="primary" height="20px" small
+                                   text>
+                                What is UpNext
+                                <v-icon dark right>mdi-help-box</v-icon>
+                            </v-btn>
+                            <v-btn block class="my-5" color="primary" height="80px" to="/app/home" x-large>
                                 Join a Party
                             </v-btn>
-                            <v-btn block class="my-5" color="primary" dark large outline to="/start">
+                            <v-btn block color="primary" height="80px" outlined to="/start" x-large>
                                 Start a Party
                             </v-btn>
-                        </v-flex>
-                    </v-flex>
-                </v-layout>
+                        </v-col>
+                    </v-row>
+                </v-container>
             </v-container>
         </v-content>
     </v-app>
@@ -39,10 +86,11 @@
     import session from 'localStorage'
 
     export default {
-        name: "LandingPage",
+        name: 'LandingPage',
         data: () => ({
             installDialog: false,
-            deferredPrompt: null
+            deferredPrompt: null,
+            aboutDialog: false
         }),
         methods: {
             install() {
@@ -60,7 +108,6 @@
                     });
             }
         },
-
         mounted() {
             let t = this
             window.addEventListener('beforeinstallprompt', (e) => {
@@ -68,9 +115,9 @@
                 t.deferredPrompt = e
                 t.installDialog = true
             });
-            if (session.getItem('partyID')) {
-                this.$router.push('/m/home')
-            }
+            // if (session.getItem('partyID')) {
+            //     this.$router.push('/m/home')
+            // }
         }
     }
 </script>

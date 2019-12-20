@@ -10,7 +10,7 @@ export default class SimplifiedPlaylistObject {
     public images: Array<ImageObject>;
     public name: string;
     public owner: PublicUserObject;
-    public _public: boolean;
+    public public: boolean;
     public snapshot_id: string;
     public tracks: Array<PlaylistTrackObject>;
 

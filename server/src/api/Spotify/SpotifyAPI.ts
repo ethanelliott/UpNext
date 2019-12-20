@@ -1,5 +1,6 @@
 import AlbumsAPI from "./apis/AlbumsAPI";
 import ArtistsAPI from "./apis/ArtistsAPI";
+import AuthAPI from "./apis/AuthAPI";
 import BrowseAPI from "./apis/BrowseAPI";
 import LibraryAPI from "./apis/LibraryAPI";
 import PlayerAPI from "./apis/PlayerAPI";
@@ -12,6 +13,7 @@ export default class SpotifyAPI {
     // Sub-apis
     public albums: AlbumsAPI;
     public artists: ArtistsAPI;
+    public auth: AuthAPI;
     public browse: BrowseAPI;
     public library: LibraryAPI;
     public player: PlayerAPI;
@@ -23,6 +25,7 @@ export default class SpotifyAPI {
     constructor() {
         this.albums = new AlbumsAPI();
         this.artists = new ArtistsAPI();
+        this.auth = new AuthAPI();
         this.browse = new BrowseAPI();
         this.library = new LibraryAPI();
         this.player = new PlayerAPI();

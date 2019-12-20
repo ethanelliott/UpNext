@@ -1,5 +1,5 @@
-export default class PagingObject {
-    public items: Array<Object>;
+export default class PagingObject<T> {
+    public items: Array<T>;
     public href: string;
     public limit: number;
     public next: string;
