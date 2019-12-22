@@ -31,13 +31,11 @@
             let context = this;
             let token = session.getItem('token');
             axios.post(`/party/leave`, {token}).then(res => {
-                console.log(res.data);
                 session.removeItem('token');
                 setTimeout(() => {
                     context.$router.push('/')
                 }, 2000)
             }).catch(err => {
-                console.error(err);
             })
         }
     }

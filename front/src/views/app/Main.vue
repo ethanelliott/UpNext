@@ -97,8 +97,10 @@
                         text: 'Join the party!',
                         url: `https://upnext.cool/join?c=${this.code}`,
                     })
-                        .then(() => console.log('Successful share'))
-                        .catch((error) => console.log('Error sharing', error));
+                        .then(() => {
+                        })
+                        .catch((error) => {
+                        });
                 }
             }
         }

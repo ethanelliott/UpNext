@@ -1,7 +1,6 @@
 import 'reflect-metadata';
 import { BodyParam, JsonController, Post, QueryParam } from 'routing-controllers';
 import PartyDBService from "../Services/PartyDBService";
-import CreatingPartyDBService from "../Services/CreatingPartyDBService";
 import WebTokenService from "../Services/WebTokenService";
 import UserBuilder from "../Factory/UserBuilder";
 import UUIDService from "../Services/UUIDService";
@@ -11,7 +10,6 @@ import AuthenticationService from "../Services/AuthenticationService";
 export class PartyController {
     constructor(
         private partyDBService: PartyDBService,
-        private creatingPartyDBService: CreatingPartyDBService,
         private webTokenService: WebTokenService,
         private uuidService: UUIDService,
         private authenticationService: AuthenticationService
@@ -21,12 +19,6 @@ export class PartyController {
     @Post('/get/all')
     public getAllParties(): any {
         return this.partyDBService.getAllParties();
-    }
-
-    @Post('/new')
-    public makeNewParty(): any {
-        let x = this.creatingPartyDBService.getAllCreatingParties();
-        return x;
     }
 
     @Post('/join')
@@ -77,12 +69,12 @@ export class PartyController {
             return {
                 removed: true,
                 error: false
-            }
+            };
         } else {
             return {
                 removed: false,
                 error: true
-            }
+            };
         }
     }
 }

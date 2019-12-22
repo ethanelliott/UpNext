@@ -17,4 +17,34 @@ export default class PlayerAPI {
             .execute();
         return plainToClass(CurrentlyPlayingObject, d);
     }
+
+    public async pause(token: string): Promise<void> {
+        await WebAPIRequestBuilder
+            .make(token)
+            .withMethod(HttpMethods.PUT)
+            .withPath("/v1/me/player/pause")
+            .build()
+            .execute();
+    }
+
+    public async play(token: string): Promise<void> {
+        await WebAPIRequestBuilder
+            .make(token)
+            .withMethod(HttpMethods.PUT)
+            .withPath("/v1/me/player/play")
+            .build()
+            .execute();
+    }
+
+    public async playSong(token: string, songId: string): Promise<void> {
+        await WebAPIRequestBuilder
+            .make(token)
+            .withMethod(HttpMethods.PUT)
+            .withPath("/v1/me/player/play")
+            .withBodyParameters({
+                uris: [`spotify:track:${songId}`]
+            })
+            .build()
+            .execute();
+    }
 }

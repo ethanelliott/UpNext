@@ -9,11 +9,13 @@ import CreatingPartyDBService from "../Services/CreatingPartyDBService";
 import PartyDBService from "../Services/PartyDBService";
 import PartyBuilder from "../Factory/PartyBuilder";
 import Party from "../Types/Party";
+import UpNextService from "../Services/UpNextService";
 
 @JsonController('/auth')
 export class SpotifyOAuthController {
     constructor(
         private spotifyService: SpotifyService,
+        private upNextService: UpNextService,
         private webTokenService: WebTokenService,
         private uuidService: UUIDService,
         private creatingPartyDBService: CreatingPartyDBService,
@@ -29,7 +31,6 @@ export class SpotifyOAuthController {
             nickName,
             pid
         }, '10m');
-        // store the pid (party id) in a db, so it can be looked up to confirm that it is in queue to be created
         this.creatingPartyDBService.new(pid, state);
         return this.spotifyService
             .getSpotifyAPI()
@@ -40,16 +41,17 @@ export class SpotifyOAuthController {
     @Get('/callback')
     @Redirect(`${env.app.front.url}/make/:token`)
     public async oAuthCallback(@QueryParam("code") code: string, @QueryParam("state") state: string): Promise<any> {
-        let decodeState = this.webTokenService.verify(state); // do this first so we know its a valid request before calling spotify
-        // do a lookup in a db for the party id from the state token, and confirm is needs to be created
+        let decodeState = this.webTokenService.verify(state);
         if (decodeState.error === null && this.creatingPartyDBService.exists(decodeState.data.pid)) {
-            // delete the entry in the db so nobody else can create a party with that spotify account
             this.creatingPartyDBService.remove(decodeState.data.pid);
-            // get the actual token from spotify
             let callbackData = await this.spotifyService.getSpotifyAPI().auth.authorizationCode(env.app.spotify.clientId, env.app.spotify.clientSecret, code, env.app.spotify.redirectURI);
-            console.log(callbackData, decodeState);
-            // need to get the userId of the person logged in, then create a playlist and get that Id
-            // create party in the db and add the admin as a user
+            let userData = await this.spotifyService.getSpotifyAPI().users.getCurrent(callbackData.access_token);
+            let playlistData = await this.spotifyService.getSpotifyAPI().playlist.create(callbackData.access_token, userData.id, {
+                name: `${decodeState.data.partyName}🎵`,
+                description: `${decodeState.data.partyName} archive, brought to you by UpNext.cool`,
+                public: false,
+                collaborative: false
+            });
             let party: Party = PartyBuilder.make()
                 .withName(decodeState.data.partyName)
                 .withCode()
@@ -57,18 +59,17 @@ export class SpotifyOAuthController {
                 .withToken(callbackData.access_token)
                 .withRefreshToken(callbackData.refresh_token)
                 .withTokenExpire(callbackData.expires_in)
-                .withUserId('') // need to fill in the blank
-                .withPlaylistId('') // need to fill in the blank
+                .withUserId(userData.id)
+                .withPlaylistId(playlistData.id)
                 .build();
             this.partyDBService.newParty(party);
+            this.upNextService.startPartyEventLoop();
             let userJoinToken = this.webTokenService.generateFrom({
                 pid: decodeState.data.pid,
                 name: decodeState.data.nickName
             });
-            // tell the user that the party is being made, and give them their token so they can use it
             return {token: userJoinToken};
         } else {
-            // something has gone wrong and the token is wrong or expired
             return {token: 'error'};
         }
     }

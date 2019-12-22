@@ -64,16 +64,13 @@
             joinParty() {
                 let context = this;
                 context.setLoading();
-                console.log(context.code)
                 axios.post('/party/validate', {code: context.code}).then(res => {
-                    console.log(res.data);
                     if (res.data.valid) {
                         context.$router.push(`/make/${res.data.token}`)
                     } else {
                         context.setNotLoading();
                     }
                 }).catch(err => {
-                    console.error(err);
                 })
             }
         }

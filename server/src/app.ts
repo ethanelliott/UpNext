@@ -8,11 +8,9 @@ import { MonitorLoader } from "./loaders/MonitorLoader";
 import { HomeLoader } from "./loaders/HomeLoader";
 import { FileLoader } from "./loaders/FileLoader";
 import { SocketLoader } from "./loaders/SocketLoader";
+import { UpNextLoader } from "./loaders/UpNextLoader";
 
 bootstrapMicroframework({
-    config: {
-        showBootstrapTime: true
-    },
     loaders: [
         IocLoader,
         ExpressLoader,
@@ -20,7 +18,8 @@ bootstrapMicroframework({
         SwaggerLoader,
         MonitorLoader,
         HomeLoader,
-        FileLoader
+        FileLoader,
+        UpNextLoader
     ]
 })
     .then(() => {

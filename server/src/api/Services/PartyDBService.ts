@@ -6,6 +6,9 @@ import fs from 'fs';
 import Party from "../Types/Party";
 import { plainToClass } from "class-transformer";
 import User from "../Types/User";
+import PartyPlayState from "../Types/PartyPlayState";
+import { PartyStateEnum } from "../Types/PartyStateEnum";
+import PlaylistEntry from "../Types/PlaylistEntry";
 
 @Service()
 export default class PartyDBService {
@@ -57,5 +60,54 @@ export default class PartyDBService {
 
     public findPartyByCode(code: string): Party {
         return plainToClass(Party, this.db.findOne({code}));
+    }
+
+    public refreshPartyToken(partyId: string, accessToken: string, expires: number) {
+        let p = this.findPartyById(partyId);
+        if (p) {
+            p.token = accessToken;
+            p.tokenExpire = (new Date()).valueOf() + (1000 * expires);
+            this.db.update({id: partyId}, p);
+        }
+    }
+
+    public updatePartyPlaystate(partyId: string, playState: PartyPlayState) {
+        let p = this.findPartyById(partyId);
+        if (p) {
+            p.playState = playState;
+            this.db.update({id: partyId}, p);
+        }
+    }
+
+    public updatePartyState(partyId: string, partyState: PartyStateEnum) {
+        let p = this.findPartyById(partyId);
+        if (p) {
+            p.state = partyState;
+            this.db.update({id: partyId}, p);
+        }
+    }
+
+    updatePreviousSong(partyId: string, songId: string) {
+        let p = this.findPartyById(partyId);
+        if (p) {
+            p.previousSong = songId;
+            this.db.update({id: partyId}, p);
+        }
+    }
+
+    updatePartyPlaylist(partyId: string, playlist: Array<PlaylistEntry>) {
+        let p = this.findPartyById(partyId);
+        if (p) {
+            p.playlist = playlist;
+            this.db.update({id: partyId}, p);
+        }
+    }
+
+    updatePartyHistory(partyId: string, songId: string) {
+        let p = this.findPartyById(partyId);
+        if (p) {
+            p.history.push(songId);
+            this.db.update({id: partyId}, p);
+        }
     }
 }
