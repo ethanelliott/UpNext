@@ -1,29 +1,6 @@
 <template>
     <v-app dark>
-        <v-dialog fullscreen hide-overlay v-model="settingsDialog">
-            <v-card>
-                <v-toolbar color="primary" dark>
-                    <v-btn @click="settingsDialog = false" dark icon>
-                        <v-icon>close</v-icon>
-                    </v-btn>
-                    <v-toolbar-title>Settings</v-toolbar-title>
-                </v-toolbar>
-                <v-container>
-                    <v-flex>
-                        <v-btn @click="sharePartyCode" block class="my-5" color="primary" dark large>
-                            Share Party Code
-                        </v-btn>
-                    </v-flex>
-                    <v-flex>
-                        <v-btn block class="my-5" color="secondary" dark large to="/logout">
-                            Logout
-                        </v-btn>
-                    </v-flex>
-
-                </v-container>
-            </v-card>
-        </v-dialog>
-        <v-app-bar :extended="extended" app dark flat>
+        <v-app-bar :extended="extended" app dark color="darker">
             <v-icon color="primary">mdi-music-note-plus</v-icon>
             <v-toolbar-title class="headline text-uppercase ml-3">
                 <span>Up</span>
@@ -33,7 +10,6 @@
             <v-toolbar-items>
                 <v-btn @click="sharePartyCode" text x-large>
                     <span class="text-uppercase" style="letter-spacing: 10px;font-family: monospace;">{{ code }}</span>
-                    <v-icon right>mdi-share</v-icon>
                 </v-btn>
             </v-toolbar-items>
             <template #extension v-if="extended">
@@ -48,7 +24,7 @@
                 </v-toolbar-items>
             </template>
         </v-app-bar>
-        <v-content>
+        <v-content align="center" justify="center">
             <transition :name="transitionName" mode="out-in">
                 <router-view name="content"/>
             </transition>
@@ -64,7 +40,6 @@
         name: "Main",
         data: () => ({
             code: 'CODE',
-            settingsDialog: false,
             transitionName: DEFAULT_TRANSITION,
             extended: false,
             pageTitle: '',

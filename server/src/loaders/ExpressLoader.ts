@@ -5,12 +5,13 @@ import { createExpressServer } from 'routing-controllers';
 import { env } from '../env';
 import logger from "../util/Log";
 // Middleware
-import { LogMiddleware } from "../Middleware/LogMiddleware";
-import { SecurityMiddleware } from "../Middleware/SecurityMiddleware";
-import { ErrorMiddleware } from "../Middleware/ErrorMiddleware";
+import { LogMiddleware } from "../middleware/LogMiddleware";
+import { SecurityMiddleware } from "../middleware/SecurityMiddleware";
+import { ErrorMiddleware } from "../middleware/ErrorMiddleware";
 // Controllers
 import { PartyController } from "../api/Controllers/PartyController";
 import { SpotifyOAuthController } from "../api/Controllers/SpotifyOAuthController";
+import { CreatingPartyController } from "../api/Controllers/CreatingPartyController";
 
 export const ExpressLoader: MicroframeworkLoader = (settings: MicroframeworkSettings | undefined) => {
     if (settings) {
@@ -22,6 +23,7 @@ export const ExpressLoader: MicroframeworkLoader = (settings: MicroframeworkSett
             routePrefix: env.app.routePrefix,
             defaultErrorHandler: false,
             controllers: [
+                CreatingPartyController,
                 PartyController,
                 SpotifyOAuthController
             ],

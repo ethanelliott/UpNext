@@ -1,32 +1,88 @@
 import 'reflect-metadata';
-import { Get, JsonController, Post } from 'routing-controllers';
-import SpotifyAPI from "../Spotify/SpotifyAPI";
+import { BodyParam, JsonController, Post, QueryParam } from 'routing-controllers';
+import PartyDBService from "../Services/PartyDBService";
+import CreatingPartyDBService from "../Services/CreatingPartyDBService";
+import WebTokenService from "../Services/WebTokenService";
+import UserBuilder from "../Factory/UserBuilder";
+import UUIDService from "../Services/UUIDService";
+import AuthenticationService from "../Services/AuthenticationService";
 
 @JsonController('/party')
 export class PartyController {
-    constructor() {
+    constructor(
+        private partyDBService: PartyDBService,
+        private creatingPartyDBService: CreatingPartyDBService,
+        private webTokenService: WebTokenService,
+        private uuidService: UUIDService,
+        private authenticationService: AuthenticationService
+    ) {
+    }
+
+    @Post('/get/all')
+    public getAllParties(): any {
+        return this.partyDBService.getAllParties();
     }
 
     @Post('/new')
     public makeNewParty(): any {
-        return null;
+        let x = this.creatingPartyDBService.getAllCreatingParties();
+        return x;
     }
 
-    @Post('/auth')
-    public authenticatePartyCode(): any {
-        return null;
+    @Post('/join')
+    public joinParty(@QueryParam("token") token: string): any {
+        let decodeToken = this.webTokenService.verify(token);
+        if (decodeToken.error === null) {
+            let uid = this.uuidService.new();
+            this.partyDBService.newUser(
+                decodeToken.data.pid,
+                UserBuilder.make()
+                    .withId(uid)
+                    .withName(decodeToken.data.name)
+                    .build()
+            );
+            let userToken = this.authenticationService.generateToken(decodeToken.data.pid, uid);
+            return {token: userToken};
+        } else {
+            return {token: ""};
+        }
+    }
+
+    @Post('/validate')
+    public authenticatePartyCode(@BodyParam('code') code: string, @BodyParam('name') nickName: string): any {
+        let party = this.partyDBService.findPartyByCode(code);
+        if (party) {
+            let userJoinToken = this.webTokenService.generateFrom({
+                pid: party.id,
+                name: nickName
+            });
+            return {
+                valid: true,
+                token: userJoinToken
+            };
+        } else {
+            return {
+                valid: false,
+                token: null
+            };
+        }
+
     }
 
     @Post('/leave')
-    public leaveParty(): any {
-        return null;
-    }
-
-    @Get('/test/:id')
-    public async test(): Promise<any> {
-        // not sure why this was in the old code
-        let s = new SpotifyAPI();
-        let al = await s.browse.getFeaturedPlaylists("BQBgJmCYvtCzHPJwNosiy8NnMshN7LgyCBJV5rfAF1Re5rKR0GAOIKf5JXMTIWgxxRYHXV-OgUfjaRU7HyH0lXg5VWtBcTeJQ4sVhFDn_rUz3yEunDZhNQ4-FZ4SYBY9sAXFkGz0vSAAjgpBXT_04G64bMQvkUShzHDUKUZYVUlXflvbDy2574594AnlP3v8Es9Bh5wXqdTTzLApf0oSHj7vHI8NiEyX-QVuWWGH0uDiduwYQtofNhF1sl7V");
-        return al.message;
+    public leaveParty(@BodyParam('token') token: string): any {
+        let decodeToken = this.webTokenService.verify(token);
+        if (decodeToken.error === null) {
+            this.partyDBService.removeUser(decodeToken.data.partyId, decodeToken.data.userId);
+            return {
+                removed: true,
+                error: false
+            }
+        } else {
+            return {
+                removed: false,
+                error: true
+            }
+        }
     }
 }

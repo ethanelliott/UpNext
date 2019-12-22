@@ -47,7 +47,7 @@
                 <v-card-actions>
                     <v-spacer/>
                     <v-btn @click="aboutDialog=false">
-                        Very Cool
+                        COOL
                     </v-btn>
                 </v-card-actions>
             </v-card>
@@ -68,7 +68,7 @@
                                 What is UpNext
                                 <v-icon dark right>mdi-help-box</v-icon>
                             </v-btn>
-                            <v-btn block class="my-5" color="primary" height="80px" to="/app/home" x-large>
+                            <v-btn block class="my-5" color="primary" height="80px" to="/join" x-large>
                                 Join a Party
                             </v-btn>
                             <v-btn block color="primary" height="80px" outlined to="/start" x-large>

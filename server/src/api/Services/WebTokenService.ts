@@ -25,11 +25,12 @@ export default class WebTokenService {
         };
     }
 
-    public generateFrom(data: object): string {
+    public generateFrom(data: object, expire: string = this.expiry): string {
+        this.encryptionOptions.expiresIn = expire;
         return sign(data, this.secretKey, this.encryptionOptions);
     }
 
-    public verify(jwt: string): VerifyResponse {
+    public verify(jwt: string): VerifyResponse<any> {
         let data = {};
         let error = null;
         try {
@@ -41,7 +42,7 @@ export default class WebTokenService {
     }
 }
 
-class VerifyResponse {
+class VerifyResponse<T> {
     error: any;
-    data: any;
+    data: T;
 }

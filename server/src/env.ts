@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import * as path from 'path';
 import * as pkg from '../package.json';
-import { getOsEnv, getOsPaths, normalizePort } from './Lib/env';
+import { getOsEnv, getOsPaths, normalizePort } from './lib/env';
 import { readFileSync } from "fs";
 
 dotenv.config({path: path.join(process.cwd(), `.env${((process.env.NODE_ENV === 'test') ? '.test' : '')}`)});
@@ -36,9 +36,11 @@ export const env = {
         }
     },
     swagger: {
-        route: getOsEnv('SWAGGER_ROUTE')
+        route: getOsEnv('SWAGGER_ROUTE'),
+        enabled: getOsEnv('SWAGGER_ENABLED')
     },
     monitor: {
-        route: getOsEnv('MONITOR_ROUTE')
+        route: getOsEnv('MONITOR_ROUTE'),
+        enabled: getOsEnv('MONITOR_ENABLED')
     },
 };

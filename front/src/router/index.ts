@@ -4,11 +4,10 @@ import LandingPage from '../views/LandingPage.vue';
 import JoinPage from '../views/JoinPage.vue';
 import StartPage from '../views/StartPage.vue';
 import MakePage from '../views/MakePage.vue';
+import LeavePage from '../views/LeavePage.vue';
 // main application views
 import Main from '../views/app/Main.vue';
 import Home from '../views/app/Home.vue';
-import Queue from '../views/app/Queue.vue';
-import Add from '../views/app/Add.vue';
 
 Vue.use(VueRouter);
 
@@ -22,6 +21,11 @@ const routes = [
         path: '/join',
         name: 'join',
         component: JoinPage
+    },
+    {
+        path: '/leave',
+        name: 'leave',
+        component: LeavePage
     },
     {
         path: '/start',
@@ -52,30 +56,6 @@ const routes = [
                 components: {
                     default: Main,
                     content: Home
-                }
-            },
-            {
-                path: 'queue',
-                name: 'appQueue',
-                props: {
-                    default: false,
-                    content: true
-                },
-                components: {
-                    default: Main,
-                    content: Queue
-                }
-            },
-            {
-                path: 'add',
-                name: 'appAdd',
-                props: {
-                    default: false,
-                    content: true
-                },
-                components: {
-                    default: Main,
-                    content: Add
                 }
             }
         ]

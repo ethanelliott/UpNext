@@ -2233,6 +2233,11 @@ node-pre-gyp@^0.12.0:
     semver "^5.3.0"
     tar "^4"
 
+node-ts-uuid@^1.0.5:
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/node-ts-uuid/-/node-ts-uuid-1.0.5.tgz#d9d87abecccde66079db6a129b07d0259aa34112"
+  integrity sha512-Muz5CUs+haLDhCqBge5fI3AP7sNKh5MxD+HmiLHekgQBqnYnbZFIoc3RojXpOMV6OUgPjWS2GWqcdma1cSxOBQ==
+
 node-uuid@^1.4.1:
   version "1.4.8"
   resolved "https://registry.yarnpkg.com/node-uuid/-/node-uuid-1.4.8.tgz#b040eb0923968afabf8d32fb1f17f1167fdab907"

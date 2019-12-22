@@ -17,7 +17,7 @@
                                 <v-text-field :disabled="disableTextInput" :rules="[rules.required, rules.nick]"
                                               @input="formatForm" filled hint="" label="Nickname" v-model="nickname"/>
                                 <v-btn :disabled="!isFormValid" :loading="isLoadingButton" @click="joinParty" block
-                                       color="primary" type="submit" x-large>
+                                       color="primary" x-large>
                                     Join
                                 </v-btn>
                             </v-form>
@@ -31,6 +31,7 @@
 
 <script>
     import session from 'localStorage'
+    import axios from 'axios'
 
     export default {
         name: 'JoinPage',
@@ -58,11 +59,22 @@
             },
             formatForm() {
                 this.isFormValid = this.$refs.form.validate();
-                this.partyCode = this.partyCode.toUpperCase();
+                this.code = this.code.toUpperCase();
             },
             joinParty() {
                 let context = this;
                 context.setLoading();
+                console.log(context.code)
+                axios.post('/party/validate', {code: context.code}).then(res => {
+                    console.log(res.data);
+                    if (res.data.valid) {
+                        context.$router.push(`/make/${res.data.token}`)
+                    } else {
+                        context.setNotLoading();
+                    }
+                }).catch(err => {
+                    console.error(err);
+                })
             }
         }
     }

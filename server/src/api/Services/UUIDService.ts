@@ -1,16 +1,18 @@
 import { Service } from "typedi";
-import uuid from 'uuid/v3';
+import {Uuid, UuidOptions} from 'node-ts-uuid'
 
 
 @Service()
 export default class UUIDService {
-    private readonly domain: string;
+
+    private readonly options: UuidOptions = {
+        length: 50,
+    };
 
     constructor() {
-        this.domain = 'https://upnext.cool';
     }
 
     public new(): string {
-        return uuid(this.domain, uuid.URL);
+        return Uuid.generate(this.options);
     }
 }

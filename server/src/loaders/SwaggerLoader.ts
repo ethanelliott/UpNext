@@ -7,9 +7,11 @@ import { routingControllersToSpec } from 'routing-controllers-openapi';
 import * as swaggerUi from 'swagger-ui-express';
 
 import { env } from '../env';
+import logger from "../util/Log";
 
 export const SwaggerLoader: MicroframeworkLoader = (settings: MicroframeworkSettings | undefined) => {
-    if (settings) {
+    if (settings && env.swagger.enabled) {
+        logger.info("[START] Loading Swagger");
         const expressApp = settings.getData('express_app');
 
         const schemas = validationMetadatasToSchemas((getFromContainer(MetadataStorage) as any).validationMetadatas, {classTransformerMetadataStorage: defaultMetadataStorage});

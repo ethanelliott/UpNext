@@ -27,5 +27,5 @@ bootstrapMicroframework({
         logger.info("[START] Server is running!");
     })
     .catch((err: Error) => {
-        logger.error('[ERROR] THE SERVER HAS CRASHED: ' + err + "\n" + err.stack);
+        logger.error(`[ERROR] THE SERVER HAS CRASHED: ${err}\n${err.stack}`);
     });

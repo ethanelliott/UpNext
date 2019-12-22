@@ -1,7 +1,6 @@
 import { Service } from "typedi";
 import WebTokenService from "./WebTokenService";
 import logger from "../../util/Log";
-import UUIDService from "./UUIDService";
 import AuthenticationResponse from "../Types/AuthenticationResponse";
 
 
@@ -9,8 +8,7 @@ import AuthenticationResponse from "../Types/AuthenticationResponse";
 export default class AuthenticationService {
 
     constructor(
-        private webTokenService: WebTokenService,
-        private uuidService: UUIDService
+        private webTokenService: WebTokenService
     ) {
     }
 
@@ -20,11 +18,11 @@ export default class AuthenticationService {
         return {valid: !verification.error, data: verification.data};
     }
 
-    public generateToken(partyID: string): string {
+    public generateToken(partyID: string, userID: string): string {
         try {
             let data = {
                 "partyId": partyID,
-                "userId": this.uuidService.new()
+                "userId": userID // this.uuidService.new()
             };
             return this.webTokenService.generateFrom(data);
         } catch (e) {

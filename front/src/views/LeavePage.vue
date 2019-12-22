@@ -10,7 +10,7 @@
                                 <span class="font-weight-bold">Up</span>
                                 <span class="font-weight-light">Next</span>
                             </p>
-                            <p class="my-10 subheading">Getting the party started...</p>
+                            <p class="my-10 subheading">Leaving the party...</p>
                             <v-progress-circular :size="70" :width="7" color="primary" indeterminate/>
                         </v-col>
                     </v-row>
@@ -25,18 +25,16 @@
     import axios from 'axios'
 
     export default {
-        name: 'MakePage',
-        props: ['token'],
+        name: 'LeavePage',
         data: () => ({}),
         mounted() {
             let context = this;
-            let joinToken = context.$route.params.token;
-            axios.post(`/party/join?token=${joinToken}`).then(res => {
-                let userToken = res.data.token;
-                session.setItem('token', userToken); // set token for reqs to the party
-                //then make the user wait so they can look at the pretty screen
+            let token = session.getItem('token');
+            axios.post(`/party/leave`, {token}).then(res => {
+                console.log(res.data);
+                session.removeItem('token');
                 setTimeout(() => {
-                    context.$router.push('/app/home')
+                    context.$router.push('/')
                 }, 2000)
             }).catch(err => {
                 console.error(err);
