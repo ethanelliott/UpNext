@@ -1,25 +1,25 @@
 <template>
     <v-dialog fullscreen hide-overlay transition="dialog-bottom-transition" v-model="dialog">
         <template v-slot:activator="{ on }">
-            <v-btn @click="dialog = true" block class="my-10" color="primary" large rounded>
+            <v-btn @click="open" block class="my-5" color="primary" large rounded>
                 <v-icon left>mdi-magnify</v-icon>
                 Search
             </v-btn>
         </template>
         <v-card>
-            <v-toolbar color="darker" extended>
-                <v-btn @click="dialog = false" dark icon>
+            <v-app-bar fixed color="darker" extended>
+                <v-btn @click="close" dark icon>
                     <v-icon>mdi-close</v-icon>
                 </v-btn>
                 <v-toolbar-title>Search</v-toolbar-title>
                 <template #extension>
-                    <v-text-field autofocus clearable dense full-width
+                    <v-text-field @input="isTypingSearch = true" autofocus clearable dense full-width
                                   hide-details label="search for something" prepend-inner-icon="mdi-magnify"
-                                  single-line/>
+                                  single-line v-model="query"/>
                 </template>
-            </v-toolbar>
-            <v-container v-if="!loading && !loaded">
-                <v-container>
+            </v-app-bar>
+            <v-container class="mt-10" v-if="!loading && !loaded">
+                <v-container class="mt-10" >
                     <v-row>
                         <v-col align="center" justify="center">
                             <v-card class="mt-10" color="transparent" flat>
@@ -30,14 +30,11 @@
                     </v-row>
                 </v-container>
             </v-container>
-            <v-container v-else>
-                <v-list v-if="loading">
-                    <template v-for="(item, index) in items">
-                        <v-skeleton-loader class="mx-auto" ref="skeleton" type="list-item-avatar-three-line"
-                                           v-bind:key="index"/>
-                    </template>
+            <v-container class="mt-10" v-else>
+                <v-list class="mt-10" v-if="loading">
+                    <v-skeleton-loader class="mx-auto" ref="skeleton" type="list-item-avatar-three-line"/>
                 </v-list>
-                <v-list v-else-if="loaded">
+                <v-list class="mt-10" v-else-if="loaded">
                     <template v-for="(item, index) in items">
                         <v-list-item three-line v-bind:key="index">
                             <v-list-item-avatar tile>
@@ -62,6 +59,7 @@
 
 <script>
     import session from 'localStorage'
+    import axios from 'axios'
 
     function debounce(func, wait = 100) {
         let timeout
@@ -76,15 +74,43 @@
     export default {
         name: "Search",
         data: () => ({
+            token: '',
             loading: false,
             loaded: false,
             dialog: false,
-            notifications: false,
-            sound: true,
-            widgets: false,
-            items: new Array(10).fill(0)
+            items: [],
+            isTypingSearch: false,
+            query: '',
         }),
-        watch: {},
-
+        mounted() {
+            this.token = session.getItem('token');
+        },
+        methods: {
+            open() {
+                this.dialog = true;
+            },
+            close() {
+                this.dialog = false;
+            },
+            search() {
+                if (this.query !== "") {
+                    this.loading = true
+                    this.$emit('search', this.query)
+                } else {
+                    this.loading = false;
+                    this.items = []
+                }
+            },
+        },
+        watch: {
+            query: debounce(function () {
+                this.isTypingSearch = false
+            }, 500),
+            isTypingSearch: function (value) {
+                if (!value) {
+                    this.search()
+                }
+            }
+        },
     }
 </script>

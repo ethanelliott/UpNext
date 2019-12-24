@@ -1,5 +1,6 @@
 export enum PartyStateEnum {
     PLAYING,
     SKIPPING,
-    NEW_SONG
+    NEW_SONG,
+    NOTHING_PLAYING
 }

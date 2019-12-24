@@ -22,7 +22,7 @@ export default class AuthenticationService {
         try {
             let data = {
                 "partyId": partyID,
-                "userId": userID // this.uuidService.new()
+                "userId": userID
             };
             return this.webTokenService.generateFrom(data);
         } catch (e) {

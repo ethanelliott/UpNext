@@ -11,6 +11,7 @@ import { ErrorMiddleware } from "../middleware/ErrorMiddleware";
 // Controllers
 import { PartyController } from "../api/Controllers/PartyController";
 import { SpotifyOAuthController } from "../api/Controllers/SpotifyOAuthController";
+import { SpotifyController } from "../api/Controllers/SpotifyController";
 
 export const ExpressLoader: MicroframeworkLoader = (settings: MicroframeworkSettings | undefined) => {
     if (settings) {
@@ -23,7 +24,8 @@ export const ExpressLoader: MicroframeworkLoader = (settings: MicroframeworkSett
             defaultErrorHandler: false,
             controllers: [
                 PartyController,
-                SpotifyOAuthController
+                SpotifyOAuthController,
+                SpotifyController
             ],
             middlewares: [
                 LogMiddleware,

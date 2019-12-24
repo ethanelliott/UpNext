@@ -1,8 +1,10 @@
 import WebAPIRequestBuilder from "../Requests/WebAPIRequestBuilder";
 import { HttpMethods } from "../Types/HttpMethods";
-import { plainToClass } from "class-transformer";
+import { plainToClass, plainToClassFromExist } from "class-transformer";
 import PlaylistSnapshotObject from "../Types/PlaylistSnapshotObject";
 import PlaylistObject from "../Types/PlaylistObject";
+import PagingObject from "../Types/PagingObject";
+import PlaylistTrackObject from "../Types/PlaylistTrackObject";
 
 export default class PlaylistAPI {
 
@@ -15,7 +17,7 @@ export default class PlaylistAPI {
             .withMethod(HttpMethods.POST)
             .withPath(`/v1/playlists/${playlistId}/tracks`)
             .withBodyParameters({
-                uris: uris
+                uris: uris.map(e => `spotify:track:${e}`)
             })
             .build()
             .execute();
@@ -51,6 +53,19 @@ export default class PlaylistAPI {
             .build()
             .execute();
         return plainToClass(PlaylistObject, d);
+    }
+
+    public async getTracks(token: string, playlistId: string): Promise<PagingObject<PlaylistTrackObject>> {
+        let d = await WebAPIRequestBuilder
+            .make(token)
+            .withMethod(HttpMethods.GET)
+            .withPath(`/v1/playlists/${playlistId}/tracks`)
+            .withQueryParameters({
+                market: 'from_token'
+            })
+            .build()
+            .execute();
+        return plainToClassFromExist(new PagingObject<PlaylistTrackObject>(), d);
     }
 }
 

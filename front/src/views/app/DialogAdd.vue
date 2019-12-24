@@ -6,33 +6,49 @@
             </v-btn>
         </template>
         <v-card>
-            <v-toolbar color="darker">
+            <v-app-bar fixed color="darker">
                 <v-btn @click="close" dark icon>
                     <v-icon>mdi-close</v-icon>
                 </v-btn>
                 <v-toolbar-title>Add Songs</v-toolbar-title>
-            </v-toolbar>
-            <v-container>
+            </v-app-bar>
+            <v-container class="mt-10">
                 <v-row>
                     <v-col align="center" justify="center">
-                        <search/>
+                        <search v-on:search="search"/>
                     </v-col>
                 </v-row>
                 <v-row>
                     <v-col>
-                        <v-card>
+                        <v-card color="grey darken-2">
                             <v-card-title>
                                 Recommended Songs
+                                <v-spacer/>
+                                <v-btn @click="updateContent" icon>
+                                    <v-icon>mdi-refresh</v-icon>
+                                </v-btn>
                             </v-card-title>
+                            <v-list two-line color="transparent">
+                                <template v-for="(item, index) in recommended">
+                                    <song :key="index" v-bind:song="item" v-on:add="addItem" />
+                                    <v-divider :key="'div-' + index" v-if="index + 1 < recommended.length"/>
+                                </template>
+                            </v-list>
                         </v-card>
                     </v-col>
                 </v-row>
                 <v-row>
                     <v-col>
-                        <v-card>
+                        <v-card color="grey darken-2">
                             <v-card-title>
-                                Top Playlists
+                                {{motd}}
                             </v-card-title>
+                            <v-list one-line color="transparent">
+                                <template v-for="(item, index) in topPlaylists">
+                                    <playlist :key="index" v-bind:data="item" v-on:add="addItem" />
+                                    <v-divider :key="'div-' + index" v-if="index + 1 < topPlaylists.length"/>
+                                </template>
+                            </v-list>
                         </v-card>
                     </v-col>
                 </v-row>
@@ -43,15 +59,29 @@
 
 <script>
     import session from 'localStorage'
-
+    import axios from 'axios'
     import Search from './Search'
+    import Playlist from './components/Playlist'
+    import Song from './components/Song'
 
     export default {
         props: ['value'],
         name: "Queue",
-        data: () => ({}),
+        data: () => ({
+            token: '',
+            recommended: [],
+            topPlaylists: [],
+            motd: '',
+        }),
         components: {
-            'search': Search
+            'search': Search,
+            'playlist': Playlist,
+            'song': Song
+        },
+        mounted() {
+            window.scrollTo(0, 0);
+            this.token = session.getItem('token');
+            this.updateContent();
         },
         computed: {
             dialog: {
@@ -66,9 +96,34 @@
         methods: {
             open() {
                 this.dialog = true;
+                this.updateContent();
             },
             close() {
                 this.dialog = false;
+            },
+            updateContent() {
+                let t = this;
+                axios.post('/party/featured', {token: this.token})
+                    .then(res => {
+                        t.motd = res.data.featured.message;
+                        t.topPlaylists = res.data.featured.playlists.items.slice(0, 5);
+                    }).catch(err => {
+                        console.error(err);
+                    }
+                )
+                axios.post('/party/recommended', {token: this.token})
+                    .then(res => {
+                        t.recommended = res.data.recommended.tracks.slice(0, 5);
+                    }).catch(err => {
+                        console.error(err);
+                    }
+                )
+            },
+            addItem(songId) {
+                this.$emit('add', songId)
+            },
+            search(query) {
+                this.$emit('search', query)
             }
         },
         watch: {}

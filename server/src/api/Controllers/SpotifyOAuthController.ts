@@ -49,7 +49,7 @@ export class SpotifyOAuthController {
             let playlistData = await this.spotifyService.getSpotifyAPI().playlist.create(callbackData.access_token, userData.id, {
                 name: `${decodeState.data.partyName}🎵`,
                 description: `${decodeState.data.partyName} archive, brought to you by UpNext.cool`,
-                public: false,
+                public: true,
                 collaborative: false
             });
             let party: Party = PartyBuilder.make()
@@ -62,6 +62,10 @@ export class SpotifyOAuthController {
                 .withUserId(userData.id)
                 .withPlaylistId(playlistData.id)
                 .build();
+            // remove parties that the user already has running
+            this.upNextService.stopPartyByUserId(userData.id);
+            this.partyDBService.removePartyBySpotifyUserId(userData.id);
+            // make the new party
             this.partyDBService.newParty(party);
             this.upNextService.startPartyEventLoop();
             let userJoinToken = this.webTokenService.generateFrom({

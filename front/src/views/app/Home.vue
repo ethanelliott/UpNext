@@ -1,5 +1,21 @@
 <template>
     <v-container class="fill-height ma-0 pa-0">
+        <v-app-bar app dark color="darker">
+            <v-icon color="primary">mdi-music-note-plus</v-icon>
+            <v-toolbar-title class="headline text-uppercase ml-3">
+                <span>Up</span>
+                <span class="font-weight-light">Next</span>
+            </v-toolbar-title>
+            <v-spacer/>
+            <v-toolbar-items>
+                <v-btn @click="sharePartyCode" text x-large>
+                    <span class="text-uppercase" style="letter-spacing: 10px;font-family: monospace;">{{ code }}</span>
+                </v-btn>
+            </v-toolbar-items>
+        </v-app-bar>
+        <v-overlay :value="isLoading">
+            <v-progress-circular color="primary" indeterminate size="64"/>
+        </v-overlay>
         <v-dialog dark v-model="safetyDialog" width="500">
             <v-card>
                 <v-card-title>
@@ -23,12 +39,35 @@
             <v-row class="ma-0 pa-0">
                 <v-col class="ma-0 pa-0" align="center" justify="center">
                     <v-card color="transparent" flat max-width="600">
-                        <v-img class="mx-5" :src="albumArtwork" max-width="600" min-height="300"/>
+                        <v-card flat color="transparent">
+                            <v-img @click="overlay = true" class="mx-5" :src="albumArtwork" max-width="600"
+                                   min-height="300"/>
+                            <v-overlay absolute opacity="0.8" :value="overlay">
+                                <v-card flat color="transparent" height="35vh" width="100vw" >
+                                    <v-container class="fill-height">
+                                        <v-container>
+                                            <v-row align="center" justify="center">
+                                                <v-col>
+                                                    <v-btn x-large color="primary" @click="openSpotifyUri">
+                                                        Open In Spotify
+                                                    </v-btn>
+
+                                                </v-col>
+                                            </v-row>
+                                        </v-container>
+                                    </v-container>
+                                    <v-btn color="secondary" fab absolute top right @click="overlay = false">
+                                        <v-icon>mdi-close</v-icon>
+                                    </v-btn>
+                                </v-card>
+                            </v-overlay>
+                        </v-card>
                         <v-card-text class="mx-5" align="start">
-                            <span class="headline font-weight-medium text--primary">{{trackName}}</span>
+                            <span class="trackName headline font-weight-medium text--primary">{{trackName}}</span>
                             <br>
-                            <span class="font-weight-thin font-italic text--primary">{{trackArtist}}</span>
+                            <span class="trackArtist font-weight-thin font-italic text--primary">{{trackArtist}}</span>
                         </v-card-text>
+
                     </v-card>
                 </v-col>
             </v-row>
@@ -39,8 +78,8 @@
                     <v-card color="transparent" flat max-width="600">
                         <v-container>
                             <v-row align-content="space-around" justify="space-around">
-                                <queue v-model="dialogs.queue"/>
-                                <add v-model="dialogs.add"/>
+                                <queue v-model="dialogs.queue" v-bind:playlist="playlist"/>
+                                <add v-model="dialogs.add" v-on:add="addItem" v-on:search="search"/>
                             </v-row>
                         </v-container>
                     </v-card>
@@ -50,7 +89,7 @@
         <v-footer dark fixed>
             <v-container align="center" justify="center">
                 <v-row align="center" justify="center">
-                    <v-progress-linear class="my-0" color="primary" height="10"/>
+                    <v-progress-linear class="my-0" color="primary" height="10" v-model="songProgress"/>
                 </v-row>
             </v-container>
         </v-footer>
@@ -58,6 +97,7 @@
 </template>
 
 <script>
+    import io from 'socket.io-client'
     import session from 'localStorage'
     import Queue from './DialogQueue'
     import Add from './DialogAdd'
@@ -65,15 +105,24 @@
     export default {
         name: "Home",
         data: () => ({
-            albumArtwork: 'https://i.scdn.co/image/ab67616d0000b2737184d97b0e3c5e673348a239',
-            trackName: 'TEST',
-            trackArtist: 'TEST',
+            isLoading: true,
+            socket: null,
+            token: null,
+            eventLoop: null,
+            code: '',
+            albumArtwork: '',
+            trackName: '',
+            trackArtist: '',
+            trackId: '',
+            songProgress: 0,
+            playlist: [],
             dialogs: {
                 queue: false,
                 add: false
             },
             safetyDialog: false,
-            safeToLeave: false
+            safeToLeave: false,
+            overlay: false
         }),
         components: {
             'queue': Queue,
@@ -83,9 +132,43 @@
             navigateAway() {
                 this.safeToLeave = true;
                 this.$router.push('/leave');
+            },
+            sharePartyCode() {
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'UpNext Party Code',
+                        text: 'Join the party!',
+                        url: `https://upnext.cool/join?c=${this.code}`,
+                    })
+                        .then(() => {
+                        })
+                        .catch((error) => {
+                        });
+                }
+            },
+            openSpotifyUri: function () {
+                window.open(`spotify:track:${this.trackId}`, '_blank');
+            },
+            addItem(songId) {
+                let t = this;
+                this.socket.emit('playlist-add-song', {
+                    token: t.token,
+                    data: {
+                        songId
+                    }
+                })
+            },
+            search(query) {
+                console.log(query);
+                this.socket.emit('search', {
+                    token: this.token,
+                    data: {
+                        query
+                    }
+                })
             }
         },
-        beforeRouteLeave (to, from, next) {
+        beforeRouteLeave(to, from, next) {
             if (this.safeToLeave) {
                 next();
             } else {
@@ -102,10 +185,55 @@
                     noNav = noNav || false;
                 }
             }
-            // TODO: Add check before leaving the page
             if (!noNav) {
                 this.safetyDialog = true;
             }
         },
+        beforeDestroy() {
+            this.socket.disconnect();
+            clearInterval(this.eventLoop);
+        },
+        mounted() {
+            window.scrollTo(0, 0);
+            let t = this;
+            // This might solve all the reload delay issues
+            // setInterval(() => {
+            //     if (!document.hasFocus()) {
+            //         t.isLoading = true;
+            //     }
+            // }, 1000);
+            t.token = session.getItem('token');
+            t.socket = io(t.$socketPath);
+            t.socket.on('connect', () => {
+                t.eventLoop = setInterval(() => {
+                    t.socket.emit('get-state', {
+                        token: t.token,
+                        data: null
+                    })
+                }, 1000);
+            });
+            t.socket.on('party-leave', () => {
+                t.navigateAway();
+            });
+            t.socket.on('got-state', (message) => {
+                t.isLoading = false;
+                let state = message.data.state;
+                t.albumArtwork = state.albumArtwork.filter(e => e.width > 500)[0].url;
+                t.trackName = state.trackName;
+                t.trackArtist = state.artistName;
+                t.songProgress = state.progress / state.duration * 100;
+                t.trackId = state.trackId;
+                t.code = message.data.code;
+                t.playlist = message.data.playlist;
+            });
+        }
     }
 </script>
+
+<style>
+    .trackName {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+</style>

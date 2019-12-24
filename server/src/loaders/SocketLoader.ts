@@ -6,16 +6,17 @@ import logger from "../util/Log";
 import { createSocketServer } from "socket-controllers";
 import { AuthenticationSocketMiddleware } from "../middleware/AuthenticationSocketMiddleware";
 // Controllers
-import { TestSocketController } from "../api/SocketControllers/TestSocketController";
-import { Test2SocketController } from "../api/SocketControllers/Test2SocketController";
+import { ConnectionController } from "../api/SocketControllers/ConnectionController";
 import { SearchController } from "../api/SocketControllers/SearchController";
+import { StateController } from "../api/SocketControllers/StateController";
+import { PlaylistController } from "../api/SocketControllers/PlaylistController";
 
 export const SocketLoader: MicroframeworkLoader = (settings: MicroframeworkSettings | undefined) => {
     if (settings) {
         logger.info("[START] Loading SocketIO");
 
         const socketApp = createSocketServer(env.app.socketPort, {
-            controllers: [SearchController, TestSocketController, Test2SocketController],
+            controllers: [SearchController, ConnectionController, StateController, PlaylistController],
             middlewares: [AuthenticationSocketMiddleware]
         });
         logger.info(`[START] Socket listening on port ${env.app.socketPort}`);

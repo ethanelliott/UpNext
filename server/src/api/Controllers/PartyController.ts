@@ -5,6 +5,7 @@ import WebTokenService from "../Services/WebTokenService";
 import UserBuilder from "../Factory/UserBuilder";
 import UUIDService from "../Services/UUIDService";
 import AuthenticationService from "../Services/AuthenticationService";
+import SpotifyService from "../Services/SpotifyService";
 
 @JsonController('/party')
 export class PartyController {
@@ -12,7 +13,8 @@ export class PartyController {
         private partyDBService: PartyDBService,
         private webTokenService: WebTokenService,
         private uuidService: UUIDService,
-        private authenticationService: AuthenticationService
+        private authenticationService: AuthenticationService,
+        private spotifyService: SpotifyService
     ) {
     }
 
@@ -75,6 +77,34 @@ export class PartyController {
                 removed: false,
                 error: true
             };
+        }
+    }
+
+    @Post('/recommended')
+    public async getRecommended(@BodyParam('token') token: string) {
+        let decodeToken = this.webTokenService.verify(token);
+        if (decodeToken.error === null) {
+            let party = this.partyDBService.findPartyById(decodeToken.data.partyId);
+            let recommended = await this.spotifyService.getSpotifyAPI().browse.getRecommendations(party.token, party.history);
+            return {
+                recommended
+            };
+        } else {
+            return null;
+        }
+    }
+
+    @Post('/featured')
+    public async getFeatured(@BodyParam('token') token: string) {
+        let decodeToken = this.webTokenService.verify(token);
+        if (decodeToken.error === null) {
+            let party = this.partyDBService.findPartyById(decodeToken.data.partyId);
+            let featured = await this.spotifyService.getSpotifyAPI().browse.getFeaturedPlaylists(party.token);
+            return {
+                featured
+            };
+        } else {
+            return null;
         }
     }
 }
