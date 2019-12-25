@@ -11,10 +11,10 @@
                 </v-card-text>
                 <v-card-actions>
                     <v-spacer/>
-                    <v-btn @click="installDialog = false" color="primary" flat outlined>
+                    <v-btn @click="installDialog = false" color="primary" text outlined>
                         CANCEL
                     </v-btn>
-                    <v-btn @click.prevent="install" color="primary" flat>
+                    <v-btn @click.prevent="install" color="primary" text>
                         INSTALL THE APP
                     </v-btn>
                 </v-card-actions>

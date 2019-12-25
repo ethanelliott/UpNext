@@ -80,7 +80,7 @@ export default class UpNextService {
     }
 
     public async addSongToPlaylist(party: Party, id: string) {
-        await this.spotifyService.getSpotifyAPI().playlist.addTracks(party.token, party.playlistId, [id])
+        await this.spotifyService.getSpotifyAPI().playlist.addTracks(party.token, party.playlistId, [id]);
     }
 
     public updatePreviousSong(party: Party, id: string) {
@@ -108,18 +108,18 @@ export default class UpNextService {
                 return {
                     error: true,
                     message: 'No Active Devices.'
-                }
+                };
             } else if (e.name === 403) {
                 return {
                     error: true,
                     message: 'Not a Premium Member.'
-                }
+                };
             }
         }
         return {
             error: false,
             message: null
-        }
+        };
     }
 
     public async nextSong(party: Party) {
@@ -165,12 +165,14 @@ export default class UpNextService {
 
     public stopPartyByUserId(userId: string) {
         let p = this.partyDBService.findPartyByUserId(userId);
-        clearInterval(this.currentEventLoopParties[p.id]);
-        delete this.currentEventLoopParties[p.id];
+        if (p) {
+            clearInterval(this.currentEventLoopParties[p.id]);
+            delete this.currentEventLoopParties[p.id];
+        }
     }
 }
 
-export const playlistSort = ($a: PlaylistEntry, $b:PlaylistEntry) => {
+export const playlistSort = ($a: PlaylistEntry, $b: PlaylistEntry) => {
     let n = $b.votes - $a.votes;
     if (n !== 0) return n;
     return $a.addedAt - $b.addedAt;
