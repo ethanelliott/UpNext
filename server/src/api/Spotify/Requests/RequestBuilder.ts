@@ -56,7 +56,7 @@ export default class RequestBuilder {
     }
 
     public withAuth(token: string): RequestBuilder {
-        if (this.headers) {
+        if (!this.headers) {
             this.headers = {};
         }
         this.headers['Authorization'] = `Bearer ${token}`;

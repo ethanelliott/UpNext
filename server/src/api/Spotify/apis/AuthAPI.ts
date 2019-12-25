@@ -24,7 +24,7 @@ export default class AuthAPI {
         }`;
     }
 
-    public async authorizationCode(clientID: string, clientSecret: string, code: string, redirectURI: string,): Promise<AuthResponse> {
+    public async authorizationCode(clientID: string, clientSecret: string, code: string, redirectURI: string): Promise<AuthResponse> {
         let d = await RequestBuilder
             .builder()
             .withHost("accounts.spotify.com")
@@ -42,6 +42,24 @@ export default class AuthAPI {
             .build()
             .execute();
         return plainToClass(AuthResponse, d);
+    }
 
+    public async refreshAuthToken(clientID: string, clientSecret: string, refreshToken: string): Promise<AuthResponse> {
+        let d = await RequestBuilder
+            .builder()
+            .withHost("accounts.spotify.com")
+            .withScheme("https")
+            .withHeaders({
+                'Authorization': `Basic ${Buffer.from(`${clientID}:${clientSecret}`).toString('base64')}`
+            })
+            .withMethod(HttpMethods.POST)
+            .withPath(`/api/token`)
+            .withQueryParameters({
+                refresh_token: refreshToken,
+                grant_type: 'refresh_token'
+            })
+            .build()
+            .execute();
+        return plainToClass(AuthResponse, d);
     }
 }

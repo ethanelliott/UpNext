@@ -9,8 +9,8 @@ Vue.config.productionTip = false;
 
 const PROD = false;
 
-axios.defaults.baseURL = (PROD ? 'https://api.upnext.cool/api' : 'http://localhost:8884/api');
-Vue.prototype.$socketPath = (PROD ? 'https://socket.upnext.cool' : 'http://localhost:8885');
+axios.defaults.baseURL = (PROD ? 'https://api.upnext.cool/api' : 'http://192.168.1.212:8884/api');
+Vue.prototype.$socketPath = (PROD ? 'https://socket.upnext.cool' : 'http://192.168.1.212:8885');
 Vue.config.productionTip = false;
 
 

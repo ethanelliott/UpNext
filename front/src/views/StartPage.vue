@@ -66,7 +66,6 @@
                     .then(res => {
                         window.location.href = res.data;
                     }).catch(err => {
-                    console.error(err);
                 })
             }
         }

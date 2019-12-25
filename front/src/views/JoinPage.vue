@@ -13,7 +13,7 @@
                             <p class="my-10 subheading">Join a party!</p>
                             <v-form @submit.prevent="null" ref="form" v-model="valid">
                                 <v-text-field :disabled="disableTextInput" :rules="[rules.required, rules.counter]"
-                                              @input="formatForm" filled hint="" label="Party Code" v-model="code"/>
+                                              @input="formatForm" filled hint="" label="Party Code" v-model="partyCode"/>
                                 <v-text-field :disabled="disableTextInput" :rules="[rules.required, rules.nick]"
                                               @input="formatForm" filled hint="" label="Nickname" v-model="nickname"/>
                                 <v-btn :disabled="!isFormValid" :loading="isLoadingButton" @click="joinParty" block
@@ -35,9 +35,10 @@
 
     export default {
         name: 'JoinPage',
+        props: ['code'],
         data: () => ({
             valid: null,
-            code: '',
+            partyCode: '',
             nickname: '',
             rules: {
                 required: value => !!value || 'Required.',
@@ -48,6 +49,9 @@
             disableTextInput: false,
             isLoadingButton: false
         }),
+        mounted() {
+            this.partyCode = (this.code ? this.code : '')
+        },
         methods: {
             setLoading() {
                 this.isLoadingButton = true
@@ -59,21 +63,18 @@
             },
             formatForm() {
                 this.isFormValid = this.$refs.form.validate();
-                this.code = this.code.toUpperCase();
+                this.partyCode = this.partyCode.toUpperCase();
             },
             joinParty() {
                 let context = this;
                 context.setLoading();
-                console.log(context.code)
-                axios.post('/party/validate', {code: context.code}).then(res => {
-                    console.log(res.data);
+                axios.post('/party/validate', {code: context.partyCode, name: context.nickname}).then(res => {
                     if (res.data.valid) {
                         context.$router.push(`/make/${res.data.token}`)
                     } else {
                         context.setNotLoading();
                     }
                 }).catch(err => {
-                    console.error(err);
                 })
             }
         }

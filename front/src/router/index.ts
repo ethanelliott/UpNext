@@ -20,6 +20,7 @@ const routes = [
     {
         path: '/join',
         name: 'join',
+        props: (route: any) => ({code: route.query.c}),
         component: JoinPage
     },
     {

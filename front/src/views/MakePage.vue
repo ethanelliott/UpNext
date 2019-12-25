@@ -37,9 +37,8 @@
                 //then make the user wait so they can look at the pretty screen
                 setTimeout(() => {
                     context.$router.push('/app/home')
-                }, 2000)
+                }, 1500)
             }).catch(err => {
-                console.error(err);
             })
         }
     }

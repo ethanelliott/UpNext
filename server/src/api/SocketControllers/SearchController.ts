@@ -1,26 +1,29 @@
 import 'reflect-metadata';
 import SpotifyService from "../Services/SpotifyService";
-import { MessageBody, OnMessage, SocketController } from "socket-controllers";
+import { EmitOnFail, EmitOnSuccess, MessageBody, OnMessage, SocketController } from "socket-controllers";
 import SocketMessage from "../Types/SocketMessage";
 import AuthenticationService from "../Services/AuthenticationService";
+import PartyDBService from "../Services/PartyDBService";
 
-// This should probably use sockets
 @SocketController()
 export class SearchController {
     constructor(
         private spotifyService: SpotifyService,
-        private authenticationService: AuthenticationService
+        private authenticationService: AuthenticationService,
+        private partyDBService: PartyDBService
     ) {
     }
 
     @OnMessage("search")
+    @EmitOnSuccess("search-success")
+    @EmitOnFail("search-fail")
     public async search(@MessageBody() message: SocketMessage<any>) {
         let a = this.authenticationService.authenticate(message.token);
         if (a.valid) {
-            console.log('valid token:', a.data.partyId);
-            let x = await this.spotifyService.getSpotifyAPI().search.searchEverything('', '');
-            console.log(x);
-            return "YO";
+            let token = this.partyDBService.getTokenFromParty(a.data.partyId);
+            let q = message.data.query;
+            let x = await this.spotifyService.getSpotifyAPI().search.searchEverything(token, q);
+            return x;
         } else {
             return "";
         }

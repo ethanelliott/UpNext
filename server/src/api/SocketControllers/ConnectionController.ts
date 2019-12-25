@@ -3,15 +3,15 @@ import { ConnectedSocket, OnConnect, OnDisconnect, SocketController, SocketIO } 
 import logger from "../../util/Log";
 
 @SocketController()
-export class TestSocketController {
+export class ConnectionController {
     @OnConnect()
     connect(@ConnectedSocket() socket: SocketIO.Socket) {
-        logger.info(`client connected: ${socket.id}`);
+        logger.info(`[SOCKET] client connected: ${socket.id}`);
     }
 
     @OnDisconnect()
     disconnect(@ConnectedSocket() socket: SocketIO.Socket) {
-        logger.info(`client disconnected: ${socket.id}`);
+        logger.info(`[SOCKET] client disconnected: ${socket.id}`);
     }
 
 }

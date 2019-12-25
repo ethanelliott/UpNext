@@ -3,21 +3,17 @@ import PartyPlayState from "../Types/PartyPlayState";
 import PlaylistEntry from "../Types/PlaylistEntry";
 import User from "../Types/User";
 import VoteSkipEntry from "../Types/VoteSkipEntry";
+import { PartyStateEnum } from "../Types/PartyStateEnum";
 
 export default class PartyBuilder {
     private name: string;
     private code: string;
     private id: string;
-    private start: number;
     private token: string;
     private refreshToken: string;
     private tokenExpire: number;
     private userId: string;
     private playlistId: string;
-    private playState: PartyPlayState;
-    private playlist: Array<PlaylistEntry>;
-    private users: Array<User>;
-    private voteSkipList: Array<VoteSkipEntry>;
 
     constructor() {
     }
@@ -55,8 +51,8 @@ export default class PartyBuilder {
         return this;
     }
 
-    public withRefreshToken(token: string): PartyBuilder {
-        this.refreshToken = token;
+    public withRefreshToken(refreshToken: string): PartyBuilder {
+        this.refreshToken = refreshToken;
         return this;
     }
 
@@ -80,16 +76,19 @@ export default class PartyBuilder {
         p.name = this.name;
         p.code = this.code;
         p.id = this.id;
-        p.start = this.start;
+        p.start = (new Date()).valueOf();
         p.token = this.token;
         p.refreshToken = this.refreshToken;
-        p.tokenExpire = this.tokenExpire;
+        p.tokenExpire = (new Date()).valueOf() + (1000 * this.tokenExpire) ;
         p.userId = this.userId;
         p.playlistId = this.playlistId;
+        p.state = PartyStateEnum.PLAYING;
+        p.previousSong = '';
         p.playState = new PartyPlayState();
         p.playlist = new Array<PlaylistEntry>();
         p.users = new Array<User>();
         p.voteSkipList = new Array<VoteSkipEntry>();
+        p.history = new Array<string>();
         return p;
     }
 
