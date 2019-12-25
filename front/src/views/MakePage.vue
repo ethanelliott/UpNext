@@ -39,7 +39,6 @@
                     context.$router.push('/app/home')
                 }, 1500)
             }).catch(err => {
-                console.error(err);
             })
         }
     }

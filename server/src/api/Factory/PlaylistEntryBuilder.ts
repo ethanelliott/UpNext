@@ -50,7 +50,7 @@ export default class PlaylistEntryBuilder {
     public build(): PlaylistEntry {
         let u = UserBuilder.make().withName(this.userName).withId(this.userId).build();
         let p = new PlaylistEntry();
-        p.votes = 1; // starts at one (reddit rules)
+        p.votes = 1; // starts at one
         p.addedAt = (new Date()).valueOf();
         p.id = this.songId;
         p.added = u;

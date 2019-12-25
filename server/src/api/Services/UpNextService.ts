@@ -100,7 +100,26 @@ export default class UpNextService {
     }
 
     public async playSong(party: Party, songId: string) {
-        await this.spotifyService.getSpotifyAPI().player.playSong(party.token, songId);
+        // playing a song should also possibly return a state to represent the error
+        try {
+            await this.spotifyService.getSpotifyAPI().player.playSong(party.token, songId);
+        } catch (e) {
+            if (e.name === 404) {
+                return {
+                    error: true,
+                    message: 'No Active Devices.'
+                }
+            } else if (e.name === 403) {
+                return {
+                    error: true,
+                    message: 'Not a Premium Member.'
+                }
+            }
+        }
+        return {
+            error: false,
+            message: null
+        }
     }
 
     public async nextSong(party: Party) {

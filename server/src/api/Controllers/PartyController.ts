@@ -85,10 +85,14 @@ export class PartyController {
         let decodeToken = this.webTokenService.verify(token);
         if (decodeToken.error === null) {
             let party = this.partyDBService.findPartyById(decodeToken.data.partyId);
-            let recommended = await this.spotifyService.getSpotifyAPI().browse.getRecommendations(party.token, party.history);
-            return {
-                recommended
-            };
+            if (party.history.length > 0) {
+                let recommended = await this.spotifyService.getSpotifyAPI().browse.getRecommendations(party.token, party.history);
+                return {
+                    recommended
+                };
+            } else {
+                return { };
+            }
         } else {
             return null;
         }

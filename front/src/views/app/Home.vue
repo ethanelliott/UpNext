@@ -78,14 +78,20 @@
                     <v-card color="transparent" flat max-width="600">
                         <v-container>
                             <v-row align-content="space-around" justify="space-around">
-                                <queue v-model="dialogs.queue" v-bind:playlist="playlist"/>
-                                <add v-model="dialogs.add" v-on:add="addItem" v-on:search="search"/>
+                                <queue v-model="dialogs.queue" v-bind:playlistId="playlistId" v-bind:playlist="playlist" v-on:upvote="upvoteSong" v-on:downvote="downvoteSong" />
+                                <add v-model="dialogs.add" v-on:add="addItem" v-on:search="search" v-bind:searchResult="searchResult" />
                             </v-row>
                         </v-container>
                     </v-card>
                 </v-col>
             </v-row>
         </v-container>
+        <v-snackbar v-model="snackbar.state" :timeout="2000">
+            {{ snackbar.message }}
+            <v-btn color="blue" text @click="snackbar.action()">
+                {{ snackbar.button }}
+            </v-btn>
+        </v-snackbar>
         <v-footer dark fixed>
             <v-container align="center" justify="center">
                 <v-row align="center" justify="center">
@@ -116,13 +122,21 @@
             trackId: '',
             songProgress: 0,
             playlist: [],
+            playlistId: '',
             dialogs: {
                 queue: false,
                 add: false
             },
             safetyDialog: false,
             safeToLeave: false,
-            overlay: false
+            overlay: false,
+            snackbar: {
+                state: false,
+                message: '',
+                button: '',
+                action: () => {}
+            },
+            searchResult: []
         }),
         components: {
             'queue': Queue,
@@ -132,6 +146,12 @@
             navigateAway() {
                 this.safeToLeave = true;
                 this.$router.push('/leave');
+            },
+            showSnackbar(message, button, action) {
+                this.snackbar.message = message;
+                this.snackbar.button = button;
+                this.snackbar.action = action;
+                this.snackbar.state = true;
             },
             sharePartyCode() {
                 if (navigator.share) {
@@ -159,13 +179,28 @@
                 })
             },
             search(query) {
-                console.log(query);
                 this.socket.emit('search', {
                     token: this.token,
                     data: {
                         query
                     }
                 })
+            },
+            downvoteSong(songId) {
+                this.socket.emit('downvote-song', {
+                    token: this.token,
+                    data: {
+                        songId
+                    }
+                });
+            },
+            upvoteSong(songId) {
+                this.socket.emit('upvote-song', {
+                    token: this.token,
+                    data: {
+                        songId
+                    }
+                });
             }
         },
         beforeRouteLeave(to, from, next) {
@@ -209,7 +244,11 @@
                     t.socket.emit('get-state', {
                         token: t.token,
                         data: null
-                    })
+                    });
+                    t.socket.emit('get-state-playlist', {
+                        token: t.token,
+                        data: null
+                    });
                 }, 1000);
             });
             t.socket.on('party-leave', () => {
@@ -224,7 +263,21 @@
                 t.songProgress = state.progress / state.duration * 100;
                 t.trackId = state.trackId;
                 t.code = message.data.code;
+            });
+            t.socket.on('got-state-playlist', (message) => {
+                t.playlistId = message.data.playlistId;
                 t.playlist = message.data.playlist;
+            });
+
+            t.socket.on('song-upvoted', (message) => {
+                t.showSnackbar('Song Upvoted', 'Undo', () => {
+                    // emit an undo socket message
+                })
+            });
+            t.socket.on('song-downvoted', (message) => {
+                t.showSnackbar('Song Downvoted', 'Undo', () => {
+                    // emit an undo socket message
+                })
             });
         }
     }

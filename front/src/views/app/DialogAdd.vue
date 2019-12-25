@@ -30,7 +30,7 @@
                             </v-card-title>
                             <v-list two-line color="transparent">
                                 <template v-for="(item, index) in recommended">
-                                    <song :key="index" v-bind:song="item" v-on:add="addItem" />
+                                    <song :key="index" v-bind:song="item" v-on:add="addItem"/>
                                     <v-divider :key="'div-' + index" v-if="index + 1 < recommended.length"/>
                                 </template>
                             </v-list>
@@ -45,7 +45,7 @@
                             </v-card-title>
                             <v-list one-line color="transparent">
                                 <template v-for="(item, index) in topPlaylists">
-                                    <playlist :key="index" v-bind:data="item" v-on:add="addItem" />
+                                    <playlist :key="index" v-bind:data="item" v-on:add="addItem"/>
                                     <v-divider :key="'div-' + index" v-if="index + 1 < topPlaylists.length"/>
                                 </template>
                             </v-list>
@@ -96,6 +96,8 @@
         methods: {
             open() {
                 this.dialog = true;
+                this.recommended = [];
+                this.topPlaylists = [];
                 this.updateContent();
             },
             close() {
@@ -108,14 +110,12 @@
                         t.motd = res.data.featured.message;
                         t.topPlaylists = res.data.featured.playlists.items.slice(0, 5);
                     }).catch(err => {
-                        console.error(err);
                     }
                 )
                 axios.post('/party/recommended', {token: this.token})
                     .then(res => {
                         t.recommended = res.data.recommended.tracks.slice(0, 5);
                     }).catch(err => {
-                        console.error(err);
                     }
                 )
             },

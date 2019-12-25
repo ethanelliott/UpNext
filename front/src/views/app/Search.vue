@@ -11,15 +11,18 @@
                 <v-btn @click="close" dark icon>
                     <v-icon>mdi-close</v-icon>
                 </v-btn>
-                <v-toolbar-title>Search</v-toolbar-title>
-                <template #extension>
-                    <v-text-field @input="isTypingSearch = true" autofocus clearable dense full-width
-                                  hide-details label="search for something" prepend-inner-icon="mdi-magnify"
-                                  single-line v-model="query"/>
-                </template>
+                <v-text-field @input="isTypingSearch = true" autofocus clearable full-width
+                              hide-details label="search for something" prepend-inner-icon="mdi-magnify"
+                              single-line v-model="query"/>
+                <v-tabs slot="extension" v-model="tabs" background-color="transparent" fixed-tabs>
+                    <v-tab>Songs</v-tab>
+                    <v-tab>Albums</v-tab>
+                    <v-tab>Artists</v-tab>
+                    <v-tab>Playlists</v-tab>
+                </v-tabs>
             </v-app-bar>
             <v-container class="mt-10" v-if="!loading && !loaded">
-                <v-container class="mt-10" >
+                <v-container class="mt-10">
                     <v-row>
                         <v-col align="center" justify="center">
                             <v-card class="mt-10" color="transparent" flat>
@@ -81,6 +84,7 @@
             items: [],
             isTypingSearch: false,
             query: '',
+            tabs: null
         }),
         mounted() {
             this.token = session.getItem('token');

@@ -43,14 +43,11 @@ export class PlaylistController {
     public async upvoteSong(@MessageBody() message: SocketMessage<any>): Promise<SocketMessage<any>> {
         let a = this.authenticationService.authenticate(message.token);
         if (a.valid) {
-            console.log('upvoting');
             let user = this.partyDBService.findUserById(a.data.partyId, a.data.userId);
             this.partyDBService.upvoteSong(a.data.partyId, message.data.songId, user);
             return {
                 token: message.token,
-                data: {
-
-                }
+                data: {}
             };
         } else {
             throw new Error('Invalid token! Please Leave!');
@@ -67,9 +64,7 @@ export class PlaylistController {
             this.partyDBService.downvoteSong(a.data.partyId, message.data.songId, user);
             return {
                 token: message.token,
-                data: {
-
-                }
+                data: {}
             };
         } else {
             throw new Error('Invalid token! Please Leave!');
@@ -78,7 +73,7 @@ export class PlaylistController {
 
     @OnMessage("playlist-add-song")
     @EmitOnSuccess("playlist-song-added")
-    @EmitOnFail("party-leave")
+    @EmitOnFail('party-leave')
     public async addSongToPlaylist(@MessageBody() message: SocketMessage<any>): Promise<SocketMessage<any>> {
         let a = this.authenticationService.authenticate(message.token);
         if (a.valid) {
@@ -93,15 +88,19 @@ export class PlaylistController {
                 .withAlbumArtwork(track.album.images.filter(e => e.width < 100)[0].url)
                 .withArtistName(track.artists.map(e => e.name).join(', '))
                 .build();
-            if (party.playlist.length === 0 && !party.playState.isPlaying) {
-                await this.upNextService.playSong(party, entry.id);
+            if (party.state === 3 && party.playlist.length === 0 && !party.playState.isPlaying) {
+                let res = await this.upNextService.playSong(party, entry.id);
+                if (res.error) {
+                    // If there is nothing to play on, then just add it to the queue
+                    this.partyDBService.addPlaylistEntry(party.id, entry);
+                }
             } else {
-                this.partyDBService.addPlaylistEntry(party.id, entry)
+                this.partyDBService.addPlaylistEntry(party.id, entry);
             }
             return {
                 token: message.token,
                 data: {}
-            }
+            };
         } else {
             throw new Error('Invalid token! Please Leave!');
         }

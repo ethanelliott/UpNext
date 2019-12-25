@@ -46,6 +46,10 @@ export class SpotifyOAuthController {
             this.creatingPartyDBService.remove(decodeState.data.pid);
             let callbackData = await this.spotifyService.getSpotifyAPI().auth.authorizationCode(env.app.spotify.clientId, env.app.spotify.clientSecret, code, env.app.spotify.redirectURI);
             let userData = await this.spotifyService.getSpotifyAPI().users.getCurrent(callbackData.access_token);
+            if (userData.product !== 'premium') {
+                // must be premium to play songs
+                return {token: 'error'};
+            }
             let playlistData = await this.spotifyService.getSpotifyAPI().playlist.create(callbackData.access_token, userData.id, {
                 name: `${decodeState.data.partyName}🎵`,
                 description: `${decodeState.data.partyName} archive, brought to you by UpNext.cool`,

@@ -31,26 +31,28 @@
                     <v-icon>mdi-share</v-icon>
                 </v-btn>
             </v-app-bar>
-            <v-list three-line>
-                <template v-for="(track, index) in playlist">
-                    <v-list-item v-bind:key="'item-' + index" @click="showVoteDialog(track)">
-                        <v-list-item-avatar tile size="60">
-                            <v-img :src="track.albumArtwork"/>
-                        </v-list-item-avatar>
-                        <v-list-item-content>
-                            <v-list-item-title class="font-weight-bold">{{track.name}}</v-list-item-title>
-                            <v-list-item-subtitle>{{track.artist}}</v-list-item-subtitle>
-                            <v-list-item-subtitle>Added By: {{track.added.name}}</v-list-item-subtitle>
-                        </v-list-item-content>
-                        <v-list-item-action>
-                            <span class="overline green--text">+{{track.upVoters.length}}</span>
-                            <span class="title">{{track.votes}}</span>
-                            <span class="overline red--text">-{{track.downVoters.length}}</span>
-                        </v-list-item-action>
-                    </v-list-item>
-                    <v-divider :key="'div-' + index" v-if="index + 1 < playlist.length"/>
-                </template>
-            </v-list>
+            <v-container>
+                <v-list class="mt-10" three-line>
+                    <template v-for="(track, index) in playlist">
+                        <v-list-item v-bind:key="'item-' + index" @click="showVoteDialog(track)">
+                            <v-list-item-avatar tile size="60">
+                                <v-img :src="track.albumArtwork"/>
+                            </v-list-item-avatar>
+                            <v-list-item-content>
+                                <v-list-item-title class="font-weight-bold">{{track.name}}</v-list-item-title>
+                                <v-list-item-subtitle>{{track.artist}}</v-list-item-subtitle>
+                                <v-list-item-subtitle>Added By: {{track.added.name}}</v-list-item-subtitle>
+                            </v-list-item-content>
+                            <v-list-item-action>
+                                <span class="overline green--text">+{{track.upVoters.length}}</span>
+                                <span class="title">{{track.votes}}</span>
+                                <span class="overline red--text">-{{track.downVoters.length}}</span>
+                            </v-list-item-action>
+                        </v-list-item>
+                        <v-divider :key="'div-' + index" v-if="index + 1 < playlist.length"/>
+                    </template>
+                </v-list>
+            </v-container>
         </v-card>
     </v-dialog>
 </template>
@@ -60,13 +62,9 @@
     import io from 'socket.io-client'
 
     export default {
-        props: ['value'],
+        props: ['value', 'playlist', 'playlistId'],
         name: "Queue",
         data: () => ({
-            socket: null,
-            eventLoop: null,
-            playlist: [],
-            playlistId: '',
             voteDialog: false,
             voteSongId: ''
         }),
@@ -95,52 +93,14 @@
                 this.voteSongId = song.id;
             },
             downvoteSong() {
-                this.socket.emit('downvote-song', {
-                   token: this.token,
-                   data: {
-                       songId: this.voteSongId
-                   }
-                });
+                this.$emit('downvote', this.voteSongId);
                 this.voteDialog = false;
             },
             upvoteSong() {
-                this.socket.emit('upvote-song', {
-                    token: this.token,
-                    data: {
-                        songId: this.voteSongId
-                    }
-                });
+                this.$emit('upvote', this.voteSongId)
                 this.voteDialog = false;
             }
-        },
-        mounted() {
-            let t = this;
-            t.token = session.getItem('token');
-            t.socket = io(t.$socketPath);
-            t.socket.on('connect', () => {
-                t.eventLoop = setInterval(() => {
-                    t.socket.emit('get-state-playlist', {
-                        token: t.token,
-                        data: null
-                    })
-                }, 1000);
-            });
-            t.socket.on('got-state-playlist', (message) => {
-                t.playlistId = message.data.playlistId;
-                t.playlist = message.data.playlist;
-            });
-
-            t.socket.on('song-upvoted', (message) => {
-                console.log('song-upvoted');
-            });
-            t.socket.on('song-downvoted', (message) => {
-                console.log('song-downvoted');
-            });
-        },
-        beforeDestroy() {
-            this.socket.disconnect();
-            clearInterval(this.eventLoop);
-        },
+        }
 
     }
 </script>

@@ -22,7 +22,7 @@
 
             <v-list two-line color="transparent">
                 <template v-for="(item, index) in songs">
-                    <song :key="index" v-bind:song="item.track" v-on:add="addItem" />
+                    <song :key="index" v-bind:song="item.track" v-on:add="addItem"/>
                     <v-divider :key="'div-' + index" v-if="index + 1 < songs.length"/>
                 </template>
             </v-list>
@@ -55,7 +55,6 @@
                 axios.post('/spotify/playlist/tracks', {token: this.token, playlistId: this.data.id}).then(res => {
                     this.songs = res.data.items;
                 }).catch(err => {
-                    console.error(err);
                 })
             },
             close() {
