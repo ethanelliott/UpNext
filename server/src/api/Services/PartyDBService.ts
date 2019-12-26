@@ -9,6 +9,7 @@ import User from "../Types/User";
 import PartyPlayState from "../Types/PartyPlayState";
 import { PartyStateEnum } from "../Types/PartyStateEnum";
 import PlaylistEntry from "../Types/PlaylistEntry";
+import PartyColours from "../Types/PartyColours";
 
 @Service()
 export default class PartyDBService {
@@ -186,5 +187,13 @@ export default class PartyDBService {
 
     public findPartyByUserId(userId: string) {
         return plainToClass(Party, this.db.findOne({userId}));
+    }
+
+    public updatePartyColours(partyId: string, colours: PartyColours) {
+        let p = this.findPartyById(partyId);
+        if (p) {
+            p.colours = colours;
+            this.db.update({id: partyId}, p);
+        }
     }
 }

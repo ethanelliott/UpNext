@@ -31,7 +31,7 @@ export default class SearchAPI {
         return plainToClass(SearchResultAllObject, d);
     }
 
-    public async searchEverything(token: string, query: string): Promise<SearchResultAllObject> {
+    public async searchEverything(token: string, query: string, limit: number): Promise<SearchResultAllObject> {
         let d = await WebAPIRequestBuilder
             .make(token)
             .withMethod(HttpMethods.GET)
@@ -40,7 +40,7 @@ export default class SearchAPI {
                 q: query,
                 type: SearchAPI.ALL_TYPES.join(','),
                 market: 'from_token',
-                limit: 1,
+                limit: limit,
                 offset: 0
             })
             .build()

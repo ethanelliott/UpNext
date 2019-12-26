@@ -22,10 +22,13 @@ export class SearchController {
         if (a.valid) {
             let token = this.partyDBService.getTokenFromParty(a.data.partyId);
             let q = message.data.query;
-            let x = await this.spotifyService.getSpotifyAPI().search.searchEverything(token, q);
-            return x;
+            let x = await this.spotifyService.getSpotifyAPI().search.searchEverything(token, q, 20);
+            return {
+                token: message.token,
+                data: x
+            };
         } else {
-            return "";
+            return {};
         }
     }
 }

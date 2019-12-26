@@ -15,7 +15,7 @@
             <v-container class="mt-10">
                 <v-row>
                     <v-col align="center" justify="center">
-                        <search v-on:search="search"/>
+                        <search v-on:search="search" v-bind:searchResult="searchResult"/>
                     </v-col>
                 </v-row>
                 <v-row>
@@ -65,7 +65,7 @@
     import Song from './components/Song'
 
     export default {
-        props: ['value'],
+        props: ['value', 'searchResult'],
         name: "Queue",
         data: () => ({
             token: '',

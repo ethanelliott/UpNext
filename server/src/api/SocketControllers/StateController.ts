@@ -25,7 +25,8 @@ export class StateController {
                     state: party.playState,
                     name: party.name,
                     code: party.code,
-                    playlist: party.playlist
+                    playlist: party.playlist,
+                    colours: party.colours
                 }
             };
         } else {

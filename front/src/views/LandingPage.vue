@@ -110,6 +110,9 @@
         },
         mounted() {
             let t = this
+            if (session.getItem('token')) {
+                t.$router.push('/app/home');
+            }
             window.addEventListener('beforeinstallprompt', (e) => {
                 e.preventDefault()
                 t.deferredPrompt = e

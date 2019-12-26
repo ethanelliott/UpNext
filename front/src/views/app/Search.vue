@@ -34,27 +34,40 @@
                 </v-container>
             </v-container>
             <v-container class="mt-10" v-else>
-                <v-list class="mt-10" v-if="loading">
-                    <v-skeleton-loader class="mx-auto" ref="skeleton" type="list-item-avatar-three-line"/>
-                </v-list>
-                <v-list class="mt-10" v-else-if="loaded">
-                    <template v-for="(item, index) in items">
-                        <v-list-item three-line v-bind:key="index">
-                            <v-list-item-avatar tile>
-                                <v-img src="https://cdn.vuetifyjs.com/images/logos/vuetify-logo-dark.png"/>
-                            </v-list-item-avatar>
-                            <v-list-item-content>
-                                <v-list-item-title>Three-line item</v-list-item-title>
-                                <v-list-item-subtitle>
-                                    Secondary line text Lorem ipsum dolor sit amet,
-                                </v-list-item-subtitle>
-                                <v-list-item-subtitle>
-                                    consectetur adipiscing elit. {{item}}
-                                </v-list-item-subtitle>
-                            </v-list-item-content>
-                        </v-list-item>
-                    </template>
-                </v-list>
+                <v-tabs-items v-model="tabs">
+                    <v-tab-item>
+                        <v-list class="mt-10" v-if="loading">
+                            <v-skeleton-loader class="mx-auto" ref="skeleton" type="list-item-avatar-three-line"/>
+                        </v-list>
+                        <v-list class="mt-10" v-else-if="loaded">
+
+                        </v-list>
+                    </v-tab-item>
+                    <v-tab-item>
+                        <v-list class="mt-10" v-if="loading">
+                            <v-skeleton-loader class="mx-auto" ref="skeleton" type="list-item-avatar-three-line"/>
+                        </v-list>
+                        <v-list class="mt-10" v-else-if="loaded">
+
+                        </v-list>
+                    </v-tab-item>
+                    <v-tab-item>
+                        <v-list class="mt-10" v-if="loading">
+                            <v-skeleton-loader class="mx-auto" ref="skeleton" type="list-item-avatar-three-line"/>
+                        </v-list>
+                        <v-list class="mt-10" v-else-if="loaded">
+
+                        </v-list>
+                    </v-tab-item>
+                    <v-tab-item>
+                        <v-list class="mt-10" v-if="loading">
+                            <v-skeleton-loader class="mx-auto" ref="skeleton" type="list-item-avatar-three-line"/>
+                        </v-list>
+                        <v-list class="mt-10" v-else-if="loaded">
+
+                        </v-list>
+                    </v-tab-item>
+                </v-tabs-items>
             </v-container>
         </v-card>
     </v-dialog>
@@ -76,12 +89,12 @@
 
     export default {
         name: "Search",
+        tokens: ['searchResult'],
         data: () => ({
             token: '',
             loading: false,
             loaded: false,
             dialog: false,
-            items: [],
             isTypingSearch: false,
             query: '',
             tabs: null

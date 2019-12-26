@@ -1,5 +1,5 @@
 <template>
-    <v-container class="fill-height ma-0 pa-0">
+    <v-container class="fill-height ma-0 pa-0" :style="backgroundString">
         <v-app-bar app dark color="darker">
             <v-icon color="primary">mdi-music-note-plus</v-icon>
             <v-toolbar-title class="headline text-uppercase ml-3">
@@ -40,7 +40,7 @@
                 <v-col class="ma-0 pa-0" align="center" justify="center">
                     <v-card color="transparent" flat max-width="600">
                         <v-card flat color="transparent">
-                            <v-img @click="overlay = true" class="mx-5" :src="albumArtwork" max-width="600"
+                            <v-img @click="overlay = true" class="mx-5 elevation-20" :src="albumArtwork" max-width="600"
                                    min-height="300"/>
                             <v-overlay absolute opacity="0.8" :value="overlay">
                                 <v-card flat color="transparent" height="35vh" width="100vw" >
@@ -95,7 +95,7 @@
         <v-footer dark fixed>
             <v-container align="center" justify="center">
                 <v-row align="center" justify="center">
-                    <v-progress-linear class="my-0" color="primary" height="10" v-model="songProgress"/>
+                    <v-progress-linear class="my-0" :color="progressColour" height="10" v-model="songProgress"/>
                 </v-row>
             </v-container>
         </v-footer>
@@ -136,7 +136,9 @@
                 button: '',
                 action: () => {}
             },
-            searchResult: []
+            searchResult: {},
+            backgroundString: '',
+            progressColour: 'primary'
         }),
         components: {
             'queue': Queue,
@@ -263,6 +265,10 @@
                 t.songProgress = state.progress / state.duration * 100;
                 t.trackId = state.trackId;
                 t.code = message.data.code;
+                let v = message.data.colours.vibrant;
+                let lv = message.data.colours.lightVibrant;
+                t.backgroundString = `background-image: linear-gradient(rgba(${lv.r}, ${lv.g}, ${lv.b}, 0.5) 10%, rgba(0,0,0,1) 80%);`;
+                t.progressColour = `rgb(${v.r}, ${v.g}, ${v.b})`;
             });
             t.socket.on('got-state-playlist', (message) => {
                 t.playlistId = message.data.playlistId;
@@ -279,6 +285,16 @@
                     // emit an undo socket message
                 })
             });
+
+            t.socket.on('search-success', (message) => {
+                console.log(message);
+                t.searchResult = message.data;
+            });
+
+            t.socket.on('search-fail', (message) => {
+                console.log(message);
+                //UH-OH SOMETHING HAPPENED
+            });
         }
     }
 </script>
@@ -288,5 +304,8 @@
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+    }
+    .cool-background {
+        background-image: linear-gradient(rgba(0, 176, 255, 0.5) 5%, #303030 70%);
     }
 </style>

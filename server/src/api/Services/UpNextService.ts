@@ -9,6 +9,9 @@ import PartyPlayState from "../Types/PartyPlayState";
 import PlaylistEntry from "../Types/PlaylistEntry";
 import deep from 'deepcopy';
 import { PartyStateEnum } from "../Types/PartyStateEnum";
+import Vibrant = require('node-vibrant');
+import { Vec3 } from "node-vibrant/lib/color";
+import Colour from "../Types/Colours";
 
 @Service()
 export default class UpNextService {
@@ -62,6 +65,8 @@ export default class UpNextService {
                                 ref.updatePreviousSong(party, playState.item.id);
                                 ref.setPartyState(party, PartyStateEnum.PLAYING);
                                 ref.updatePartyPlaystate(party, playState);
+                                // update the colours
+                                ref.updatePartyColours(ref.partyDBService.findPartyById(party.id));
                                 break;
                             case PartyStateEnum.NOTHING_PLAYING:
                                 // TODO: need to find a nice way to tell the user that nothing is playing
@@ -72,11 +77,33 @@ export default class UpNextService {
                         }
                     } catch (e) {
                         console.log(`Error in the main party thread with party: ${globParty.id}`);
-                        console.error(e);
+                        console.log(e);
                     }
                 }, UpNextService.CLOCK_CYCLE);
             }
         });
+    }
+
+    public updatePartyColours(party: Party) {
+        let t = this;
+        Vibrant.from(party.playState.albumArtwork.filter(e => e.width < 100)[0].url).getPalette().then((palette) => {
+            this.partyDBService.updatePartyColours(party.id, {
+                vibrant: t.vec3ToColour(palette.Vibrant.getRgb()),
+                darkVibrant: t.vec3ToColour(palette.DarkVibrant.getRgb()),
+                lightVibrant: t.vec3ToColour(palette.LightVibrant.getRgb()),
+                muted: t.vec3ToColour(palette.Muted.getRgb()),
+                darkMuted: t.vec3ToColour(palette.DarkMuted.getRgb()),
+                lightMuted: t.vec3ToColour(palette.LightMuted.getRgb()),
+            });
+        });
+    }
+
+    private vec3ToColour(rgb: Vec3): Colour {
+        return {
+            r: Math.floor(rgb[0]),
+            g: Math.floor(rgb[1]),
+            b: Math.floor(rgb[2])
+        };
     }
 
     public async addSongToPlaylist(party: Party, id: string) {
