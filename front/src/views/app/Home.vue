@@ -406,7 +406,7 @@
             });
 
             t.socket.on('search-fail', (message) => {
-                console.log(message);
+                // console.log(message);
                 //UH-OH SOMETHING HAPPENED
             });
         }
