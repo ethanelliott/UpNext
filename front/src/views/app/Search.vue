@@ -128,6 +128,11 @@
             },
             close() {
                 this.dialog = false;
+                this.songs = [];
+                this.albums = [];
+                this.artists = [];
+                this.playlists = [];
+                this.query = '';
             },
             search() {
                 if (this.query !== "") {

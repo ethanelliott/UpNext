@@ -7,7 +7,7 @@ import logger from "../util/Log";
 export class LogMiddleware implements ExpressMiddlewareInterface {
 
     public use(req: express.Request, res: express.Response, next: express.NextFunction): any {
-        logger.info(`[EXPRESS] ${req.method} ${req.path}`);
+        logger.debug(`[EXPRESS] ${req.method} ${req.path}`);
         next();
     }
 

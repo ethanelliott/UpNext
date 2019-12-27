@@ -1,5 +1,6 @@
 'use strict';
 import winston from "winston";
+import { env } from "../env";
 
 const {createLogger, format, transports} = winston;
 const {combine, timestamp, printf, colorize} = format;
@@ -23,7 +24,7 @@ const fileLogFormat = () => {
 };
 
 const logger = createLogger({
-    level: (process.env.NODE_ENV === 'production' ? 'error' : 'debug'),
+    level: (env.isProduction ? 'info' : 'debug'),
     levels: {
         emerg: 0,
         alert: 1,
