@@ -76,7 +76,7 @@ export default class UpNextService {
                                 break;
                         }
                     } catch (e) {
-                        console.log(`Error in the main party thread with party: ${globParty.id}`);
+                        logger.error(`Error in the main party thread with party: ${globParty.id}`);
                         console.log(e);
                     }
                 }, UpNextService.CLOCK_CYCLE);
@@ -104,6 +104,11 @@ export default class UpNextService {
             g: Math.floor(rgb[1]),
             b: Math.floor(rgb[2])
         };
+    }
+
+    public async fixChromecastBug(partyId: string) {
+        let p = this.partyDBService.findPartyById(partyId);
+        await this.playSong(p, p.playState.trackId);
     }
 
     public async addSongToPlaylist(party: Party, id: string) {
@@ -195,6 +200,25 @@ export default class UpNextService {
         if (p) {
             clearInterval(this.currentEventLoopParties[p.id]);
             delete this.currentEventLoopParties[p.id];
+        }
+    }
+
+    public stopPartyByPartyId(partyId: string) {
+        let p = this.partyDBService.findPartyById(partyId);
+        if (p) {
+            clearInterval(this.currentEventLoopParties[p.id]);
+            delete this.currentEventLoopParties[p.id];
+        }
+    }
+
+    public async togglePlayback(partyId: string) {
+        let p = this.partyDBService.findPartyById(partyId);
+        if (p) {
+            if (p.playState.isPlaying) {
+                await this.spotifyService.getSpotifyAPI().player.pause(p.token);
+            } else {
+                await this.spotifyService.getSpotifyAPI().player.play(p.token);
+            }
         }
     }
 }

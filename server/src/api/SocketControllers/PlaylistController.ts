@@ -88,7 +88,7 @@ export class PlaylistController {
                 .withAlbumArtwork(track.album.images.filter(e => e.width < 100)[0].url)
                 .withArtistName(track.artists.map(e => e.name).join(', '))
                 .build();
-            if (party.state === 3 && party.playlist.length === 0 && !party.playState.isPlaying) {
+            if (party.playlist.length === 0 && !party.playState.isPlaying) {
                 let res = await this.upNextService.playSong(party, entry.id);
                 if (res.error) {
                     // If there is nothing to play on, then just add it to the queue

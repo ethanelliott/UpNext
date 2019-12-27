@@ -24,6 +24,7 @@ export default class Party {
     playlistId: string;
 
     // upnext party info
+    admin: User;
     colours: PartyColours;
     state: PartyStateEnum;
     previousSong: string;

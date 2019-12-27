@@ -11,8 +11,88 @@
                 <v-btn @click="sharePartyCode" text x-large>
                     <span class="text-uppercase" style="letter-spacing: 10px;font-family: monospace;">{{ code }}</span>
                 </v-btn>
+                <v-btn v-if="isAdmin" @click="openAdminMenu" icon color="primary">
+                    <v-icon>mdi-settings</v-icon>
+                </v-btn>
             </v-toolbar-items>
         </v-app-bar>
+        <v-navigation-drawer v-if="isAdmin" width="300" v-model="adminDrawer" fixed right temporary class="text-left">
+            <v-toolbar color="primary">
+                <v-toolbar-title>Party Settings</v-toolbar-title>
+            </v-toolbar>
+            <v-card>
+                <v-card-title>Media Controls</v-card-title>
+                <v-container>
+                    <v-row justify="center" align="center">
+                        <v-col align="center" justify="center">
+                            <v-btn x-large icon @click="togglePlayback"><v-icon>mdi-play-pause</v-icon></v-btn>
+                        </v-col>
+                        <v-col align="center" justify="center">
+                            <v-btn x-large icon @click="skipNextSong"><v-icon>mdi-skip-next</v-icon></v-btn>
+                        </v-col>
+                    </v-row>
+                </v-container>
+            </v-card>
+            <v-divider/>
+            <v-list subheader two-line flat>
+                <v-subheader>Chrome Stop Error</v-subheader>
+                <v-list-item-group multiple>
+                    <v-list-item>
+                        <v-list-item-content>
+                            <v-btn color="primary" @click="fixChromeError">Fix the Chrome Error</v-btn>
+                        </v-list-item-content>
+                    </v-list-item>
+                </v-list-item-group>
+            </v-list>
+            <v-divider/>
+            <v-list subheader two-line flat>
+                <v-subheader>Playback Settings</v-subheader>
+                <v-list-item-group multiple>
+                    <v-list-item>
+                        <template v-slot:default="{ active, toggle }">
+                            <v-list-item-action>
+                                <v-switch color="primary" v-model="autoPlay"/>
+                            </v-list-item-action>
+
+                            <v-list-item-content>
+                                <v-list-item-title>AutoPlay</v-list-item-title>
+                                <v-list-item-subtitle>Auto-fill an empty queue</v-list-item-subtitle>
+                            </v-list-item-content>
+                        </template>
+                    </v-list-item>
+                </v-list-item-group>
+            </v-list>
+            <v-divider/>
+            <v-list subheader two-line flat>
+                <v-subheader>Danger Zone</v-subheader>
+                <v-list-item-group multiple>
+                    <v-list-item>
+                        <v-list-item-content>
+                            <v-btn color="error" @click="deleteSafetyDialog=true">Delete the Party</v-btn>
+                        </v-list-item-content>
+                    </v-list-item>
+                </v-list-item-group>
+            </v-list>
+        </v-navigation-drawer>
+        <v-dialog dark v-model="deleteSafetyDialog" width="500">
+            <v-card>
+                <v-card-title>
+                    Are you sure you want to Delete the party?
+                </v-card-title>
+                <v-card-text>
+                    This cannot be un-done... once it's gone it's gone for good!
+                </v-card-text>
+                <v-card-actions>
+                    <v-spacer/>
+                    <v-btn large color="error" @click="deleteTheParty">
+                        Delete
+                    </v-btn>
+                    <v-btn color="primary" large @click="deleteSafetyDialog=false">
+                        Cancel
+                    </v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
         <v-overlay :value="isLoading">
             <v-progress-circular color="primary" indeterminate size="64"/>
         </v-overlay>
@@ -43,7 +123,7 @@
                             <v-img @click="overlay = true" class="mx-5 elevation-20" :src="albumArtwork" max-width="600"
                                    min-height="300"/>
                             <v-overlay absolute opacity="0.8" :value="overlay">
-                                <v-card flat color="transparent" height="35vh" width="100vw" >
+                                <v-card flat color="transparent" height="35vh" width="100vw">
                                     <v-container class="fill-height">
                                         <v-container>
                                             <v-row align="center" justify="center">
@@ -78,8 +158,9 @@
                     <v-card color="transparent" flat max-width="600">
                         <v-container>
                             <v-row align-content="space-around" justify="space-around">
-                                <queue v-model="dialogs.queue" v-bind:playlistId="playlistId" v-bind:playlist="playlist" v-on:upvote="upvoteSong" v-on:downvote="downvoteSong" />
-                                <add v-model="dialogs.add" v-on:add="addItem" v-on:search="search" v-bind:searchResult="searchResult" />
+                                <queue ref="queue" v-model="dialogs.queue" v-bind:playlistId="playlistId" v-bind:playlist="playlist"
+                                       v-on:upvote="upvoteSong" v-on:downvote="downvoteSong"/>
+                                <add ref="add" v-model="dialogs.add" v-on:add="addItem" v-on:search="search"/>
                             </v-row>
                         </v-container>
                     </v-card>
@@ -123,20 +204,25 @@
             songProgress: 0,
             playlist: [],
             playlistId: '',
+            autoPlay: false,
             dialogs: {
                 queue: false,
                 add: false
             },
             safetyDialog: false,
             safeToLeave: false,
+            deleteSafetyDialog: false,
             overlay: false,
             snackbar: {
                 state: false,
                 message: '',
                 button: '',
-                action: () => {}
+                action: () => {
+                }
             },
             searchResult: {},
+            isAdmin: false,
+            adminDrawer: false,
             backgroundString: '',
             progressColour: 'primary'
         }),
@@ -154,6 +240,33 @@
                 this.snackbar.button = button;
                 this.snackbar.action = action;
                 this.snackbar.state = true;
+            },
+            openAdminMenu() {
+                this.adminDrawer = true;
+            },
+            skipNextSong() {
+                this.socket.emit('party-playback-next', {
+                    token: this.token,
+                    data: { }
+                })
+            },
+            togglePlayback() {
+                this.socket.emit('party-playback-toggle', {
+                    token: this.token,
+                    data: { }
+                })
+            },
+            fixChromeError() {
+                this.socket.emit('party-fix-chrome', {
+                    token: this.token,
+                    data: { }
+                })
+            },
+            deleteTheParty() {
+                this.socket.emit('party-delete', {
+                    token: this.token,
+                    data: { }
+                })
             },
             sharePartyCode() {
                 if (navigator.share) {
@@ -264,6 +377,7 @@
                 t.trackArtist = state.artistName;
                 t.songProgress = state.progress / state.duration * 100;
                 t.trackId = state.trackId;
+                t.isAdmin = message.data.admin;
                 t.code = message.data.code;
                 let v = message.data.colours.vibrant;
                 let lv = message.data.colours.lightVibrant;
@@ -287,8 +401,8 @@
             });
 
             t.socket.on('search-success', (message) => {
-                console.log(message);
                 t.searchResult = message.data;
+                t.$refs.add.$refs.search.gotResult(message.data);
             });
 
             t.socket.on('search-fail', (message) => {
@@ -300,11 +414,6 @@
 </script>
 
 <style>
-    .trackName {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
     .cool-background {
         background-image: linear-gradient(rgba(0, 176, 255, 0.5) 5%, #303030 70%);
     }
