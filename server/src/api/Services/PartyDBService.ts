@@ -9,6 +9,7 @@ import User from "../Types/User";
 import PartyPlayState from "../Types/PartyPlayState";
 import { PartyStateEnum } from "../Types/PartyStateEnum";
 import PlaylistEntry from "../Types/PlaylistEntry";
+import PartyColours from "../Types/PartyColours";
 
 @Service()
 export default class PartyDBService {
@@ -39,6 +40,11 @@ export default class PartyDBService {
     public newUser(partyId: string, user: User) {
         let p = this.findPartyById(partyId);
         if (p) {
+            if (p.users.length === 0) {
+                // first user becomes the admin -> is there a better way?
+                // TODO: Investigate this... maybe the party creation token can have an admin field
+                p.admin = user;
+            }
             p.users.push(user);
             this.db.update({id: partyId}, p);
         }
@@ -186,5 +192,17 @@ export default class PartyDBService {
 
     public findPartyByUserId(userId: string) {
         return plainToClass(Party, this.db.findOne({userId}));
+    }
+
+    public updatePartyColours(partyId: string, colours: PartyColours) {
+        let p = this.findPartyById(partyId);
+        if (p) {
+            p.colours = colours;
+            this.db.update({id: partyId}, p);
+        }
+    }
+
+    public removePartyByPartyId(partyId: string) {
+        this.db.remove({id: partyId});
     }
 }

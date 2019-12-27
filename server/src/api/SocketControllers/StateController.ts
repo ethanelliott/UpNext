@@ -3,12 +3,14 @@ import { EmitOnFail, EmitOnSuccess, MessageBody, OnMessage, SocketController } f
 import SocketMessage from "../Types/SocketMessage";
 import PartyDBService from "../Services/PartyDBService";
 import AuthenticationService from "../Services/AuthenticationService";
+import UpNextService from "../Services/UpNextService";
 
 @SocketController()
 export class StateController {
     constructor(
         private authenticationService: AuthenticationService,
-        private partyDBService: PartyDBService
+        private partyDBService: PartyDBService,
+        private upNextService: UpNextService
     ) {
     }
 
@@ -25,9 +27,57 @@ export class StateController {
                     state: party.playState,
                     name: party.name,
                     code: party.code,
-                    playlist: party.playlist
+                    playlist: party.playlist,
+                    colours: party.colours,
+                    admin: party.admin.id === a.data.userId
                 }
             };
+        } else {
+            throw new Error('Invalid token! Please Leave!');
+        }
+    }
+
+    @OnMessage("party-fix-chrome")
+    public async fixChromecastError(@MessageBody() message: SocketMessage<any>) {
+        let a = this.authenticationService.authenticate(message.token);
+        if (a.valid) {
+            await this.upNextService.fixChromecastBug(a.data.partyId);
+        } else {
+            throw new Error('Invalid token! Please Leave!');
+        }
+    }
+
+    @OnMessage("party-delete")
+    public async deleteTheParty(@MessageBody() message: SocketMessage<any>) {
+        let a = this.authenticationService.authenticate(message.token);
+        if (a.valid) {
+            this.upNextService.stopPartyByPartyId(a.data.partyId);
+            this.partyDBService.removePartyByPartyId(a.data.partyId);
+        } else {
+            throw new Error('Invalid token! Please Leave!');
+        }
+    }
+
+    @OnMessage("party-playback-toggle")
+    public async togglePartyPlayback(@MessageBody() message: SocketMessage<any>) {
+        let a = this.authenticationService.authenticate(message.token);
+        if (a.valid) {
+            this.upNextService.togglePlayback(a.data.partyId);
+        } else {
+            throw new Error('Invalid token! Please Leave!');
+        }
+    }
+
+    @OnMessage("party-playback-next")
+    public async partyNextSong(@MessageBody() message: SocketMessage<any>) {
+        let a = this.authenticationService.authenticate(message.token);
+        if (a.valid) {
+            let p = this.partyDBService.findPartyById(a.data.partyId);
+            if (p) {
+                await this.upNextService.nextSong(p);
+            } else {
+                throw new Error('Nothing in the queue...');
+            }
         } else {
             throw new Error('Invalid token! Please Leave!');
         }

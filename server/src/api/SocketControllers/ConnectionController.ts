@@ -6,12 +6,12 @@ import logger from "../../util/Log";
 export class ConnectionController {
     @OnConnect()
     connect(@ConnectedSocket() socket: SocketIO.Socket) {
-        logger.info(`[SOCKET] client connected: ${socket.id}`);
+        logger.debug(`[SOCKET] client connected: ${socket.id}`);
     }
 
     @OnDisconnect()
     disconnect(@ConnectedSocket() socket: SocketIO.Socket) {
-        logger.info(`[SOCKET] client disconnected: ${socket.id}`);
+        logger.debug(`[SOCKET] client disconnected: ${socket.id}`);
     }
 
 }

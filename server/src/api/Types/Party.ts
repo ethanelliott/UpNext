@@ -3,6 +3,7 @@ import PlaylistEntry from "./PlaylistEntry";
 import VoteSkipEntry from "./VoteSkipEntry";
 import PartyPlayState from "./PartyPlayState";
 import { PartyStateEnum } from "./PartyStateEnum";
+import PartyColours from "./PartyColours";
 
 export default class Party {
     //db
@@ -23,6 +24,8 @@ export default class Party {
     playlistId: string;
 
     // upnext party info
+    admin: User;
+    colours: PartyColours;
     state: PartyStateEnum;
     previousSong: string;
     playState: PartyPlayState;

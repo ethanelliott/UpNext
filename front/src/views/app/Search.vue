@@ -21,7 +21,7 @@
                     <v-tab>Playlists</v-tab>
                 </v-tabs>
             </v-app-bar>
-            <v-container class="mt-10" v-if="!loading && !loaded">
+            <v-container class="mt-10" v-if="emptySearch">
                 <v-container class="mt-10">
                     <v-row>
                         <v-col align="center" justify="center">
@@ -34,27 +34,50 @@
                 </v-container>
             </v-container>
             <v-container class="mt-10" v-else>
-                <v-list class="mt-10" v-if="loading">
-                    <v-skeleton-loader class="mx-auto" ref="skeleton" type="list-item-avatar-three-line"/>
-                </v-list>
-                <v-list class="mt-10" v-else-if="loaded">
-                    <template v-for="(item, index) in items">
-                        <v-list-item three-line v-bind:key="index">
-                            <v-list-item-avatar tile>
-                                <v-img src="https://cdn.vuetifyjs.com/images/logos/vuetify-logo-dark.png"/>
-                            </v-list-item-avatar>
-                            <v-list-item-content>
-                                <v-list-item-title>Three-line item</v-list-item-title>
-                                <v-list-item-subtitle>
-                                    Secondary line text Lorem ipsum dolor sit amet,
-                                </v-list-item-subtitle>
-                                <v-list-item-subtitle>
-                                    consectetur adipiscing elit. {{item}}
-                                </v-list-item-subtitle>
-                            </v-list-item-content>
-                        </v-list-item>
-                    </template>
-                </v-list>
+                <v-tabs-items v-model="tabs">
+                    <v-tab-item> // songs
+                        <v-list class="mt-10" v-if="loading">
+                            <v-skeleton-loader class="mx-auto" ref="skeleton" type="list-item-avatar-three-line"/>
+                        </v-list>
+                        <v-list class="mt-10" v-else>
+                            <v-list two-line color="transparent">
+                                <template v-for="(item, index) in songs">
+                                    <song :key="index" v-bind:song="item" v-on:add="addItem"/>
+                                    <v-divider :key="'div-' + index" v-if="index + 1 < songs.length"/>
+                                </template>
+                            </v-list>
+                        </v-list>
+                    </v-tab-item>
+                    <v-tab-item>
+                        <v-list class="mt-10" v-if="loading">
+                            <v-skeleton-loader class="mx-auto" ref="skeleton" type="list-item-avatar-three-line"/>
+                        </v-list>
+                        <v-list class="mt-10">
+
+                        </v-list>
+                    </v-tab-item>
+                    <v-tab-item>
+                        <v-list class="mt-10" v-if="loading">
+                            <v-skeleton-loader class="mx-auto" ref="skeleton" type="list-item-avatar-three-line"/>
+                        </v-list>
+                        <v-list class="mt-10">
+
+                        </v-list>
+                    </v-tab-item>
+                    <v-tab-item>
+                        <v-list class="mt-10" v-if="loading">
+                            <v-skeleton-loader class="mx-auto" ref="skeleton" type="list-item-avatar-three-line"/>
+                        </v-list>
+                        <v-list class="mt-10">
+                            <v-list one-line color="transparent">
+                                <template v-for="(item, index) in playlists">
+                                    <playlist :key="index" v-bind:data="item" v-on:add="addItem"/>
+                                    <v-divider :key="'div-' + index" v-if="index + 1 < playlists.length"/>
+                                </template>
+                            </v-list>
+                        </v-list>
+                    </v-tab-item>
+                </v-tabs-items>
             </v-container>
         </v-card>
     </v-dialog>
@@ -63,6 +86,9 @@
 <script>
     import session from 'localStorage'
     import axios from 'axios'
+
+    import Playlist from './components/Playlist'
+    import Song from './components/Song'
 
     function debounce(func, wait = 100) {
         let timeout
@@ -79,13 +105,20 @@
         data: () => ({
             token: '',
             loading: false,
-            loaded: false,
+            emptySearch: true,
             dialog: false,
-            items: [],
             isTypingSearch: false,
             query: '',
-            tabs: null
+            tabs: null,
+            songs: [],
+            albums: [],
+            artists: [],
+            playlists: []
         }),
+        components: {
+            'playlist': Playlist,
+            'song': Song
+        },
         mounted() {
             this.token = session.getItem('token');
         },
@@ -95,16 +128,35 @@
             },
             close() {
                 this.dialog = false;
+                this.songs = [];
+                this.albums = [];
+                this.artists = [];
+                this.playlists = [];
+                this.query = '';
             },
             search() {
                 if (this.query !== "") {
-                    this.loading = true
+                    this.loading = true;
+                    this.emptySearch = false;
+                    this.songs = [];
+                    this.albums = [];
+                    this.artists = [];
+                    this.playlists = [];
                     this.$emit('search', this.query)
                 } else {
                     this.loading = false;
+                    this.emptySearch = true;
                     this.items = []
                 }
             },
+            gotResult(data) {
+                this.songs = data.tracks.items;
+                this.playlists = data.playlists.items;
+                this.loading = false;
+            },
+            addItem(songId) {
+                this.$emit('add', songId)
+            }
         },
         watch: {
             query: debounce(function () {

@@ -15,7 +15,7 @@
             <v-container class="mt-10">
                 <v-row>
                     <v-col align="center" justify="center">
-                        <search v-on:search="search"/>
+                        <search ref="search" v-on:search="search" v-on:add="addItem"/>
                     </v-col>
                 </v-row>
                 <v-row>
@@ -40,7 +40,7 @@
                 <v-row>
                     <v-col>
                         <v-card color="grey darken-2">
-                            <v-card-title>
+                            <v-card-title style="word-wrap: break-spaces">
                                 {{motd}}
                             </v-card-title>
                             <v-list one-line color="transparent">
