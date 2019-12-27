@@ -134,6 +134,8 @@ export default class UpNextService {
     public async playSong(party: Party, songId: string) {
         // playing a song should also possibly return a state to represent the error
         try {
+            // the idea here is that with 2 calls to play, the chrome bug might not happen
+            await this.spotifyService.getSpotifyAPI().player.playSong(party.token, songId);
             await this.spotifyService.getSpotifyAPI().player.playSong(party.token, songId);
         } catch (e) {
             if (e.name === 404) {
