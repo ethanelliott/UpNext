@@ -344,7 +344,7 @@
                 }
             },
             openSpotifyUri: function () {
-                window.open(`spotify:track:${this.trackId}`);
+                window.open(`https://open.spotify.com/track/${this.trackId}`);
             },
             addItem(songId) {
                 let t = this;
