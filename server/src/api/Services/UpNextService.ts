@@ -69,7 +69,6 @@ export default class UpNextService {
                                 ref.updatePartyColours(ref.partyDBService.findPartyById(party.id));
                                 break;
                             case PartyStateEnum.NOTHING_PLAYING:
-                                // TODO: need to find a nice way to tell the user that nothing is playing
                                 if (playState && playState.item) {
                                     ref.setPartyState(party, PartyStateEnum.PLAYING);
                                 }
