@@ -11,7 +11,7 @@
             </v-list-item>
         </template>
         <v-card>
-            <v-app-bar fixed color="darker">
+            <v-app-bar fixed flat>
                 <v-btn @click="close" color="primary" icon>
                     <v-icon>mdi-close</v-icon>
                 </v-btn>
@@ -21,24 +21,19 @@
             <v-divider class="mt-12"/>
             <v-divider class="mt-2"/>
             <v-img class="my-5" height="200" contain :src="data.images[0].url"/>
-
-            <v-card>
-                <v-list v-if="songs.length > 0" two-line color="transparent">
-                    <template v-for="(item, index) in songs">
-                        <song :key="index" v-bind:song="item.track" v-on:add="addItem"/>
-                        <v-divider :key="'div-' + index" v-if="index + 1 < songs.length"/>
-                    </template>
-                </v-list>
-                <v-container class="fill-height" v-else>
-                    <v-container>
-                        <v-row justify="center" align="center">
-                            <v-col justify="center" align="center">
-                                <v-progress-circular :size="70" :width="7" color="primary" indeterminate/>
-                            </v-col>
-                        </v-row>
-                    </v-container>
-                </v-container>
-            </v-card>
+            <v-list one-line color="transparent">
+                <template v-for="(item, index) in data.artists">
+                    <artist :key="index" v-bind:data="item" v-on:add="addItem"  v-on:dialog="handleDialog"/>
+                    <v-divider :key="'div-' + index" v-if="index + 1 < data.artists.length"/>
+                </template>
+            </v-list>
+            <v-divider/>
+            <v-list two-line color="transparent">
+                <template v-for="(item, index) in songs">
+                    <song :key="index" v-bind:song="item" v-on:add="addItem"/>
+                    <v-divider :key="'div-' + index" v-if="index + 1 < songs.length"/>
+                </template>
+            </v-list>
         </v-card>
     </v-dialog>
 </template>
@@ -46,32 +41,36 @@
 <script>
     import session from 'localStorage'
     import axios from 'axios'
-    import Song from './Song'
 
     export default {
         props: ['data'],
-        name: "Playlist",
+        name: "Album",
         data: () => ({
             dialog: false,
             token: '',
             songs: [],
         }),
         components: {
-            'song': Song
+            'song': () => import('./Song'),
+            'artist': () => import('./Artist')
         },
         mounted() {
             this.token = session.getItem('token');
         },
         methods: {
             open() {
-                this.dialog = true;
-                axios.post('/spotify/playlist/tracks', {token: this.token, playlistId: this.data.id}).then(res => {
-                    this.songs = res.data.items;
+                let t = this;
+                axios.post('/spotify/album/tracks', {token: this.token, albumId: this.data.id}).then(res => {
+                    t.songs = res.data.items.map(e => {
+                        e.album = t.data;
+                        return e;
+                    });
                 }).catch(err => {
                 })
+                t.dialog = true;
                 this.handleDialog({
                     state: 'open',
-                    id: 'playlist',
+                    id: 'album',
                     close: this.close
                 });
             },
@@ -79,7 +78,7 @@
                 this.dialog = false;
                 this.handleDialog({
                     state: 'close',
-                    id: 'playlist'
+                    id: 'album'
                 });
             },
             addItem(songId) {

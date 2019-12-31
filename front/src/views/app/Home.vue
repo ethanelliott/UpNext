@@ -20,15 +20,31 @@
             <v-toolbar color="primary">
                 <v-toolbar-title>Party Settings</v-toolbar-title>
             </v-toolbar>
-            <v-card>
+            <v-card flat color="transparent">
                 <v-card-title>Media Controls</v-card-title>
-                <v-container>
-                    <v-row justify="center" align="center">
-                        <v-col align="center" justify="center">
-                            <v-btn x-large icon @click="togglePlayback"><v-icon>mdi-play-pause</v-icon></v-btn>
+                <v-container class="ma-0 pa-0">
+                    <v-row class="ma-0 pa-0" justify="center" align="center">
+                        <v-col class="ma-0 pa-0" align="center" justify="center">
+                            <v-btn x-large icon @click="togglePlayback">
+                                <v-icon>mdi-play-pause</v-icon>
+                            </v-btn>
                         </v-col>
+                        <v-col class="ma-0 pa-0" align="center" justify="center">
+                            <v-btn x-large icon @click="skipNextSong">
+                                <v-icon>mdi-skip-next</v-icon>
+                            </v-btn>
+                        </v-col>
+                    </v-row>
+                </v-container>
+            </v-card>
+            <v-card flat color="transparent">
+                <v-container class="ma-0 pa-0">
+                    <v-row class="ma-0 pa-0" justify="center" align="center">
                         <v-col align="center" justify="center">
-                            <v-btn x-large icon @click="skipNextSong"><v-icon>mdi-skip-next</v-icon></v-btn>
+                            <v-btn block tile @click="playbackDeviceDialog = true">
+                                <v-icon left>mdi-cast</v-icon>
+                                {{ device.name }}
+                            </v-btn>
                         </v-col>
                     </v-row>
                 </v-container>
@@ -93,6 +109,26 @@
                 </v-card-actions>
             </v-card>
         </v-dialog>
+        <v-dialog dark v-model="playbackDeviceDialog" width="500">
+            <v-card>
+                <v-card-title>
+                    Select Device
+                </v-card-title>
+                <v-card-text>
+                    <v-select v-model="selectedDevice" :items="devices" label="Playback Device" outlined
+                              item-text="name" item-value="id" return-object/>
+                </v-card-text>
+                <v-card-actions>
+                    <v-spacer/>
+                    <v-btn large @click="playbackDeviceDialog=false">
+                        Cancel
+                    </v-btn>
+                    <v-btn large color="primary" @click="transferPlaybackToSelected">
+                        Apply
+                    </v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
         <v-overlay :value="isLoading">
             <v-progress-circular color="primary" indeterminate size="64"/>
         </v-overlay>
@@ -115,7 +151,7 @@
                 </v-card-actions>
             </v-card>
         </v-dialog>
-        <v-container class="ma-0 pa-0">
+        <v-container class="ma-0 pa-0" v-if="hasState">
             <v-row class="ma-0 pa-0">
                 <v-col class="ma-0 pa-0" align="center" justify="center">
                     <v-card color="transparent" flat max-width="600">
@@ -147,22 +183,37 @@
                             <br>
                             <span class="trackArtist font-weight-thin font-italic text--primary">{{trackArtist}}</span>
                         </v-card-text>
-
                     </v-card>
                 </v-col>
             </v-row>
         </v-container>
-        <v-container class="ma-0 pa-0 mb-12">
+        <v-container class="ma-0 pa-0 mb-12" v-if="hasState">
             <v-row class="ma-0 pa-0">
                 <v-col class="ma-0 pa-0" align="center" justify="center">
                     <v-card color="transparent" flat max-width="600">
                         <v-container>
                             <v-row align-content="space-around" justify="space-around">
-                                <queue ref="queue" v-model="dialogs.queue" v-bind:playlistId="playlistId" v-bind:playlist="playlist"
-                                       v-on:upvote="upvoteSong" v-on:downvote="downvoteSong"/>
-                                <add ref="add" v-model="dialogs.add" v-on:add="addItem" v-on:search="search"/>
+                                <queue ref="queue" v-bind:playlistId="playlistId"
+                                       v-bind:playlist="playlist"
+                                       v-on:upvote="upvoteSong" v-on:downvote="downvoteSong" v-on:dialog="handleDialog"/>
+                                <add ref="add" v-on:add="addItem" v-on:search="search" v-on:dialog="handleDialog"/>
                             </v-row>
                         </v-container>
+                    </v-card>
+                </v-col>
+            </v-row>
+        </v-container>
+        <v-container class="ma-0 pa-0 mb-12" v-else>
+            <v-row class="ma-0 pa-0">
+                <v-col class="ma-0 pa-0" align="center" justify="center">
+                    <v-card color="transparent" flat max-width="600">
+                        <v-icon color="primary" size="90">mdi-music-note-off</v-icon>
+                        <v-card-title class="align-center justify-center">
+                            No Playback Devices Found!
+                        </v-card-title>
+                        <v-card-text>
+                            Start playing music on a device to get the party started!
+                        </v-card-text>
                     </v-card>
                 </v-col>
             </v-row>
@@ -192,6 +243,7 @@
     export default {
         name: "Home",
         data: () => ({
+            hasState: true,
             isLoading: true,
             socket: null,
             token: null,
@@ -205,10 +257,7 @@
             playlist: [],
             playlistId: '',
             autoPlay: false,
-            dialogs: {
-                queue: false,
-                add: false
-            },
+            openDialogs: [],
             safetyDialog: false,
             safeToLeave: false,
             deleteSafetyDialog: false,
@@ -224,7 +273,11 @@
             isAdmin: false,
             adminDrawer: false,
             backgroundString: '',
-            progressColour: 'primary'
+            progressColour: 'primary',
+            devices: [],
+            device: {},
+            selectedDevice: {},
+            playbackDeviceDialog: false
         }),
         components: {
             'queue': Queue,
@@ -234,6 +287,15 @@
             navigateAway() {
                 this.safeToLeave = true;
                 this.$router.push('/leave');
+            },
+            handleDialog(data) {
+                if (data.state === "open") {
+                    this.openDialogs.push(data);
+                } else if (data.state === "close") {
+                    if (this.openDialogs.filter(e => e.id === data.id).length > 0) {
+                        this.openDialogs.pop();
+                    }
+                }
             },
             showSnackbar(message, button, action) {
                 this.snackbar.message = message;
@@ -247,25 +309,25 @@
             skipNextSong() {
                 this.socket.emit('party-playback-next', {
                     token: this.token,
-                    data: { }
+                    data: {}
                 })
             },
             togglePlayback() {
                 this.socket.emit('party-playback-toggle', {
                     token: this.token,
-                    data: { }
+                    data: {}
                 })
             },
             fixChromeError() {
                 this.socket.emit('party-fix-chrome', {
                     token: this.token,
-                    data: { }
+                    data: {}
                 })
             },
             deleteTheParty() {
                 this.socket.emit('party-delete', {
                     token: this.token,
-                    data: { }
+                    data: {}
                 })
             },
             sharePartyCode() {
@@ -282,7 +344,7 @@
                 }
             },
             openSpotifyUri: function () {
-                window.open(`spotify:track:${this.trackId}`, '_blank');
+                window.open(`spotify:track:${this.trackId}`);
             },
             addItem(songId) {
                 let t = this;
@@ -316,6 +378,15 @@
                         songId
                     }
                 });
+            },
+            transferPlaybackToSelected() {
+                this.socket.emit('party-playback-transfer', {
+                    token: this.token,
+                    data: {
+                        deviceId: this.selectedDevice.id
+                    }
+                });
+                this.playbackDeviceDialog = false;
             }
         },
         beforeRouteLeave(to, from, next) {
@@ -325,18 +396,11 @@
                 next(false);
             }
             // clever way to use dialogs to feel like navigation
-            let noNav = false;
-            let knownDialogs = Object.keys(this.dialogs);
-            for (let i = 0; i < knownDialogs.length; i++) {
-                if (this.dialogs[knownDialogs[i]]) {
-                    this.dialogs[knownDialogs[i]] = false
-                    noNav = noNav || true;
-                } else {
-                    noNav = noNav || false;
-                }
-            }
-            if (!noNav) {
+            if (this.openDialogs.length === 0) {
                 this.safetyDialog = true;
+            } else {
+                let x = this.openDialogs.pop();
+                x.close();
             }
         },
         beforeDestroy() {
@@ -372,17 +436,24 @@
             t.socket.on('got-state', (message) => {
                 t.isLoading = false;
                 let state = message.data.state;
-                t.albumArtwork = state.albumArtwork.filter(e => e.width > 500)[0].url;
-                t.trackName = state.trackName;
-                t.trackArtist = state.artistName;
-                t.songProgress = state.progress / state.duration * 100;
-                t.trackId = state.trackId;
+                if (state.trackName) {
+                    t.hasState = true;
+                    t.device = state.device;
+                    t.albumArtwork = state.albumArtwork.filter(e => e.width > 500)[0].url;
+                    t.trackName = state.trackName;
+                    t.trackArtist = state.artistName;
+                    t.songProgress = state.progress / state.duration * 100;
+                    t.trackId = state.trackId;
+                    let v = message.data.colours.vibrant;
+                    let lv = message.data.colours.lightVibrant;
+                    t.backgroundString = `background-image: linear-gradient(rgba(${lv.r}, ${lv.g}, ${lv.b}, 0.5) 10%, rgba(0,0,0,1) 80%);`;
+                    t.progressColour = `rgb(${v.r}, ${v.g}, ${v.b})`;
+                } else {
+                    t.hasState = false;
+                }
+                t.devices = message.data.devices.devices;
                 t.isAdmin = message.data.admin;
                 t.code = message.data.code;
-                let v = message.data.colours.vibrant;
-                let lv = message.data.colours.lightVibrant;
-                t.backgroundString = `background-image: linear-gradient(rgba(${lv.r}, ${lv.g}, ${lv.b}, 0.5) 10%, rgba(0,0,0,1) 80%);`;
-                t.progressColour = `rgb(${v.r}, ${v.g}, ${v.b})`;
             });
             t.socket.on('got-state-playlist', (message) => {
                 t.playlistId = message.data.playlistId;

@@ -6,7 +6,6 @@ import FeaturedPlaylistsObject from "../Types/FeaturedPlaylistsObject";
 import NewReleasesObject from "../Types/NewReleasesObject";
 import RecommendationsResponseObject from "../Types/RecommendationsResponseObject";
 
-// TODO: continue adding the other functions
 export default class BrowseAPI {
 
     constructor() {

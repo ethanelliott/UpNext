@@ -62,31 +62,32 @@
     import io from 'socket.io-client'
 
     export default {
-        props: ['value', 'playlist', 'playlistId'],
+        props: ['playlist', 'playlistId'],
         name: "Queue",
         data: () => ({
+            dialog: false,
             voteDialog: false,
             voteSongId: ''
         }),
-        computed: {
-            dialog: {
-                get() {
-                    return this.value
-                },
-                set(value) {
-                    this.$emit('input', value)
-                }
-            }
-        },
         methods: {
             open() {
+                window.scrollTo(0, 0);
                 this.dialog = true;
+                this.handleDialog({
+                    state: 'open',
+                    id: 'queue',
+                    close: this.close
+                });
             },
             close() {
                 this.dialog = false;
+                this.handleDialog({
+                    state: 'close',
+                    id: 'queue'
+                });
             },
             openPlaylist() {
-                window.open(`spotify:playlist:${this.playlistId}`, '_blank');
+                window.open(`spotify:playlist:${this.playlistId}`);
             },
             showVoteDialog(song) {
                 this.voteDialog = true;
@@ -99,6 +100,9 @@
             upvoteSong() {
                 this.$emit('upvote', this.voteSongId)
                 this.voteDialog = false;
+            },
+            handleDialog(state) {
+                this.$emit('dialog', state)
             }
         }
 

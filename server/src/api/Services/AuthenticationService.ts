@@ -2,20 +2,27 @@ import { Service } from "typedi";
 import WebTokenService from "./WebTokenService";
 import logger from "../../util/Log";
 import AuthenticationResponse from "../Types/AuthenticationResponse";
+import PartyDBService from "./PartyDBService";
 
 
 @Service()
 export default class AuthenticationService {
 
     constructor(
-        private webTokenService: WebTokenService
+        private webTokenService: WebTokenService,
+        private partyDBService: PartyDBService
     ) {
     }
 
     public authenticate(token: string): AuthenticationResponse {
         let verification = this.webTokenService.verify(token);
-        // need to add logic for making sure the party still exists... if it doesn't, this will fail
-        return {valid: !verification.error, data: verification.data};
+        let p = this.partyDBService.findPartyById(verification.data.partyId);
+        if (p) {
+            return {valid: !verification.error, data: verification.data};
+        } else {
+            return {valid: false, data: verification.data};
+        }
+
     }
 
     public generateToken(partyID: string, userID: string): string {

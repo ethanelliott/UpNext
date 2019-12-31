@@ -42,7 +42,6 @@ export default class PartyDBService {
         if (p) {
             if (p.users.length === 0) {
                 // first user becomes the admin -> is there a better way?
-                // TODO: Investigate this... maybe the party creation token can have an admin field
                 p.admin = user;
             }
             p.users.push(user);

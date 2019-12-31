@@ -15,7 +15,7 @@
             <v-container class="mt-10">
                 <v-row>
                     <v-col align="center" justify="center">
-                        <search ref="search" v-on:search="search" v-on:add="addItem"/>
+                        <search ref="search" v-on:search="search" v-on:add="addItem" v-on:dialog="handleDialog"/>
                     </v-col>
                 </v-row>
                 <v-row>
@@ -54,6 +54,12 @@
                 </v-row>
             </v-container>
         </v-card>
+        <v-snackbar v-model="snackbar" :timeout="2000">
+            {{ message }}
+            <v-btn color="blue" text @click="undoAddSong">
+                Undo
+            </v-btn>
+        </v-snackbar>
     </v-dialog>
 </template>
 
@@ -65,13 +71,16 @@
     import Song from './components/Song'
 
     export default {
-        props: ['value'],
+        props: [],
         name: "Queue",
         data: () => ({
+            dialog: false,
             token: '',
             recommended: [],
             topPlaylists: [],
             motd: '',
+            snackbar: false,
+            message: ''
         }),
         components: {
             'search': Search,
@@ -83,25 +92,24 @@
             this.token = session.getItem('token');
             this.updateContent();
         },
-        computed: {
-            dialog: {
-                get() {
-                    return this.value
-                },
-                set(value) {
-                    this.$emit('input', value)
-                }
-            }
-        },
         methods: {
             open() {
                 this.dialog = true;
                 this.recommended = [];
                 this.topPlaylists = [];
                 this.updateContent();
+                this.handleDialog({
+                    state: 'open',
+                    id: 'add',
+                    close: this.close
+                });
             },
             close() {
                 this.dialog = false;
+                this.handleDialog({
+                    state: 'close',
+                    id: 'add'
+                });
             },
             updateContent() {
                 let t = this;
@@ -109,6 +117,7 @@
                     .then(res => {
                         t.motd = res.data.featured.message;
                         t.topPlaylists = res.data.featured.playlists.items.slice(0, 5);
+                        window.scrollTo(0, 0);
                     }).catch(err => {
                     }
                 )
@@ -120,10 +129,18 @@
                 )
             },
             addItem(songId) {
-                this.$emit('add', songId)
+                this.$emit('add', songId);
+                this.message = 'Song Added'
+                this.snackbar = true;
             },
             search(query) {
                 this.$emit('search', query)
+            },
+            undoAddSong() {
+
+            },
+            handleDialog(state) {
+                this.$emit('dialog', state)
             }
         },
         watch: {}
