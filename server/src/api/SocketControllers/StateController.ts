@@ -4,13 +4,15 @@ import SocketMessage from "../Types/SocketMessage";
 import PartyDBService from "../Services/PartyDBService";
 import AuthenticationService from "../Services/AuthenticationService";
 import UpNextService from "../Services/UpNextService";
+import SpotifyService from "../Services/SpotifyService";
 
 @SocketController()
 export class StateController {
     constructor(
         private authenticationService: AuthenticationService,
         private partyDBService: PartyDBService,
-        private upNextService: UpNextService
+        private upNextService: UpNextService,
+        private spotifyService: SpotifyService
     ) {
     }
 
@@ -21,6 +23,7 @@ export class StateController {
         let a = this.authenticationService.authenticate(message.token);
         if (a.valid) {
             let party = this.partyDBService.findPartyById(a.data.partyId);
+            let devices = await this.spotifyService.getSpotifyAPI().player.getDevices(party.token);
             return {
                 token: message.token,
                 data: {
@@ -29,7 +32,8 @@ export class StateController {
                     code: party.code,
                     playlist: party.playlist,
                     colours: party.colours,
-                    admin: party.admin.id === a.data.userId
+                    admin: party.admin.id === a.data.userId,
+                    devices: devices
                 }
             };
         } else {
@@ -78,6 +82,18 @@ export class StateController {
             } else {
                 throw new Error('Nothing in the queue...');
             }
+        } else {
+            throw new Error('Invalid token! Please Leave!');
+        }
+    }
+
+    @OnMessage("party-playback-transfer")
+    public async transferPlayback(@MessageBody() message: SocketMessage<any>) {
+        let a = this.authenticationService.authenticate(message.token);
+        if (a.valid) {
+            let p = this.partyDBService.findPartyById(a.data.partyId);
+            let deviceId = message.data.deviceId;
+            await this.spotifyService.getSpotifyAPI().player.transferDevice(p.token, deviceId);
         } else {
             throw new Error('Invalid token! Please Leave!');
         }

@@ -2,6 +2,7 @@ import { plainToClass } from "class-transformer";
 import WebAPIRequestBuilder from "../Requests/WebAPIRequestBuilder";
 import { HttpMethods } from "../Types/HttpMethods";
 import CurrentlyPlayingObject from "../Types/CurrentlyPlayingObject";
+import DevicesObject from "../Types/DevicesObject";
 
 export default class PlayerAPI {
 
@@ -46,5 +47,29 @@ export default class PlayerAPI {
             })
             .build()
             .execute();
+    }
+
+    public async getDevices(token: string): Promise<DevicesObject> {
+        let d = await WebAPIRequestBuilder
+            .make(token)
+            .withMethod(HttpMethods.GET)
+            .withPath("/v1/me/player/devices")
+            .build()
+            .execute();
+        return plainToClass(DevicesObject, d);
+    }
+
+    public async transferDevice(token: string, deviceId: string): Promise<DevicesObject> {
+        let d = await WebAPIRequestBuilder
+            .make(token)
+            .withMethod(HttpMethods.PUT)
+            .withPath("/v1/me/player")
+            .withBodyParameters({
+                device_ids: [deviceId],
+                play: true
+            })
+            .build()
+            .execute();
+        return plainToClass(DevicesObject, d);
     }
 }

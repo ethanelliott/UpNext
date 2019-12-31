@@ -42,7 +42,7 @@
                         <v-list class="mt-10" v-else>
                             <v-list two-line color="transparent">
                                 <template v-for="(item, index) in songs">
-                                    <song :key="index" v-bind:song="item" v-on:add="addItem"/>
+                                    <song :key="index" v-bind:song="item" v-on:add="addItem" v-on:dialog="handleDialog"/>
                                     <v-divider :key="'div-' + index" v-if="index + 1 < songs.length"/>
                                 </template>
                             </v-list>
@@ -52,8 +52,13 @@
                         <v-list class="mt-10" v-if="loading">
                             <v-skeleton-loader class="mx-auto" ref="skeleton" type="list-item-avatar-three-line"/>
                         </v-list>
-                        <v-list class="mt-10">
-
+                        <v-list class="mt-10" v-else>
+                            <v-list two-line color="transparent">
+                                <template v-for="(item, index) in albums">
+                                    <album :key="index" v-bind:data="item" v-on:add="addItem"  v-on:dialog="handleDialog"/>
+                                    <v-divider :key="'div-' + index" v-if="index + 1 < albums.length"/>
+                                </template>
+                            </v-list>
                         </v-list>
                     </v-tab-item>
                     <v-tab-item>
@@ -61,7 +66,12 @@
                             <v-skeleton-loader class="mx-auto" ref="skeleton" type="list-item-avatar-three-line"/>
                         </v-list>
                         <v-list class="mt-10">
-
+                            <v-list one-line color="transparent">
+                                <template v-for="(item, index) in artists">
+                                    <artist :key="index" v-bind:data="item" v-on:add="addItem" v-on:dialog="handleDialog"/>
+                                    <v-divider :key="'div-' + index" v-if="index + 1 < artists.length"/>
+                                </template>
+                            </v-list>
                         </v-list>
                     </v-tab-item>
                     <v-tab-item>
@@ -71,7 +81,7 @@
                         <v-list class="mt-10">
                             <v-list one-line color="transparent">
                                 <template v-for="(item, index) in playlists">
-                                    <playlist :key="index" v-bind:data="item" v-on:add="addItem"/>
+                                    <playlist :key="index" v-bind:data="item" v-on:add="addItem"  v-on:dialog="handleDialog"/>
                                     <v-divider :key="'div-' + index" v-if="index + 1 < playlists.length"/>
                                 </template>
                             </v-list>
@@ -89,6 +99,8 @@
 
     import Playlist from './components/Playlist'
     import Song from './components/Song'
+    import Album from './components/Album'
+    import Artist from './components/Artist'
 
     function debounce(func, wait = 100) {
         let timeout
@@ -117,7 +129,9 @@
         }),
         components: {
             'playlist': Playlist,
-            'song': Song
+            'song': Song,
+            'album': Album,
+            'artist': Artist
         },
         mounted() {
             this.token = session.getItem('token');
@@ -125,6 +139,11 @@
         methods: {
             open() {
                 this.dialog = true;
+                this.handleDialog({
+                    state: 'open',
+                    id: 'search',
+                    close: this.close
+                });
             },
             close() {
                 this.dialog = false;
@@ -133,6 +152,10 @@
                 this.artists = [];
                 this.playlists = [];
                 this.query = '';
+                this.handleDialog({
+                    state: 'close',
+                    id: 'search'
+                });
             },
             search() {
                 if (this.query !== "") {
@@ -152,10 +175,15 @@
             gotResult(data) {
                 this.songs = data.tracks.items;
                 this.playlists = data.playlists.items;
+                this.albums = data.albums.items;
+                this.artists = data.artists.items;
                 this.loading = false;
             },
             addItem(songId) {
                 this.$emit('add', songId)
+            },
+            handleDialog(state) {
+                this.$emit('dialog', state)
             }
         },
         watch: {

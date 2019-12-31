@@ -1,4 +1,5 @@
 import ImageObject from "../Spotify/Types/ImageObject";
+import DeviceObject from "../Spotify/Types/DeviceObject";
 
 export default class PartyPlayState {
     isPlaying: boolean;
@@ -9,4 +10,5 @@ export default class PartyPlayState {
     progress: number;
     duration: number;
     albumArtwork: Array<ImageObject>;
+    device: DeviceObject
 }

@@ -180,6 +180,7 @@ export default class UpNextService {
         ps.albumArtwork = currentlyPlaying.item.album.images;
         ps.duration = currentlyPlaying.item.duration_ms;
         ps.progress = currentlyPlaying.progress_ms;
+        ps.device = currentlyPlaying.device;
         this.partyDBService.updatePartyPlaystate(party.id, ps);
     }
 

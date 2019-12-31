@@ -8,7 +8,7 @@
             <v-list-item-subtitle>{{song.artists.map(e => e.name).join(', ')}}</v-list-item-subtitle>
         </v-list-item-content>
         <v-list-item-action>
-            <v-btn @click="addItem" color="primary" icon>
+            <v-btn @click="addItem" color="primary" icon large>
                 <v-icon>mdi-plus</v-icon>
             </v-btn>
         </v-list-item-action>
