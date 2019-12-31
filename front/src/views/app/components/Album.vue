@@ -1,5 +1,5 @@
 <template>
-    <v-dialog fullscreen hide-overlay transition="dialog-bottom-transition" v-model="dialog">
+    <v-dialog fullscreen transition="dialog-bottom-transition" v-model="dialog">
         <template v-slot:activator="{ on }">
             <v-list-item @click="open">
                 <v-list-item-avatar tile>
@@ -10,7 +10,7 @@
                 </v-list-item-content>
             </v-list-item>
         </template>
-        <v-card>
+        <v-card color="darker">
             <v-app-bar fixed flat>
                 <v-btn @click="close" color="primary" icon>
                     <v-icon>mdi-close</v-icon>
@@ -21,13 +21,6 @@
             <v-divider class="mt-12"/>
             <v-divider class="mt-2"/>
             <v-img class="my-5" height="200" contain :src="data.images[0].url"/>
-            <v-list one-line color="transparent">
-                <template v-for="(item, index) in data.artists">
-                    <artist :key="index" v-bind:data="item" v-on:add="addItem"  v-on:dialog="handleDialog"/>
-                    <v-divider :key="'div-' + index" v-if="index + 1 < data.artists.length"/>
-                </template>
-            </v-list>
-            <v-divider/>
             <v-list two-line color="transparent">
                 <template v-for="(item, index) in songs">
                     <song :key="index" v-bind:song="item" v-on:add="addItem"/>
@@ -51,8 +44,7 @@
             songs: [],
         }),
         components: {
-            'song': () => import('./Song'),
-            'artist': () => import('./Artist')
+            'song': () => import('./Song')
         },
         mounted() {
             this.token = session.getItem('token');
@@ -60,6 +52,7 @@
         methods: {
             open() {
                 let t = this;
+                t.dialog = true;
                 axios.post('/spotify/album/tracks', {token: this.token, albumId: this.data.id}).then(res => {
                     t.songs = res.data.items.map(e => {
                         e.album = t.data;
@@ -67,7 +60,6 @@
                     });
                 }).catch(err => {
                 })
-                t.dialog = true;
                 this.handleDialog({
                     state: 'open',
                     id: 'album',

@@ -87,7 +87,7 @@
                 });
             },
             openPlaylist() {
-                window.open(`spotify:playlist:${this.playlistId}`);
+                window.open(`https://open.spotify.com/playlist/${this.playlistId}`);
             },
             showVoteDialog(song) {
                 this.voteDialog = true;
