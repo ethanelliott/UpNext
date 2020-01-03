@@ -73,6 +73,7 @@ export default class PartyBuilder {
 
     public build(): Party {
         let p = new Party();
+        p.admin = new Array<User>();
         p.name = this.name;
         p.code = this.code;
         p.id = this.id;

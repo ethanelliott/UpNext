@@ -5,6 +5,7 @@ import JoinPage from '../views/JoinPage.vue';
 import StartPage from '../views/StartPage.vue';
 import MakePage from '../views/MakePage.vue';
 import LeavePage from '../views/LeavePage.vue';
+import AdminPage from '../views/AdminPage.vue';
 // main application views
 import Main from '../views/app/Main.vue';
 import Home from '../views/app/Home.vue';
@@ -12,6 +13,11 @@ import Home from '../views/app/Home.vue';
 Vue.use(VueRouter);
 
 const routes = [
+    {
+        path: '/admin',
+        name: 'admin',
+        component: AdminPage
+    },
     {
         path: '/',
         name: 'home',

@@ -5,6 +5,7 @@ import PartyDBService from "../Services/PartyDBService";
 import AuthenticationService from "../Services/AuthenticationService";
 import UpNextService from "../Services/UpNextService";
 import SpotifyService from "../Services/SpotifyService";
+import logger from "../../util/Log";
 
 @SocketController()
 export class StateController {
@@ -20,24 +21,31 @@ export class StateController {
     @EmitOnSuccess("got-state")
     @EmitOnFail("party-leave")
     public async getState(@MessageBody() message: SocketMessage<any>): Promise<SocketMessage<any>> {
-        let a = this.authenticationService.authenticate(message.token);
-        if (a.valid) {
-            let party = this.partyDBService.findPartyById(a.data.partyId);
-            let devices = await this.spotifyService.getSpotifyAPI().player.getDevices(party.token);
-            return {
-                token: message.token,
-                data: {
-                    state: party.playState,
-                    name: party.name,
-                    code: party.code,
-                    playlist: party.playlist,
-                    colours: party.colours,
-                    admin: party.admin.id === a.data.userId,
-                    devices: devices
-                }
-            };
-        } else {
-            throw new Error('Invalid token! Please Leave!');
+        try {
+            let a = this.authenticationService.authenticate(message.token);
+            if (a.valid) {
+                let party = this.partyDBService.findPartyById(a.data.partyId);
+                // TODO move this to somewhere only the admin can see
+                let devices = await this.spotifyService.getSpotifyAPI().player.getDevices(party.token);
+                return {
+                    token: message.token,
+                    data: {
+                        state: party.playState,
+                        name: party.name,
+                        code: party.code,
+                        playlist: party.playlist,
+                        colours: party.colours,
+                        admin: party.admin.filter(e => e.id === a.data.userId).length > 0,
+                        devices: devices
+                    }
+                };
+            } else {
+                throw new Error('Invalid token! Please Leave!');
+            }
+        } catch (e) {
+            console.log(e);
+            logger.error(e);
+            throw new Error('Something wrong');
         }
     }
 

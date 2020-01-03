@@ -6,6 +6,7 @@ import UserBuilder from "../Factory/UserBuilder";
 import UUIDService from "../Services/UUIDService";
 import AuthenticationService from "../Services/AuthenticationService";
 import SpotifyService from "../Services/SpotifyService";
+import UpNextService from "../Services/UpNextService";
 
 @JsonController('/party')
 export class PartyController {
@@ -14,13 +15,27 @@ export class PartyController {
         private webTokenService: WebTokenService,
         private uuidService: UUIDService,
         private authenticationService: AuthenticationService,
-        private spotifyService: SpotifyService
+        private spotifyService: SpotifyService,
+        private upNextService: UpNextService
     ) {
     }
 
     @Post('/get/all')
     public getAllParties(): any {
         return this.partyDBService.getAllParties();
+    }
+
+    @Post('/delete')
+    public deleteParty(@QueryParam("id") partyId: string): any {
+        this.upNextService.stopPartyByPartyId(partyId);
+        this.partyDBService.removePartyByPartyId(partyId);
+        return {};
+    }
+
+    @Post('/new/admin')
+    public addAdmin(@QueryParam("id") partyId: string): any {
+
+        return {};
     }
 
     @Post('/join')

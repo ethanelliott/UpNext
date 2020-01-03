@@ -41,8 +41,7 @@ export default class PartyDBService {
         let p = this.findPartyById(partyId);
         if (p) {
             if (p.users.length === 0) {
-                // first user becomes the admin -> is there a better way?
-                p.admin = user;
+                p.admin.push(user);
             }
             p.users.push(user);
             this.db.update({id: partyId}, p);
