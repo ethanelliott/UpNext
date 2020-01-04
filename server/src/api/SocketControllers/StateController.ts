@@ -1,10 +1,12 @@
 import 'reflect-metadata';
-import { EmitOnFail, EmitOnSuccess, MessageBody, OnMessage, SocketController } from "socket-controllers";
+import { ConnectedSocket, EmitOnSuccess, MessageBody, OnMessage, SocketController } from "socket-controllers";
 import SocketMessage from "../Types/SocketMessage";
 import PartyDBService from "../Services/PartyDBService";
 import AuthenticationService from "../Services/AuthenticationService";
 import UpNextService from "../Services/UpNextService";
 import SpotifyService from "../Services/SpotifyService";
+import logger from "../../util/Log";
+import { Socket } from "socket.io";
 
 @SocketController()
 export class StateController {
@@ -18,26 +20,34 @@ export class StateController {
 
     @OnMessage("get-state")
     @EmitOnSuccess("got-state")
-    @EmitOnFail("party-leave")
-    public async getState(@MessageBody() message: SocketMessage<any>): Promise<SocketMessage<any>> {
-        let a = this.authenticationService.authenticate(message.token);
-        if (a.valid) {
-            let party = this.partyDBService.findPartyById(a.data.partyId);
-            let devices = await this.spotifyService.getSpotifyAPI().player.getDevices(party.token);
-            return {
-                token: message.token,
-                data: {
-                    state: party.playState,
-                    name: party.name,
-                    code: party.code,
-                    playlist: party.playlist,
-                    colours: party.colours,
-                    admin: party.admin.id === a.data.userId,
-                    devices: devices
-                }
-            };
-        } else {
-            throw new Error('Invalid token! Please Leave!');
+    public async getState(@ConnectedSocket() socket: Socket, @MessageBody() message: SocketMessage<any>): Promise<SocketMessage<any>> {
+        try {
+            let a = this.authenticationService.authenticate(message.token);
+            if (a.valid) {
+                let party = this.partyDBService.findPartyById(a.data.partyId);
+                // TODO move this to somewhere only the admin can see
+                return {
+                    token: message.token,
+                    data: {
+                        state: party.playState,
+                        name: party.name,
+                        code: party.code,
+                        playlist: party.playlist,
+                        colours: party.colours,
+                        admin: party.admin.filter(e => e.id === a.data.userId).length > 0
+                    }
+                };
+            } else {
+                socket.emit('party-leave');
+                return {
+                    token: null,
+                    data: null
+                };
+            }
+        } catch (e) {
+            console.log(e);
+            logger.error(e);
+            throw new Error('Something wrong');
         }
     }
 

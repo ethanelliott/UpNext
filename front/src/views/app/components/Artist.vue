@@ -3,21 +3,22 @@
         <template v-slot:activator="{ on }">
             <v-list-item @click="open">
                 <v-list-item-avatar tile>
-                    <v-img size="60" :src="data.images[0].url"/>
+                    <v-img :src="(data.images[0] ? data.images[0].url: '')" size="60" v-if="data.images[0]"/>
+                    <v-icon v-else>mdi-artist</v-icon>
                 </v-list-item-avatar>
                 <v-list-item-content>
                     <v-list-item-title>{{data.name}}</v-list-item-title>
                 </v-list-item-content>
             </v-list-item>
         </template>
-        <v-card v-if="dialog">
+        <v-card v-if="dialog && artistData">
             <v-app-bar fixed flat color="transparent">
-                <v-btn small @click="dialog = false" color="primary" dark fab>
+                <v-btn @click="close" color="primary" dark fab small>
                     <v-icon>mdi-close</v-icon>
                 </v-btn>
                 <v-spacer/>
             </v-app-bar>
-            <v-img height="200" :src="data.images[0].url"/>
+            <v-img :src="(data.images[0] ? data.images[0].url: '')" height="200"/>
             <v-toolbar flat color="transparent">
                 <v-toolbar-title>{{ data.name }}</v-toolbar-title>
                 <v-spacer/>
@@ -50,10 +51,21 @@
             <v-list two-line color="transparent" v-if="artistData.appears.length > 0">
                 <v-subheader>Appears On</v-subheader>
                 <template v-for="(item, index) in artistData.appears">
-                    <album :key="index" v-bind:data="item" v-on:add="addItem"  v-on:dialog="handleDialog"/>
+                    <album :key="index" v-bind:data="item" v-on:add="addItem" v-on:dialog="handleDialog"/>
                     <v-divider :key="'div-' + index" v-if="index + 1 < artistData.appears.length"/>
                 </template>
             </v-list>
+        </v-card>
+        <v-card v-else>
+            <v-container class="fill-height">
+                <v-container>
+                    <v-row align="center" justify="center">
+                        <v-col align="center" justify="center">
+                            <v-progress-circular :size="70" :width="7" color="primary" indeterminate/>
+                        </v-col>
+                    </v-row>
+                </v-container>
+            </v-container>
         </v-card>
     </v-dialog>
 </template>

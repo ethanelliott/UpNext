@@ -6,6 +6,7 @@ import UserBuilder from "../Factory/UserBuilder";
 import UUIDService from "../Services/UUIDService";
 import AuthenticationService from "../Services/AuthenticationService";
 import SpotifyService from "../Services/SpotifyService";
+import UpNextService from "../Services/UpNextService";
 
 @JsonController('/party')
 export class PartyController {
@@ -14,7 +15,8 @@ export class PartyController {
         private webTokenService: WebTokenService,
         private uuidService: UUIDService,
         private authenticationService: AuthenticationService,
-        private spotifyService: SpotifyService
+        private spotifyService: SpotifyService,
+        private upNextService: UpNextService
     ) {
     }
 
@@ -23,18 +25,27 @@ export class PartyController {
         return this.partyDBService.getAllParties();
     }
 
+    @Post('/delete')
+    public deleteParty(@QueryParam("id") partyId: string): any {
+        this.upNextService.stopPartyByPartyId(partyId);
+        this.partyDBService.removePartyByPartyId(partyId);
+        return {};
+    }
+
     @Post('/join')
     public joinParty(@QueryParam("token") token: string): any {
         let decodeToken = this.webTokenService.verify(token);
         if (decodeToken.error === null) {
             let uid = this.uuidService.new();
+            let user = UserBuilder.make()
+                .withId(uid)
+                .withName(decodeToken.data.name)
+                .build();
             this.partyDBService.newUser(
                 decodeToken.data.pid,
-                UserBuilder.make()
-                    .withId(uid)
-                    .withName(decodeToken.data.name)
-                    .build()
+                user
             );
+            this.partyDBService.addAdminUser(decodeToken.data.pid, user);
             let userToken = this.authenticationService.generateToken(decodeToken.data.pid, uid);
             return {token: userToken};
         } else {
@@ -48,7 +59,8 @@ export class PartyController {
         if (party) {
             let userJoinToken = this.webTokenService.generateFrom({
                 pid: party.id,
-                name: nickName
+                name: nickName,
+                admin: false
             });
             return {
                 valid: true,
@@ -60,7 +72,27 @@ export class PartyController {
                 token: null
             };
         }
+    }
 
+    @Post('/admin/join')
+    public newAdminJoin(@BodyParam('partyId') partyId: string, @BodyParam('name') nickName: string): any {
+        let party = this.partyDBService.findPartyById(partyId);
+        if (party) {
+            let userJoinToken = this.webTokenService.generateFrom({
+                pid: party.id,
+                name: nickName,
+                admin: true
+            });
+            return {
+                valid: true,
+                token: userJoinToken
+            };
+        } else {
+            return {
+                valid: false,
+                token: null
+            };
+        }
     }
 
     @Post('/leave')
@@ -110,5 +142,11 @@ export class PartyController {
         } else {
             return null;
         }
+    }
+
+    @Post('/fix')
+    public async fixChromeError(@BodyParam('partyId') partyId: string): Promise<any> {
+        await this.upNextService.fixChromecastBug(partyId);
+        return {};
     }
 }

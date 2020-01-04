@@ -9,9 +9,10 @@ import PartyPlayState from "../Types/PartyPlayState";
 import PlaylistEntry from "../Types/PlaylistEntry";
 import deep from 'deepcopy';
 import { PartyStateEnum } from "../Types/PartyStateEnum";
-import Vibrant = require('node-vibrant');
 import { Vec3 } from "node-vibrant/lib/color";
 import Colour from "../Types/Colours";
+import DeviceObject from "../Spotify/Types/DeviceObject";
+import Vibrant = require('node-vibrant');
 
 @Service()
 export default class UpNextService {
@@ -40,16 +41,18 @@ export default class UpNextService {
                         let party = ref.partyDBService.findPartyById(globParty.id);
                         await ref.checkForValidToken(party);
                         let playState = await this.spotifyService.getSpotifyAPI().player.getPlayingContext(party.token);
+                        let devices = (await this.spotifyService.getSpotifyAPI().player.getDevices(party.token)).devices;
+                        // logger.info(`[S] ${party.state}`)
                         switch (party.state) {
                             case PartyStateEnum.PLAYING:
                                 if (playState && playState.item) {
-                                    if (playState.item.duration_ms - playState.progress_ms <= 2500) {
+                                    if (playState.item.duration_ms - playState.progress_ms <= 2000) {
                                         ref.setPartyState(party, PartyStateEnum.SKIPPING);
                                     }
                                     if (playState.item.id !== party.previousSong) {
                                         ref.setPartyState(party, PartyStateEnum.NEW_SONG);
                                     }
-                                    ref.updatePartyPlaystate(party, playState);
+                                    ref.updatePartyPlaystate(party, playState, devices);
                                 } else {
                                     ref.setPartyState(party, PartyStateEnum.NOTHING_PLAYING);
                                 }
@@ -59,12 +62,12 @@ export default class UpNextService {
                                 ref.setPartyState(party, PartyStateEnum.NEW_SONG);
                                 break;
                             case PartyStateEnum.NEW_SONG:
-                                if (party.previousSong !== playState.item.id) {
+                                if (playState.item && party.previousSong !== playState.item.id) {
                                     await ref.addSongToPlaylist(party, playState.item.id);
                                 }
                                 ref.updatePreviousSong(party, playState.item.id);
                                 ref.setPartyState(party, PartyStateEnum.PLAYING);
-                                ref.updatePartyPlaystate(party, playState);
+                                ref.updatePartyPlaystate(party, playState, devices);
                                 // update the colours
                                 ref.updatePartyColours(ref.partyDBService.findPartyById(party.id));
                                 break;
@@ -169,7 +172,7 @@ export default class UpNextService {
         }
     }
 
-    public updatePartyPlaystate(party: Party, currentlyPlaying: CurrentlyPlayingObject) {
+    public updatePartyPlaystate(party: Party, currentlyPlaying: CurrentlyPlayingObject, devices: Array<DeviceObject>) {
         let ps = new PartyPlayState();
         ps.isPlaying = currentlyPlaying.is_playing;
         ps.trackId = currentlyPlaying.item.id;
@@ -180,6 +183,7 @@ export default class UpNextService {
         ps.duration = currentlyPlaying.item.duration_ms;
         ps.progress = currentlyPlaying.progress_ms;
         ps.device = currentlyPlaying.device;
+        ps.availableDevices = devices;
         this.partyDBService.updatePartyPlaystate(party.id, ps);
     }
 

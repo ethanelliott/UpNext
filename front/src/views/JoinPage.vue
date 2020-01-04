@@ -1,5 +1,10 @@
 <template>
     <v-app>
+        <v-app-bar color="transparent" flat>
+            <v-btn icon to="/" x-large>
+                <v-icon>mdi-arrow-left</v-icon>
+            </v-btn>
+        </v-app-bar>
         <v-content>
             <v-container class="fill-height">
                 <v-container>
@@ -11,6 +16,7 @@
                                 <span class="font-weight-light">Next</span>
                             </p>
                             <p class="my-10 subheading">Join a party!</p>
+                            <p class="mb-4 subheading error--text" v-if="error">Invalid Party Code!</p>
                             <v-form @submit.prevent="null" ref="form" v-model="valid">
                                 <v-text-field :disabled="disableTextInput" :rules="[rules.required, rules.counter]"
                                               @input="formatForm" filled hint="" label="Party Code" v-model="partyCode"/>
@@ -37,6 +43,7 @@
         name: 'JoinPage',
         props: ['code'],
         data: () => ({
+            error: false,
             valid: null,
             partyCode: '',
             nickname: '',
@@ -67,12 +74,14 @@
             },
             joinParty() {
                 let context = this;
+                context.error = false;
                 context.setLoading();
                 axios.post('/party/validate', {code: context.partyCode, name: context.nickname}).then(res => {
                     if (res.data.valid) {
                         context.$router.push(`/make/${res.data.token}`)
                     } else {
                         context.setNotLoading();
+                        context.error = true;
                     }
                 }).catch(err => {
                 })

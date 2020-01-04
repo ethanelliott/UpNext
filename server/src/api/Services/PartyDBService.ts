@@ -41,8 +41,7 @@ export default class PartyDBService {
         let p = this.findPartyById(partyId);
         if (p) {
             if (p.users.length === 0) {
-                // first user becomes the admin -> is there a better way?
-                p.admin = user;
+                p.admin.push(user);
             }
             p.users.push(user);
             this.db.update({id: partyId}, p);
@@ -159,10 +158,10 @@ export default class PartyDBService {
             let entryIndex = p.playlist.findIndex(e => e.id === songId);
             if (entryIndex >= 0 && !(p.playlist[entryIndex].upVoters.filter(e => e.id === user.id).length > 0)) {
                 if (p.playlist[entryIndex].downVoters.filter(e => e.id === user.id).length > 0) {
-                    p.playlist[entryIndex].downVoters = p.playlist[entryIndex].downVoters.filter(e => e.id !== user.id)
-                    p.playlist[entryIndex].votes+=1;
+                    p.playlist[entryIndex].downVoters = p.playlist[entryIndex].downVoters.filter(e => e.id !== user.id);
+                    p.playlist[entryIndex].votes += 1;
                 }
-                p.playlist[entryIndex].votes+=1;
+                p.playlist[entryIndex].votes += 1;
                 p.playlist[entryIndex].upVoters.push(user);
                 this.db.update({id: partyId}, p);
             }
@@ -175,10 +174,10 @@ export default class PartyDBService {
             let entryIndex = p.playlist.findIndex(e => e.id === songId);
             if (entryIndex >= 0 && !(p.playlist[entryIndex].downVoters.filter(e => e.id === user.id).length > 0)) {
                 if (p.playlist[entryIndex].upVoters.filter(e => e.id === user.id).length > 0) {
-                    p.playlist[entryIndex].upVoters = p.playlist[entryIndex].upVoters.filter(e => e.id !== user.id)
-                    p.playlist[entryIndex].votes-=1;
+                    p.playlist[entryIndex].upVoters = p.playlist[entryIndex].upVoters.filter(e => e.id !== user.id);
+                    p.playlist[entryIndex].votes -= 1;
                 }
-                p.playlist[entryIndex].votes-=1;
+                p.playlist[entryIndex].votes -= 1;
                 p.playlist[entryIndex].downVoters.push(user);
                 this.db.update({id: partyId}, p);
             }
@@ -203,5 +202,43 @@ export default class PartyDBService {
 
     public removePartyByPartyId(partyId: string) {
         this.db.remove({id: partyId});
+    }
+
+    public removePlaylistEntryById(partyId: string, songId: string) {
+        let p = this.findPartyById(partyId);
+        if (p) {
+            let i;
+            for (i = 0; i < p.playlist.length; i++) {
+                if (p.playlist[i].id === songId) {
+                    break;
+                }
+            }
+            p.playlist.splice(i, 1);
+            this.db.update({id: partyId}, p);
+        }
+    }
+
+    public clearThePlaylist(partyId: string) {
+        let p = this.findPartyById(partyId);
+        if (p) {
+            p.playlist = [];
+            this.db.update({id: partyId}, p);
+        }
+    }
+
+    public cleanThePlaylist(partyId: string) {
+        let p = this.findPartyById(partyId);
+        if (p) {
+            p.playlist = p.playlist.filter(e => e.votes >= 0);
+            this.db.update({id: partyId}, p);
+        }
+    }
+
+    public addAdminUser(partyId: string, user: User) {
+        let p = this.findPartyById(partyId);
+        if (p) {
+            p.admin.push(user);
+            this.db.update({id: partyId}, p);
+        }
     }
 }

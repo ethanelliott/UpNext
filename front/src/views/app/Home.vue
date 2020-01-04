@@ -1,6 +1,6 @@
 <template>
-    <v-container class="fill-height ma-0 pa-0" :style="backgroundString">
-        <v-app-bar app dark color="darker">
+    <v-container :style="backgroundString" class="fill-height ma-0 pa-0">
+        <v-app-bar app color="darker" dark>
             <v-icon color="primary">mdi-music-note-plus</v-icon>
             <v-toolbar-title class="headline text-uppercase ml-3">
                 <span>Up</span>
@@ -11,37 +11,52 @@
                 <v-btn @click="sharePartyCode" text x-large>
                     <span class="text-uppercase" style="letter-spacing: 10px;font-family: monospace;">{{ code }}</span>
                 </v-btn>
-                <v-btn v-if="isAdmin" @click="openAdminMenu" icon color="primary">
+                <v-btn @click="openAdminMenu" color="primary" icon v-if="isAdmin">
                     <v-icon>mdi-settings</v-icon>
                 </v-btn>
+                <v-menu offset-y v-else>
+                    <template v-slot:activator="{ on }">
+                        <v-btn color="primary" dark icon v-on="on">
+                            <v-icon>mdi-dots-vertical</v-icon>
+                        </v-btn>
+                    </template>
+                    <v-list color="darker">
+                        <v-list-item @click="navigateAway">
+                            <v-list-item-title>
+                                <v-icon left>mdi-logout</v-icon>
+                                Logout
+                            </v-list-item-title>
+                        </v-list-item>
+                    </v-list>
+                </v-menu>
             </v-toolbar-items>
         </v-app-bar>
-        <v-navigation-drawer v-if="isAdmin" width="300" v-model="adminDrawer" fixed right temporary class="text-left">
+        <v-navigation-drawer class="text-left" fixed right temporary v-if="isAdmin" v-model="adminDrawer" width="300">
             <v-toolbar color="primary">
                 <v-toolbar-title>Party Settings</v-toolbar-title>
             </v-toolbar>
-            <v-card flat color="transparent">
+            <v-card color="transparent" flat>
                 <v-card-title>Media Controls</v-card-title>
                 <v-container class="ma-0 pa-0">
-                    <v-row class="ma-0 pa-0" justify="center" align="center">
-                        <v-col class="ma-0 pa-0" align="center" justify="center">
-                            <v-btn x-large icon @click="togglePlayback">
+                    <v-row align="center" class="ma-0 pa-0" justify="center">
+                        <v-col align="center" class="ma-0 pa-0" justify="center">
+                            <v-btn @click="togglePlayback" icon x-large>
                                 <v-icon>mdi-play-pause</v-icon>
                             </v-btn>
                         </v-col>
-                        <v-col class="ma-0 pa-0" align="center" justify="center">
-                            <v-btn x-large icon @click="skipNextSong">
+                        <v-col align="center" class="ma-0 pa-0" justify="center">
+                            <v-btn @click="skipNextSong" icon x-large>
                                 <v-icon>mdi-skip-next</v-icon>
                             </v-btn>
                         </v-col>
                     </v-row>
                 </v-container>
             </v-card>
-            <v-card flat color="transparent">
+            <v-card color="transparent" flat>
                 <v-container class="ma-0 pa-0">
-                    <v-row class="ma-0 pa-0" justify="center" align="center">
+                    <v-row align="center" class="ma-0 pa-0" justify="center">
                         <v-col align="center" justify="center">
-                            <v-btn block tile @click="playbackDeviceDialog = true">
+                            <v-btn @click="playbackDeviceDialog = true" block tile>
                                 <v-icon left>mdi-cast</v-icon>
                                 {{ device.name }}
                             </v-btn>
@@ -50,18 +65,18 @@
                 </v-container>
             </v-card>
             <v-divider/>
-            <v-list subheader two-line flat>
+            <v-list flat subheader two-line>
                 <v-subheader>Chrome Stop Error</v-subheader>
                 <v-list-item-group multiple>
                     <v-list-item>
                         <v-list-item-content>
-                            <v-btn color="primary" @click="fixChromeError">Fix the Chrome Error</v-btn>
+                            <v-btn @click="fixChromeError" color="primary">Fix the Chrome Error</v-btn>
                         </v-list-item-content>
                     </v-list-item>
                 </v-list-item-group>
             </v-list>
             <v-divider/>
-            <v-list subheader two-line flat>
+            <v-list flat subheader two-line>
                 <v-subheader>Playback Settings</v-subheader>
                 <v-list-item-group multiple>
                     <v-list-item>
@@ -76,15 +91,25 @@
                             </v-list-item-content>
                         </template>
                     </v-list-item>
+                    <v-list-item>
+                        <v-list-item-content>
+                            <v-btn @click="cleanTheQueue" color="primary">Clean the Queue</v-btn>
+                        </v-list-item-content>
+                    </v-list-item>
                 </v-list-item-group>
             </v-list>
             <v-divider/>
-            <v-list subheader two-line flat>
+            <v-list flat subheader two-line>
                 <v-subheader>Danger Zone</v-subheader>
                 <v-list-item-group multiple>
                     <v-list-item>
                         <v-list-item-content>
-                            <v-btn color="error" @click="deleteSafetyDialog=true">Delete the Party</v-btn>
+                            <v-btn @click="emptyTheQueue" color="warning">Empty the Queue</v-btn>
+                        </v-list-item-content>
+                    </v-list-item>
+                    <v-list-item>
+                        <v-list-item-content>
+                            <v-btn @click="deleteSafetyDialog=true" color="error">Delete the Party</v-btn>
                         </v-list-item-content>
                     </v-list-item>
                 </v-list-item-group>
@@ -100,10 +125,10 @@
                 </v-card-text>
                 <v-card-actions>
                     <v-spacer/>
-                    <v-btn large color="error" @click="deleteTheParty">
+                    <v-btn @click="deleteTheParty" color="error" large>
                         Delete
                     </v-btn>
-                    <v-btn color="primary" large @click="deleteSafetyDialog=false">
+                    <v-btn @click="deleteSafetyDialog=false" color="primary" large>
                         Cancel
                     </v-btn>
                 </v-card-actions>
@@ -115,15 +140,15 @@
                     Select Device
                 </v-card-title>
                 <v-card-text>
-                    <v-select v-model="selectedDevice" :items="devices" label="Playback Device" outlined
-                              item-text="name" item-value="id" return-object/>
+                    <v-select :items="devices" item-text="name" item-value="id" label="Playback Device"
+                              outlined return-object v-model="selectedDevice"/>
                 </v-card-text>
                 <v-card-actions>
                     <v-spacer/>
-                    <v-btn large @click="playbackDeviceDialog=false">
+                    <v-btn @click="playbackDeviceDialog=false" large>
                         Cancel
                     </v-btn>
-                    <v-btn large color="primary" @click="transferPlaybackToSelected">
+                    <v-btn @click="transferPlaybackToSelected" color="primary" large>
                         Apply
                     </v-btn>
                 </v-card-actions>
@@ -142,10 +167,10 @@
                 </v-card-text>
                 <v-card-actions>
                     <v-spacer/>
-                    <v-btn large @click="navigateAway">
+                    <v-btn @click="navigateAway" large>
                         Leave
                     </v-btn>
-                    <v-btn color="primary" large @click="safetyDialog=false">
+                    <v-btn @click="safetyDialog=false" color="primary" large>
                         Stay
                     </v-btn>
                 </v-card-actions>
@@ -153,18 +178,18 @@
         </v-dialog>
         <v-container class="ma-0 pa-0" v-if="hasState">
             <v-row class="ma-0 pa-0">
-                <v-col class="ma-0 pa-0" align="center" justify="center">
+                <v-col align="center" class="ma-0 pa-0" justify="center">
                     <v-card color="transparent" flat max-width="600">
-                        <v-card flat color="transparent">
-                            <v-img @click="overlay = true" class="mx-5 elevation-20" :src="albumArtwork" max-width="600"
+                        <v-card color="transparent" flat>
+                            <v-img :src="albumArtwork" @click="overlay = true" class="mx-5 elevation-20" max-width="600"
                                    min-height="300"/>
-                            <v-overlay absolute opacity="0.8" :value="overlay">
-                                <v-card flat color="transparent" height="35vh" width="100vw">
+                            <v-overlay :value="overlay" absolute opacity="0.8">
+                                <v-card color="transparent" flat height="35vh" width="100vw">
                                     <v-container class="fill-height">
                                         <v-container>
                                             <v-row align="center" justify="center">
                                                 <v-col>
-                                                    <v-btn x-large color="primary" @click="openSpotifyUri">
+                                                    <v-btn @click="openSpotifyUri" color="primary" x-large>
                                                         Open In Spotify
                                                     </v-btn>
 
@@ -172,13 +197,13 @@
                                             </v-row>
                                         </v-container>
                                     </v-container>
-                                    <v-btn color="secondary" fab absolute top right @click="overlay = false">
+                                    <v-btn @click="overlay = false" absolute color="secondary" fab right top>
                                         <v-icon>mdi-close</v-icon>
                                     </v-btn>
                                 </v-card>
                             </v-overlay>
                         </v-card>
-                        <v-card-text class="mx-5" align="start">
+                        <v-card-text align="start" class="mx-5">
                             <span class="trackName headline font-weight-medium text--primary">{{trackName}}</span>
                             <br>
                             <span class="trackArtist font-weight-thin font-italic text--primary">{{trackArtist}}</span>
@@ -189,14 +214,14 @@
         </v-container>
         <v-container class="ma-0 pa-0 mb-12" v-if="hasState">
             <v-row class="ma-0 pa-0">
-                <v-col class="ma-0 pa-0" align="center" justify="center">
+                <v-col align="center" class="ma-0 pa-0" justify="center">
                     <v-card color="transparent" flat max-width="600">
                         <v-container>
                             <v-row align-content="space-around" justify="space-around">
-                                <queue ref="queue" v-bind:playlistId="playlistId"
-                                       v-bind:playlist="playlist"
-                                       v-on:upvote="upvoteSong" v-on:downvote="downvoteSong" v-on:dialog="handleDialog"/>
-                                <add ref="add" v-on:add="addItem" v-on:search="search" v-on:dialog="handleDialog"/>
+                                <queue ref="queue" v-bind:playlist="playlist"
+                                       v-bind:playlistId="playlistId" v-on:dialog="handleDialog"
+                                       v-on:downvote="downvoteSong" v-on:upvote="upvoteSong"/>
+                                <add ref="add" v-on:add="addItem" v-on:dialog="handleDialog" v-on:search="search"/>
                             </v-row>
                         </v-container>
                     </v-card>
@@ -205,7 +230,7 @@
         </v-container>
         <v-container class="ma-0 pa-0 mb-12" v-else>
             <v-row class="ma-0 pa-0">
-                <v-col class="ma-0 pa-0" align="center" justify="center">
+                <v-col align="center" class="ma-0 pa-0" justify="center">
                     <v-card color="transparent" flat max-width="600">
                         <v-icon color="primary" size="90">mdi-music-note-off</v-icon>
                         <v-card-title class="align-center justify-center">
@@ -218,16 +243,16 @@
                 </v-col>
             </v-row>
         </v-container>
-        <v-snackbar v-model="snackbar.state" :timeout="2000">
-            {{ snackbar.message }}
-            <v-btn color="blue" text @click="snackbar.action()">
-                {{ snackbar.button }}
+        <v-snackbar :timeout="2000" absolute bottom v-model="snackbarState">
+            {{ snackbarMessage }}
+            <v-btn @click="snackbarAction()" color="blue" text>
+                {{ snackbarButton }}
             </v-btn>
         </v-snackbar>
         <v-footer dark fixed>
             <v-container align="center" justify="center">
                 <v-row align="center" justify="center">
-                    <v-progress-linear class="my-0" :color="progressColour" height="10" v-model="songProgress"/>
+                    <v-progress-linear :color="progressColour" class="my-0" height="10" v-model="songProgress"/>
                 </v-row>
             </v-container>
         </v-footer>
@@ -262,12 +287,10 @@
             safeToLeave: false,
             deleteSafetyDialog: false,
             overlay: false,
-            snackbar: {
-                state: false,
-                message: '',
-                button: '',
-                action: () => {
-                }
+            snackbarState: false,
+            snackbarMessage: '',
+            snackbarButton: '',
+            snackbarAction: () => {
             },
             searchResult: {},
             isAdmin: false,
@@ -298,10 +321,10 @@
                 }
             },
             showSnackbar(message, button, action) {
-                this.snackbar.message = message;
-                this.snackbar.button = button;
-                this.snackbar.action = action;
-                this.snackbar.state = true;
+                this.snackbarMessage = message;
+                this.snackbarButton = button;
+                this.snackbarAction = action;
+                this.snackbarState = true;
             },
             openAdminMenu() {
                 this.adminDrawer = true;
@@ -353,15 +376,24 @@
                     data: {
                         songId
                     }
-                })
+                });
             },
-            search(query) {
-                this.socket.emit('search', {
+            search() {
+                this.safeToLeave = true;
+                this.$router.push('/app/search');
+            },
+            emptyTheQueue() {
+                this.socket.emit('playlist-clear', {
                     token: this.token,
-                    data: {
-                        query
-                    }
-                })
+                    data: {}
+                });
+            },
+            cleanTheQueue() {
+                // remove songs with a negative score
+                this.socket.emit('playlist-clean', {
+                    token: this.token,
+                    data: {}
+                });
             },
             downvoteSong(songId) {
                 this.socket.emit('downvote-song', {
@@ -395,7 +427,6 @@
             } else {
                 next(false);
             }
-            // clever way to use dialogs to feel like navigation
             if (this.openDialogs.length === 0) {
                 this.safetyDialog = true;
             } else {
@@ -410,12 +441,6 @@
         mounted() {
             window.scrollTo(0, 0);
             let t = this;
-            // This might solve all the reload delay issues
-            // setInterval(() => {
-            //     if (!document.hasFocus()) {
-            //         t.isLoading = true;
-            //     }
-            // }, 1000);
             t.token = session.getItem('token');
             t.socket = io(t.$socketPath);
             t.socket.on('connect', () => {
@@ -451,7 +476,7 @@
                 } else {
                     t.hasState = false;
                 }
-                t.devices = message.data.devices.devices;
+                t.devices = message.data.state.availableDevices;
                 t.isAdmin = message.data.admin;
                 t.code = message.data.code;
             });
@@ -461,16 +486,24 @@
             });
 
             t.socket.on('song-upvoted', (message) => {
-                t.showSnackbar('Song Upvoted', 'Undo', () => {
-                    // emit an undo socket message
+                t.showSnackbar('Song Upvoted', '', () => {
                 })
             });
             t.socket.on('song-downvoted', (message) => {
-                t.showSnackbar('Song Downvoted', 'Undo', () => {
-                    // emit an undo socket message
+                t.showSnackbar('Song Downvoted', '', () => {
                 })
             });
-
+            t.socket.on('playlist-song-added', (message) => {
+                t.showSnackbar('Song Added', 'Undo', () => {
+                    // emit an undo socket message
+                    t.socket.emit('playlist-remove-song', {
+                        token: this.token,
+                        data: {
+                            songId: message.data.songId
+                        }
+                    });
+                })
+            });
             t.socket.on('search-success', (message) => {
                 t.searchResult = message.data;
                 t.$refs.add.$refs.search.gotResult(message.data);

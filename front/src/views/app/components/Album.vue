@@ -7,6 +7,7 @@
                 </v-list-item-avatar>
                 <v-list-item-content>
                     <v-list-item-title>{{data.name}}</v-list-item-title>
+                    <v-list-item-subtitle>{{data.artists.map(e => e.name).join(', ')}}</v-list-item-subtitle>
                 </v-list-item-content>
             </v-list-item>
         </template>
