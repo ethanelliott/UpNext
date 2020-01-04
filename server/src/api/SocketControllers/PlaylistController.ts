@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { EmitOnFail, EmitOnSuccess, MessageBody, OnMessage, SocketController } from "socket-controllers";
+import { EmitOnSuccess, MessageBody, OnMessage, SocketController } from "socket-controllers";
 import SocketMessage from "../Types/SocketMessage";
 import PartyDBService from "../Services/PartyDBService";
 import AuthenticationService from "../Services/AuthenticationService";
@@ -20,7 +20,6 @@ export class PlaylistController {
 
     @OnMessage("get-state-playlist")
     @EmitOnSuccess("got-state-playlist")
-    @EmitOnFail("party-leave")
     public async getPlaylistState(@MessageBody() message: SocketMessage<any>): Promise<SocketMessage<any>> {
         let a = this.authenticationService.authenticate(message.token);
         if (a.valid) {
@@ -39,7 +38,6 @@ export class PlaylistController {
 
     @OnMessage("upvote-song")
     @EmitOnSuccess("song-upvoted")
-    @EmitOnFail("party-leave")
     public async upvoteSong(@MessageBody() message: SocketMessage<any>): Promise<SocketMessage<any>> {
         let a = this.authenticationService.authenticate(message.token);
         if (a.valid) {
@@ -56,7 +54,6 @@ export class PlaylistController {
 
     @OnMessage("downvote-song")
     @EmitOnSuccess("song-downvoted")
-    @EmitOnFail("party-leave")
     public async downvoteSong(@MessageBody() message: SocketMessage<any>): Promise<SocketMessage<any>> {
         let a = this.authenticationService.authenticate(message.token);
         if (a.valid) {
@@ -71,9 +68,24 @@ export class PlaylistController {
         }
     }
 
+    @OnMessage("playlist-remove-song")
+    @EmitOnSuccess("song-removed")
+    public async removeSong(@MessageBody() message: SocketMessage<any>): Promise<SocketMessage<any>> {
+        let a = this.authenticationService.authenticate(message.token);
+        if (a.valid) {
+            let party = this.partyDBService.findPartyById(a.data.partyId);
+            this.partyDBService.removePlaylistEntryById(party.id, message.data.songId);
+            return {
+                token: message.token,
+                data: {}
+            };
+        } else {
+            throw new Error('Invalid token! Please Leave!');
+        }
+    }
+
     @OnMessage("playlist-add-song")
     @EmitOnSuccess("playlist-song-added")
-    @EmitOnFail('party-leave')
     public async addSongToPlaylist(@MessageBody() message: SocketMessage<any>): Promise<SocketMessage<any>> {
         let a = this.authenticationService.authenticate(message.token);
         if (a.valid) {
@@ -99,7 +111,9 @@ export class PlaylistController {
             }
             return {
                 token: message.token,
-                data: {}
+                data: {
+                    songId: message.data.songId
+                }
             };
         } else {
             throw new Error('Invalid token! Please Leave!');

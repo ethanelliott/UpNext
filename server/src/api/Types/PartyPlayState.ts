@@ -10,5 +10,6 @@ export default class PartyPlayState {
     progress: number;
     duration: number;
     albumArtwork: Array<ImageObject>;
-    device: DeviceObject
+    device: DeviceObject;
+    availableDevices: Array<DeviceObject>;
 }

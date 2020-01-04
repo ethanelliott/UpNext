@@ -203,4 +203,18 @@ export default class PartyDBService {
     public removePartyByPartyId(partyId: string) {
         this.db.remove({id: partyId});
     }
+
+    public removePlaylistEntryById(partyId: string, songId: string) {
+        let p = this.findPartyById(partyId);
+        if (p) {
+            let i;
+            for (i = 0; i < p.playlist.length; i++) {
+                if (p.playlist[i].id === songId) {
+                    break;
+                }
+            }
+            p.playlist.splice(i, 1);
+            this.db.update({id: partyId}, p);
+        }
+    }
 }

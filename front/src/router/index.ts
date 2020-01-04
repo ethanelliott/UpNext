@@ -9,6 +9,7 @@ import AdminPage from '../views/AdminPage.vue';
 // main application views
 import Main from '../views/app/Main.vue';
 import Home from '../views/app/Home.vue';
+import Search from '../views/app/Search.vue';
 
 Vue.use(VueRouter);
 
@@ -63,6 +64,18 @@ const routes = [
                 components: {
                     default: Main,
                     content: Home
+                }
+            },
+            {
+                path: 'search',
+                name: 'appSearch',
+                props: {
+                    default: false,
+                    content: true
+                },
+                components: {
+                    default: Main,
+                    content: Search
                 }
             }
         ]

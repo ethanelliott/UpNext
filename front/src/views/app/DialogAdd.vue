@@ -15,7 +15,10 @@
             <v-container class="mt-10">
                 <v-row>
                     <v-col align="center" justify="center">
-                        <search ref="search" v-on:search="search" v-on:add="addItem" v-on:dialog="handleDialog"/>
+                        <v-btn @click="goToSearch" block color="primary">
+                            <v-icon>mdi-magnify</v-icon>
+                            Search
+                        </v-btn>
                     </v-col>
                 </v-row>
                 <v-row>
@@ -66,7 +69,6 @@
 <script>
     import session from 'localStorage'
     import axios from 'axios'
-    import Search from './Search'
     import Playlist from './components/Playlist'
     import Song from './components/Song'
 
@@ -83,7 +85,6 @@
             message: ''
         }),
         components: {
-            'search': Search,
             'playlist': Playlist,
             'song': Song
         },
@@ -127,6 +128,9 @@
                     }).catch(err => {
                     }
                 )
+            },
+            goToSearch() {
+                this.$emit('search');
             },
             addItem(songId) {
                 this.$emit('add', songId);
