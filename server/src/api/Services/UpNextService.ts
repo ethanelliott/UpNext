@@ -42,10 +42,11 @@ export default class UpNextService {
                         await ref.checkForValidToken(party);
                         let playState = await this.spotifyService.getSpotifyAPI().player.getPlayingContext(party.token);
                         let devices = (await this.spotifyService.getSpotifyAPI().player.getDevices(party.token)).devices;
+                        // logger.info(`[S] ${party.state}`)
                         switch (party.state) {
                             case PartyStateEnum.PLAYING:
                                 if (playState && playState.item) {
-                                    if (playState.item.duration_ms - playState.progress_ms <= 2500) {
+                                    if (playState.item.duration_ms - playState.progress_ms <= 2000) {
                                         ref.setPartyState(party, PartyStateEnum.SKIPPING);
                                     }
                                     if (playState.item.id !== party.previousSong) {

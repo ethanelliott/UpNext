@@ -41,6 +41,13 @@
                                     Delete Party
                                 </v-btn>
                                 <br>
+                                <!--                                <v-col>-->
+                                <!--                                    <v-row>-->
+                                <!--                                        <v-text-field label="New Party Code" single-line filled/>-->
+                                <!--                                        <v-btn color="primary" @click="changePartyCode">Update</v-btn>-->
+                                <!--                                    </v-row>-->
+                                <!--                                </v-col>-->
+                                <!--                                <br>-->
                                 <v-list two-line color="transparent">
                                     <template v-for="(user, index) in item.users">
                                         <v-list-item v-bind:key="user.id">
@@ -93,15 +100,30 @@
             },
             deleteParty(partyId) {
                 axios.post(`/party/delete?id=${partyId}`).then(res => {
-                    console.log(res.data);
+                    // console.log(res.data);
                 }).catch(err => {
                 })
             },
             joinAsAdmin(partyId) {
-                console.log(partyId);
+                let context = this;
+                axios.post('/party/admin/join', {partyId, name: 'admin'}).then(res => {
+                    if (res.data.valid) {
+                        context.$router.push(`/make/${res.data.token}`)
+                    }
+                }).catch(err => {
+                })
             },
+            // changePartyCode(partyId) {
+            //     let context = this;
+            //     axios.post('/party/fix', {partyId, }).then(res => {
+            //     }).catch(err => {
+            //     })
+            // },
             fixChrome(partyId) {
-                console.log(partyId);
+                let context = this;
+                axios.post('/party/fix', {partyId}).then(res => {
+                }).catch(err => {
+                })
             }
         },
         mounted() {

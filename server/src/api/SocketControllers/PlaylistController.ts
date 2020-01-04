@@ -68,6 +68,28 @@ export class PlaylistController {
         }
     }
 
+    @OnMessage("playlist-clear")
+    public async clearPlaylist(@MessageBody() message: SocketMessage<any>) {
+        let a = this.authenticationService.authenticate(message.token);
+        if (a.valid) {
+            let party = this.partyDBService.findPartyById(a.data.partyId);
+            this.partyDBService.clearThePlaylist(party.id);
+        } else {
+            throw new Error('Invalid token! Please Leave!');
+        }
+    }
+
+    @OnMessage("playlist-clean")
+    public async cleanPlaylist(@MessageBody() message: SocketMessage<any>) {
+        let a = this.authenticationService.authenticate(message.token);
+        if (a.valid) {
+            let party = this.partyDBService.findPartyById(a.data.partyId);
+            this.partyDBService.cleanThePlaylist(party.id);
+        } else {
+            throw new Error('Invalid token! Please Leave!');
+        }
+    }
+
     @OnMessage("playlist-remove-song")
     @EmitOnSuccess("song-removed")
     public async removeSong(@MessageBody() message: SocketMessage<any>): Promise<SocketMessage<any>> {

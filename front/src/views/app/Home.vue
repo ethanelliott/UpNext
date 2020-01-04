@@ -14,6 +14,21 @@
                 <v-btn @click="openAdminMenu" color="primary" icon v-if="isAdmin">
                     <v-icon>mdi-settings</v-icon>
                 </v-btn>
+                <v-menu offset-y v-else>
+                    <template v-slot:activator="{ on }">
+                        <v-btn color="primary" dark icon v-on="on">
+                            <v-icon>mdi-dots-vertical</v-icon>
+                        </v-btn>
+                    </template>
+                    <v-list color="darker">
+                        <v-list-item @click="navigateAway">
+                            <v-list-item-title>
+                                <v-icon left>mdi-logout</v-icon>
+                                Logout
+                            </v-list-item-title>
+                        </v-list-item>
+                    </v-list>
+                </v-menu>
             </v-toolbar-items>
         </v-app-bar>
         <v-navigation-drawer class="text-left" fixed right temporary v-if="isAdmin" v-model="adminDrawer" width="300">
@@ -76,12 +91,22 @@
                             </v-list-item-content>
                         </template>
                     </v-list-item>
+                    <v-list-item>
+                        <v-list-item-content>
+                            <v-btn @click="cleanTheQueue" color="primary">Clean the Queue</v-btn>
+                        </v-list-item-content>
+                    </v-list-item>
                 </v-list-item-group>
             </v-list>
             <v-divider/>
             <v-list flat subheader two-line>
                 <v-subheader>Danger Zone</v-subheader>
                 <v-list-item-group multiple>
+                    <v-list-item>
+                        <v-list-item-content>
+                            <v-btn @click="emptyTheQueue" color="warning">Empty the Queue</v-btn>
+                        </v-list-item-content>
+                    </v-list-item>
                     <v-list-item>
                         <v-list-item-content>
                             <v-btn @click="deleteSafetyDialog=true" color="error">Delete the Party</v-btn>
@@ -357,6 +382,19 @@
                 this.safeToLeave = true;
                 this.$router.push('/app/search');
             },
+            emptyTheQueue() {
+                this.socket.emit('playlist-clear', {
+                    token: this.token,
+                    data: {}
+                });
+            },
+            cleanTheQueue() {
+                // remove songs with a negative score
+                this.socket.emit('playlist-clean', {
+                    token: this.token,
+                    data: {}
+                });
+            },
             downvoteSong(songId) {
                 this.socket.emit('downvote-song', {
                     token: this.token,
@@ -448,13 +486,11 @@
             });
 
             t.socket.on('song-upvoted', (message) => {
-                t.showSnackbar('Song Upvoted', 'Undo', () => {
-                    // emit an undo socket message
+                t.showSnackbar('Song Upvoted', '', () => {
                 })
             });
             t.socket.on('song-downvoted', (message) => {
-                t.showSnackbar('Song Downvoted', 'Undo', () => {
-                    // emit an undo socket message
+                t.showSnackbar('Song Downvoted', '', () => {
                 })
             });
             t.socket.on('playlist-song-added', (message) => {

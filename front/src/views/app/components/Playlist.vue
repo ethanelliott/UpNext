@@ -22,7 +22,7 @@
             <v-divider class="mt-2"/>
             <v-img class="my-5" height="200" contain :src="data.images[0].url"/>
 
-            <v-card>
+            <v-card color="transparent" flat>
                 <v-list v-if="songs.length > 0" two-line color="transparent">
                     <template v-for="(item, index) in songs">
                         <song :key="index" v-bind:song="item.track" v-on:add="addItem"/>

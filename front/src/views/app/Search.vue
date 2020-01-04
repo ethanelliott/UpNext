@@ -203,6 +203,7 @@
                 this.$router.push('/leave');
             },
             handleDialog(data) {
+                // console.log(data, this.openDialogs);
                 if (data.state === "open") {
                     this.openDialogs.push(data);
                 } else if (data.state === "close") {

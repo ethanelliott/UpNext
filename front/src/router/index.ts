@@ -1,56 +1,46 @@
 import Vue from 'vue';
 import VueRouter from 'vue-router';
-import LandingPage from '../views/LandingPage.vue';
-import JoinPage from '../views/JoinPage.vue';
-import StartPage from '../views/StartPage.vue';
-import MakePage from '../views/MakePage.vue';
-import LeavePage from '../views/LeavePage.vue';
-import AdminPage from '../views/AdminPage.vue';
-// main application views
-import Main from '../views/app/Main.vue';
-import Home from '../views/app/Home.vue';
-import Search from '../views/app/Search.vue';
 
 Vue.use(VueRouter);
 
 const routes = [
     {
-        path: '/admin',
+        path: '/eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9',
         name: 'admin',
-        component: AdminPage
+        component: () => import('../views/AdminPage.vue')
     },
     {
         path: '/',
         name: 'home',
-        component: LandingPage
+        component: () => import('../views/LandingPage.vue')
     },
     {
         path: '/join',
         name: 'join',
         props: (route: any) => ({code: route.query.c}),
-        component: JoinPage
+        component: () => import('../views/JoinPage.vue')
     },
     {
         path: '/leave',
         name: 'leave',
-        component: LeavePage
+        component: () => import('../views/LeavePage.vue')
     },
     {
         path: '/start',
         name: 'start',
-        component: StartPage
+        component: () => import('../views/StartPage.vue')
     },
     {
         path: '/make/:token',
         name: 'make',
-        component: MakePage
+        component: () => import('../views/MakePage.vue')
     },
     {
         path: '/app',
         name: 'app',
         components: {
-            default: Main,
-            content: Home
+            default: () => import('../views/app/Main.vue'),
+            content: () => import('../views/app/Home.vue')
         },
         redirect: '/app/home',
         children: [
@@ -62,8 +52,8 @@ const routes = [
                     content: true
                 },
                 components: {
-                    default: Main,
-                    content: Home
+                    default: () => import('../views/app/Main.vue'),
+                    content: () => import('../views/app/Home.vue')
                 }
             },
             {
@@ -74,8 +64,8 @@ const routes = [
                     content: true
                 },
                 components: {
-                    default: Main,
-                    content: Search
+                    default: () => import('../views/app/Main.vue'),
+                    content: () => import('../views/app/Search.vue')
                 }
             }
         ]

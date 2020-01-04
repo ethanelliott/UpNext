@@ -1,5 +1,10 @@
 <template>
     <v-app>
+        <v-app-bar color="transparent" flat>
+            <v-btn icon to="/" x-large>
+                <v-icon>mdi-arrow-left</v-icon>
+            </v-btn>
+        </v-app-bar>
         <v-content>
             <v-container class="fill-height">
                 <v-container>

@@ -1,7 +1,8 @@
 <template>
     <v-list-item>
         <v-list-item-avatar tile>
-            <v-img size="60" :src="song.album.images.filter(e => e.height < 100)[0].url"/>
+            <v-img :src="song.album.images.filter(e => e.height < 100)[0].url" size="60" v-if="song"/>
+            <v-icon v-else>mdi-album</v-icon>
         </v-list-item-avatar>
         <v-list-item-content>
             <v-list-item-title>{{song.name}}</v-list-item-title>

@@ -15,7 +15,7 @@
             <v-container class="mt-10">
                 <v-row>
                     <v-col align="center" justify="center">
-                        <v-btn @click="goToSearch" block color="primary">
+                        <v-btn @click="goToSearch" block class="my-5" color="primary" x-large>
                             <v-icon>mdi-magnify</v-icon>
                             Search
                         </v-btn>
