@@ -3,25 +3,24 @@ import { EmitOnSuccess, MessageBody, OnMessage, SocketController } from "socket-
 import SocketMessage from "../Types/general/SocketMessage";
 import AuthenticationService from "../Services/AuthenticationService";
 import logger from "../../util/Log";
+import { PartyService } from "../Services/PartyService";
 
 
 @SocketController()
 export class PlaylistController {
     constructor(
         private authenticationService: AuthenticationService,
-        // private partyDBService: PartyDBService,
-        // private upNextService: UpNextService
+        private partyService: PartyService
     ) {
     }
 
     @OnMessage("playlist-state")
     @EmitOnSuccess("playlist-state")
     public async getPlaylistState(@MessageBody() message: SocketMessage<any>) {
-        this.authenticationService.authenticate(message.token).then(tokenData => {
-            console.log('playlist-state');
-        }).catch(err => {
-            logger.error(err);
-        });
+        const tokenData = await this.authenticationService.authenticate(message.token);
+        return {
+            playlist: this.partyService.getPlaylistForPartyId(tokenData.partyId)
+        };
     }
 
     @OnMessage("playlist-upvote-song")
@@ -65,6 +64,7 @@ export class PlaylistController {
     public async removeSong(@MessageBody() message: SocketMessage<any>) {
         this.authenticationService.authenticate(message.token).then(tokenData => {
             console.log('playlist-remove-song');
+            this.partyService.removeSongFromPlaylist(tokenData.partyId, tokenData.userId, message.data.songId);
         }).catch(err => {
             logger.error(err);
         });
@@ -74,6 +74,7 @@ export class PlaylistController {
     public async addSongToPlaylist(@MessageBody() message: SocketMessage<any>) {
         this.authenticationService.authenticate(message.token).then(tokenData => {
             console.log('playlist-add-song');
+            this.partyService.addSongToPlaylist(tokenData.partyId, tokenData.userId, message.data.songId);
         }).catch(err => {
             logger.error(err);
         });

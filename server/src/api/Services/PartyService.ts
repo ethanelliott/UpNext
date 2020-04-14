@@ -17,6 +17,10 @@ import { UserDB } from "../Types/DatabaseMaps/UserDB";
 import UserBuilder from "../Factory/UserBuilder";
 import { PartyJoinToken } from "../Types/general/PartyJoinToken";
 import { UserPermissionEnum } from "../Types/Enums/UserPermissionEnum";
+import { PlaylistEntryDatabaseService } from "./Database/PlaylistEntryDatabaseService";
+import { PlaylistVoteDatabaseService } from "./Database/PlaylistVoteDatabaseService";
+import { PlaylistEntryDB } from "../Types/DatabaseMaps/PlaylistEntryDB";
+import { ProcessorEvents } from "./EventProcessorService";
 
 @Service()
 export class PartyService {
@@ -29,7 +33,9 @@ export class PartyService {
         private userDatabaseService: UserDatabaseService,
         private partyDatabaseService: PartyDatabaseService,
         private partyStateDatabaseService: PartyStateDatabaseService,
-        private partyHistoryDatabaseService: PartyHistoryDatabaseService
+        private partyHistoryDatabaseService: PartyHistoryDatabaseService,
+        private playlistEntryDatabaseService: PlaylistEntryDatabaseService,
+        private playlistVoteDatabaseService: PlaylistVoteDatabaseService,
     ) {
 
     }
@@ -121,7 +127,32 @@ export class PartyService {
         return this.partyStateDatabaseService.getPartyStateByPartyId(partyId);
     }
 
-    public getPartyFromId(partyId: string) {
+    public getPartyFromId(partyId: string): PartyDB {
         return this.partyDatabaseService.getPartyById(partyId);
     }
+
+    public getPlaylistForPartyId(partyId: string): Array<PlaylistEntryDB> {
+        return this.playlistEntryDatabaseService.getAllPlaylistEntriesForParty(partyId);
+    }
+
+    // all of this is wrong
+    public upvoteSong(partyId: string): void {
+        this.playlistVoteDatabaseService.getVotesForEntry(partyId);
+    }
+
+    public addSongToPlaylist(partyId: string, userId: string, songId: string) {
+        this.upNextService.emitEventToProcess(partyId, ProcessorEvents.PLAYLIST_ADD_SONG, {userId, songId});
+    }
+
+    public removeSongFromPlaylist(partyId: string, userId: string, songId: string) {
+        this.upNextService.emitEventToProcess(partyId, ProcessorEvents.PLAYLIST_REMOVE_SONG, {userId, songId});
+    }
+
+    public async search(partyId: string, searchTerm: string): Promise<any> {
+        const token = this.partyDatabaseService.getPartyById(partyId).spotifyToken;
+        const results = await this.spotifyService.getSpotifyAPI().search.searchEverything(token, searchTerm, 20);
+        return results;
+    }
+
+
 }

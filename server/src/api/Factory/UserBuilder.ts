@@ -1,5 +1,6 @@
 import { UserDB } from "../Types/DatabaseMaps/UserDB";
 import { UserPermissionEnum } from "../Types/Enums/UserPermissionEnum";
+import moment from "moment";
 
 
 export default class UserBuilder {
@@ -47,6 +48,7 @@ export default class UserBuilder {
         p.id = this.id;
         p.score = this.score;
         p.partyId = this.partyId;
+        p.joinedAt = moment().valueOf();
         p.userPermission = this.permission;
         p.spotifyToken = '';
         p.spotifyRefreshToken = '';

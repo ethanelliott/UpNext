@@ -4,5 +4,6 @@ export enum PartyStateEnum {
     NEW_SONG,
     NOTHING_PLAYING,
     SCRUBBING,
-    PAUSED
+    PAUSED,
+    SONG_CHANGED_MANUALLY,
 }

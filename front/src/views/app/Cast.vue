@@ -44,9 +44,15 @@
                                     {{ trackName }}</h1>
                             </v-row>
                             <v-row class="ma-0 pa-0">
-                                <h1 class="display-2 font-weight-thin text-left"
+                                <h1 class="display-2 font-weight-thin text-left "
                                     style="height: 1.2em; text-overflow: ellipsis;white-space: nowrap;overflow: hidden;">
                                     {{ artistName }}</h1>
+                            </v-row>
+                            <v-row class="ma-0 pa-0">
+                                <h1 class="heading font-weight-regular text-left"
+                                    style="height: 1.2em; text-overflow: ellipsis;white-space: nowrap;overflow: hidden;">
+                                    Added By: {{ addedBy }}
+                                </h1>
                             </v-row>
                         </v-col>
                     </v-row>
@@ -103,10 +109,15 @@
                                 <v-row class="ma-0 pa-0 mt-4 ml-3 pl-8">
                                     <v-card class="ma-o pa-0 elevation-0" color="transparent" height="190"
                                             width="0"></v-card>
-                                    <v-card :key="`${i}${e}`" class="mr-5 text-left elevation-0" color="transparent"
+                                    <v-card :key="`${i}${e}`"
+                                            class="mr-5 text-left elevation-0"
+                                            color="transparent"
                                             tile
-                                            v-for="(e, i) in playlist.slice(0, 6)" width="150">
+                                            v-for="(e, i) in playlist.slice(0, 6)"
+                                            width="150"
+                                    >
                                         <v-img :src="e.albumArtwork" class="elevation-10 mb-1" height="100"
+                                               v-if="e.albumArtwork"
                                                position="center">
                                             <v-overlay absolute opacity="0.7">
                                                 <h1 class="display-3 font-weight-bold">{{ e.votes }}</h1>
@@ -114,14 +125,14 @@
                                         </v-img>
                                         <div class="font-weight-bold"
                                              style="text-overflow: ellipsis;white-space: nowrap;overflow: hidden;">
-                                            {{e.name}}
+                                            {{ e.name}}
                                         </div>
                                         <div class="font-weight-thin"
-                                             style="text-overflow: ellipsis;white-space: nowrap;overflow: hidden;">{{
-                                            e.artist }}
+                                             style="text-overflow: ellipsis;white-space: nowrap;overflow: hidden;">
+                                            {{ e.artist }}
                                         </div>
                                         <div style="text-overflow: ellipsis;white-space: nowrap;overflow: hidden;">
-                                            Added: {{ e.added.name }}
+                                            Added: {{ e.addedBy }}
                                         </div>
                                     </v-card>
                                 </v-row>
@@ -158,6 +169,7 @@
             trackId: '',
             partyName: '',
             code: '',
+            addedBy: '',
             playlist: [],
             playlistId: '',
             songProgressLoopTrack: null,
@@ -178,11 +190,11 @@
             });
             this.socket.on('party-state', (data) => {
                 this.isLoading = false;
-                console.table(data.playstate);
                 this.trackName = data.playstate.trackName;
                 this.albumArtwork = data.playstate.albumArtwork;
                 this.artistName = data.playstate.artistName;
                 this.trackId = data.playstate.trackId;
+                this.addedBy = data.playstate.addedBy;
                 this.code = data.party.code;
                 let lv = data.playstate.colourLightVibrant;
                 let v = data.playstate.colourVibrant;
@@ -197,22 +209,21 @@
                 if (data.playstate.state === 0) {
                     const finishTime = moment().add((data.playstate.duration - data.playstate.progress), 'milliseconds').valueOf();
                     this.songProgressLoopTrack = setInterval(() => {
-                        // calculate predicted progress
                         const progress = (1 - ((finishTime - moment().valueOf()) / data.playstate.duration)) * 100;
                         this.songProgress = progress <= 100 && progress >= 0 ? progress : 0;
                     }, 100);
                 }
             });
             this.socket.on('playlist-state', (data) => {
-                console.table(data);
+                this.playlist = data.playlist;
             });
             this.socket.on('state-change', (data) => {
-                console.table(data.playstate);
                 this.isLoading = false;
                 this.trackName = data.playstate.trackName;
                 this.albumArtwork = data.playstate.albumArtwork;
                 this.artistName = data.playstate.artistName;
                 this.trackId = data.playstate.trackId;
+                this.addedBy = data.playstate.addedBy;
                 this.code = data.party.code;
                 let lv = data.playstate.colourLightVibrant;
                 let v = data.playstate.colourVibrant;
@@ -227,15 +238,17 @@
                 if (data.playstate.state === 0) {
                     const finishTime = moment().add((data.playstate.duration - data.playstate.progress), 'milliseconds').valueOf();
                     this.songProgressLoopTrack = setInterval(() => {
-                        // calculate predicted progress
                         const progress = (1 - ((finishTime - moment().valueOf()) / data.playstate.duration)) * 100;
                         this.songProgress = progress <= 100 && progress >= 0 ? progress : 0;
                     }, 100);
                 }
             });
             this.socket.on('playlist-update', (data) => {
-                console.table(data);
+                this.playlist = data.playlist;
             });
+        },
+        beforeDestroy() {
+            this.socket.disconnect();
         },
         methods: {
             navigateAway() {

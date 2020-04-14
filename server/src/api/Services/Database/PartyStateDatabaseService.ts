@@ -113,4 +113,12 @@ export class PartyStateDatabaseService {
             ]
         })).run();
     }
+
+    public updatePartyStateAddedBy(partyId: string, addedBy: string) {
+        this.databaseService.update({
+            update: this.tableName,
+            where: [{key: 'partyId', operator: '=', value: partyId}],
+            set: {addedBy}
+        });
+    }
 }

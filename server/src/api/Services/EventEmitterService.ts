@@ -24,13 +24,13 @@ export default class EventEmitterService {
 
     public emitEventAt(partyId: string, event: PartyEvent, data: any = null): void {
         logger.info(`[PEE] Emitting event ${event} at ${partyId}`);
-        this.partyEventEmitters.get(partyId).emit(event, data);
+        this.partyEventEmitters.get(partyId).emit(event.toString(10), data);
     }
 
     public joinPartyEvents(partyId: string, eventHandlers: Array<PartyEventHandler>) {
         logger.info(`[PEE] Client joined party ${partyId}`);
         const eventEmitter = this.partyEventEmitters.get(partyId);
-        eventHandlers.forEach(e => eventEmitter.on(e.event, e.action));
+        eventHandlers.forEach(e => eventEmitter.on(e.event.toString(10), e.action));
     }
 
 }

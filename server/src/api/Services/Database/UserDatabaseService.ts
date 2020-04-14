@@ -2,6 +2,8 @@ import { Service } from "typedi";
 import { DatabaseService } from "./DatabaseService";
 import QueryFactory from "../../Factory/QueryFactory";
 import { UserDB } from "../../Types/DatabaseMaps/UserDB";
+import moment from "moment";
+import { CronJobService } from "../CronJobService";
 
 @Service()
 export class UserDatabaseService {
@@ -9,13 +11,24 @@ export class UserDatabaseService {
     private readonly tableName: string = 'users';
 
     constructor(
-        private databaseService: DatabaseService
+        private databaseService: DatabaseService,
+        private cronJobService: CronJobService
     ) {
         try {
             this.databaseService.db.prepare(`SELECT * FROM ${this.tableName}`).get();
         } catch (e) {
             this.buildTable();
         }
+        this.cronJobService.newCronJob({
+            pattern: '*/30 * * * *',
+            method: () => {
+                const time12HrAgo = moment().subtract(12, 'hours').valueOf();
+                this.databaseService.delete({
+                    from: this.tableName,
+                    where: [{key: 'joinedAt', operator: '<', value: time12HrAgo}]
+                });
+            }
+        });
     }
 
     public insertUser(user: UserDB): void {
@@ -86,6 +99,7 @@ export class UserDatabaseService {
                 {name: 'nickname', type: 'TEXT', notNull: true},
                 {name: 'score', type: 'INTEGER', notNull: true},
                 {name: 'partyId', type: 'TEXT', notNull: true, foreignKey: {name: 'id', table: 'parties'}},
+                {name: 'joinedAt', type: 'INTEGER', notNull: true},
                 {name: 'spotifyToken', type: 'TEXT'},
                 {name: 'spotifyRefreshToken', type: 'TEXT'},
                 {name: 'spotifyTokenExpire', type: 'INTEGER'},

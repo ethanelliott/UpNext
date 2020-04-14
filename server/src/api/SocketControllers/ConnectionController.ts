@@ -12,7 +12,7 @@ import logger from "../../util/Log";
 import EventEmitterService from "../Services/EventEmitterService";
 import SocketMessage from "../Types/general/SocketMessage";
 import AuthenticationService from "../Services/AuthenticationService";
-import { PartyEventEmitterBuilder } from "../Factory/PartyEventEmitterBuilder";
+import { PartyEvent, PartyEventEmitterBuilder } from "../Factory/PartyEventEmitterBuilder";
 
 @SocketController()
 export class ConnectionController {
@@ -39,9 +39,9 @@ export class ConnectionController {
             this.eventQueueService.joinPartyEvents(tokenData.partyId,
                 PartyEventEmitterBuilder
                     .make()
-                    .withEvent('state-change', data => socket.emit('state-change', data))
-                    .withEvent('playlist-update', data => socket.emit('playlist-update', data))
-                    .withEvent('users-update', data => socket.emit('users-update', data))
+                    .withEvent(PartyEvent.STATE_CHANGE, data => socket.emit('state-change', data))
+                    .withEvent(PartyEvent.PLAYLIST_UPDATE, data => socket.emit('playlist-update', data))
+                    .withEvent(PartyEvent.USERS_UPDATE, data => socket.emit('users-update', data))
                     .build()
             );
         }).catch(err => {

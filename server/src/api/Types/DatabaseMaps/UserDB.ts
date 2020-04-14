@@ -5,6 +5,7 @@ export class UserDB {
     nickname: string;
     score: number;
     partyId: string;
+    joinedAt: number;
     spotifyToken: string;
     spotifyRefreshToken: string;
     spotifyTokenExpire: number;

@@ -35,4 +35,8 @@ export class PartyEventHandler {
     public action: (data: any) => any;
 }
 
-export type PartyEvent = 'state-change' | 'playlist-update' | 'users-update';
+export enum PartyEvent {
+    STATE_CHANGE,
+    PLAYLIST_UPDATE,
+    USERS_UPDATE
+}

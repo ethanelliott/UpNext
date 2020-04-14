@@ -1,13 +1,14 @@
 import 'reflect-metadata';
 import { EmitOnFail, EmitOnSuccess, MessageBody, OnMessage, SocketController } from "socket-controllers";
 import SocketMessage from "../Types/general/SocketMessage";
-import logger from "../../util/Log";
 import AuthenticationService from "../Services/AuthenticationService";
+import { PartyService } from "../Services/PartyService";
 
 @SocketController()
 export class SearchController {
     constructor(
         private authenticationService: AuthenticationService,
+        private partyService: PartyService
     ) {
     }
 
@@ -15,10 +16,7 @@ export class SearchController {
     @EmitOnSuccess("search-success")
     @EmitOnFail("search-fail")
     public async search(@MessageBody() message: SocketMessage<any>) {
-        this.authenticationService.authenticate(message.token).then(tokenData => {
-            console.table(tokenData);
-        }).catch(err => {
-            logger.error(err);
-        });
+        const tokenData = await this.authenticationService.authenticate(message.token);
+        return await this.partyService.search(tokenData.partyId, message.data.query);
     }
 }

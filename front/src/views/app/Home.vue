@@ -168,9 +168,11 @@
                             </v-dialog>
                         </v-skeleton-loader>
                         <v-card-text align="start" class="px-8">
-                            <span class="trackName headline font-weight-medium text--primary">{{trackName}}</span>
+                            <span class="headline font-weight-medium text--primary">{{trackName}}</span>
                             <br>
-                            <span class="trackArtist font-weight-thin font-italic text--primary">{{artistName}}</span>
+                            <span class="font-weight-thin font-italic text--primary">{{artistName}}</span>
+                            <br>
+                            <span>Added by: {{ addedBy }}</span>
                         </v-card-text>
                     </v-card>
                 </v-row>
@@ -243,6 +245,7 @@
             trackId: '',
             playlist: [],
             playlistId: '',
+            addedBy: '',
             openDialogs: [],
             safetyDialog: false,
             safeToLeave: false,
@@ -417,6 +420,7 @@
                 this.artistName = data.playstate.artistName;
                 this.trackId = data.playstate.trackId;
                 this.code = data.party.code;
+                this.addedBy = data.playstate.addedBy;
                 let lv = data.playstate.colourLightVibrant;
                 this.backgroundString = `background-image: linear-gradient(#${lv}ff 0%, rgba(0,0,0,1) 100%);`;
             });
@@ -431,6 +435,7 @@
                 this.artistName = data.playstate.artistName;
                 this.trackId = data.playstate.trackId;
                 this.code = data.party.code;
+                this.addedBy = data.playstate.addedBy;
                 let lv = data.playstate.colourLightVibrant;
                 this.backgroundString = `background-image: linear-gradient(#${lv}ff 0%, rgba(0,0,0,1) 100%);`;
             });
