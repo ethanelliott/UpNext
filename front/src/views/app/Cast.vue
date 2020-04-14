@@ -173,6 +173,9 @@
                 this.requestStateData();
                 this.socket.emit('join', {token: this.token, data: null});
             });
+            this.socket.on('party-leave', () => {
+                this.navigateAway();
+            });
             this.socket.on('party-state', (data) => {
                 this.isLoading = false;
                 console.table(data.playstate);
@@ -235,9 +238,9 @@
             });
         },
         methods: {
-            toHex(dec) {
-                const h = dec.toString(16)
-                return h.length === 2 ? h : `0${h}`;
+            navigateAway() {
+                this.safeToLeave = true;
+                this.$router.push('/leave');
             },
             requestStateData() {
                 this.socket.emit('party-state', {

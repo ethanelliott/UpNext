@@ -4,4 +4,5 @@ export default class WebTokenData {
     iat: number;
     exp: number;
     iss: string;
+    admin: boolean;
 }

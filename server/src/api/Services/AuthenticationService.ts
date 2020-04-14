@@ -29,11 +29,12 @@ export default class AuthenticationService {
         });
     }
 
-    public generateToken(partyID: string, userID: string): string {
+    public generateToken(partyId: string, userId: string, admin: boolean): string {
         try {
             let data = {
-                "partyId": partyID,
-                "userId": userID
+                partyId,
+                userId,
+                admin
             };
             return this.webTokenService.generateFrom(data);
         } catch (e) {

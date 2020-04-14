@@ -373,6 +373,10 @@
                     token: this.token,
                     data: null
                 });
+                this.socket.emit('user-admin', {
+                    token: this.token,
+                    data: null
+                })
             }
         },
         beforeRouteLeave(to, from, next) {
@@ -401,6 +405,9 @@
             });
             this.socket.on('party-leave', () => {
                 this.navigateAway();
+            });
+            this.socket.on('user-admin', (data) => {
+                this.isAdmin = data.admin;
             });
             this.socket.on('party-state', (data) => {
                 this.isLoading = false;

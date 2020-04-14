@@ -91,7 +91,6 @@ export default class UpNextService {
                 const spotifyPlayState = await this.spotifyService.getSpotifyAPI().player.getPlayingContext(party.spotifyToken);
                 // each of these states have entry and exit conditions, and on those conditions,
                 // we can trigger the event emitter
-                console.log(storedPartyState.state);
                 switch (storedPartyState.state) {
                     case PartyStateEnum.PLAYING:
                         // song is currently playing normally

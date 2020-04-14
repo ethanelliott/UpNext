@@ -1,6 +1,5 @@
 import { Service } from "typedi";
 import Database, { Statement } from 'better-sqlite3';
-import logger from "../../../util/Log";
 import { Delete, Insert, Select, Update } from "../../Types/DatabaseMaps/Database";
 import QueryFactory from "../../Factory/QueryFactory";
 
@@ -10,7 +9,11 @@ export class DatabaseService {
     public db: any;
 
     constructor() {
-        this.db = new Database('./store.db', {verbose: (message) => logger.debug(`[DB] ${message}`)});
+        this.db = new Database('./store.db', {
+            // verbose: (message) => {
+            //     logger.debug(`[DB] ${message}`);
+            // }
+        });
     }
 
     public queryOne<T>(params: Select): T {

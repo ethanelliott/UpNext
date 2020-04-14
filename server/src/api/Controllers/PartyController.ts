@@ -28,7 +28,7 @@ export class PartyController {
         const decodedToken = this.webTokenService.verify<PartyJoinToken>(token);
         if (decodedToken.error == null) {
             const userId = await this.partyService.joinParty(decodedToken.data);
-            const userToken = this.authenticationService.generateToken(decodedToken.data.partyId, userId);
+            const userToken = this.authenticationService.generateToken(decodedToken.data.partyId, userId, decodedToken.data.admin);
             return {token: userToken};
         } else {
             return {token: null};

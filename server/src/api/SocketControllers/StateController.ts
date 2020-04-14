@@ -1,5 +1,12 @@
 import 'reflect-metadata';
-import { ConnectedSocket, EmitOnSuccess, MessageBody, OnMessage, SocketController } from "socket-controllers";
+import {
+    ConnectedSocket,
+    EmitOnFail,
+    EmitOnSuccess,
+    MessageBody,
+    OnMessage,
+    SocketController
+} from "socket-controllers";
 import SocketMessage from "../Types/general/SocketMessage";
 import { Socket } from "socket.io";
 import logger from "../../util/Log";
@@ -16,6 +23,7 @@ export class StateController {
 
     @OnMessage("party-state")
     @EmitOnSuccess("party-state")
+    @EmitOnFail('party-leave')
     public async getState(@ConnectedSocket() socket: Socket, @MessageBody() message: SocketMessage<any>) {
         const tokenData = await this.authenticationService.authenticate(message.token);
         return {
