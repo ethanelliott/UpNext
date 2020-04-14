@@ -7,12 +7,14 @@ import axios from 'axios';
 
 Vue.config.productionTip = false;
 
-const PROD = false;
+const PROD = process.env.NODE_ENV !== 'development';
 
 axios.defaults.baseURL = (PROD ? 'https://api.upnext.cool/api' : 'http://192.168.69.100:8884/api');
 Vue.prototype.$socketPath = (PROD ? 'https://socket.upnext.cool' : 'http://192.168.69.100:8885');
 Vue.config.productionTip = false;
 
+Vue.prototype.$PROD = PROD;
+Vue.prototype.$API_URL = (PROD ? 'https://api.upnext.cool/api' : 'http://192.168.69.100:8884/api');
 
 new Vue({
     router,

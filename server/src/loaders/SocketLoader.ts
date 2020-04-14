@@ -10,13 +10,14 @@ import { ConnectionController } from "../api/SocketControllers/ConnectionControl
 import { SearchController } from "../api/SocketControllers/SearchController";
 import { StateController } from "../api/SocketControllers/StateController";
 import { PlaylistController } from "../api/SocketControllers/PlaylistController";
+import { SpotifyController } from "../api/SocketControllers/SpotifyController";
 
 export const SocketLoader: MicroframeworkLoader = (settings: MicroframeworkSettings | undefined) => {
     if (settings) {
         logger.info("[START] Loading SocketIO");
 
         const socketApp = createSocketServer(env.app.socketPort, {
-            controllers: [SearchController, ConnectionController, StateController, PlaylistController],
+            controllers: [SearchController, ConnectionController, StateController, PlaylistController, SpotifyController],
             middlewares: [AuthenticationSocketMiddleware]
         });
         logger.info(`[START] Socket listening on port ${env.app.socketPort}`);

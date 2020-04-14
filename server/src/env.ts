@@ -1,6 +1,5 @@
 import dotenv from 'dotenv';
 import * as path from 'path';
-import * as pkg from '../package.json';
 import { getOsEnv, normalizePort } from './lib/env';
 import { readFileSync } from "fs";
 
@@ -12,8 +11,8 @@ export const env = {
     isTest: process.env.NODE_ENV === 'test',
     app: {
         name: getOsEnv('APP_NAME'),
-        version: (pkg as any).version,
-        description: (pkg as any).description,
+        version: getOsEnv('APP_VERSION'),
+        description: getOsEnv('APP_DESCRIPTION'),
         host: getOsEnv('APP_HOST'),
         schema: getOsEnv('APP_SCHEMA'),
         routePrefix: getOsEnv('APP_ROUTE_PREFIX'),

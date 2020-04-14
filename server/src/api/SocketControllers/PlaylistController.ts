@@ -1,144 +1,81 @@
 import 'reflect-metadata';
 import { EmitOnSuccess, MessageBody, OnMessage, SocketController } from "socket-controllers";
-import SocketMessage from "../Types/SocketMessage";
-import PartyDBService from "../Services/PartyDBService";
+import SocketMessage from "../Types/general/SocketMessage";
 import AuthenticationService from "../Services/AuthenticationService";
-import UpNextService, { playlistSort } from "../Services/UpNextService";
-import PlaylistEntryBuilder from "../Factory/PlaylistEntryBuilder";
-import SpotifyService from "../Services/SpotifyService";
+import logger from "../../util/Log";
 
 
 @SocketController()
 export class PlaylistController {
     constructor(
         private authenticationService: AuthenticationService,
-        private partyDBService: PartyDBService,
-        private spotifyService: SpotifyService,
-        private upNextService: UpNextService
+        // private partyDBService: PartyDBService,
+        // private upNextService: UpNextService
     ) {
     }
 
-    @OnMessage("get-state-playlist")
-    @EmitOnSuccess("got-state-playlist")
-    public async getPlaylistState(@MessageBody() message: SocketMessage<any>): Promise<SocketMessage<any>> {
-        let a = this.authenticationService.authenticate(message.token);
-        if (a.valid) {
-            let party = this.partyDBService.findPartyById(a.data.partyId);
-            return {
-                token: message.token,
-                data: {
-                    playlistId: party.playlistId,
-                    playlist: party.playlist.sort(playlistSort)
-                }
-            };
-        } else {
-            throw new Error('Invalid token! Please Leave!');
-        }
+    @OnMessage("playlist-state")
+    @EmitOnSuccess("playlist-state")
+    public async getPlaylistState(@MessageBody() message: SocketMessage<any>) {
+        this.authenticationService.authenticate(message.token).then(tokenData => {
+            console.log('playlist-state');
+        }).catch(err => {
+            logger.error(err);
+        });
     }
 
-    @OnMessage("upvote-song")
-    @EmitOnSuccess("song-upvoted")
-    public async upvoteSong(@MessageBody() message: SocketMessage<any>): Promise<SocketMessage<any>> {
-        let a = this.authenticationService.authenticate(message.token);
-        if (a.valid) {
-            let user = this.partyDBService.findUserById(a.data.partyId, a.data.userId);
-            this.partyDBService.upvoteSong(a.data.partyId, message.data.songId, user);
-            return {
-                token: message.token,
-                data: {}
-            };
-        } else {
-            throw new Error('Invalid token! Please Leave!');
-        }
+    @OnMessage("playlist-upvote-song")
+    public async upvoteSong(@MessageBody() message: SocketMessage<any>) {
+        this.authenticationService.authenticate(message.token).then(tokenData => {
+            console.log('playlist-upvote-song');
+        }).catch(err => {
+            logger.error(err);
+        });
     }
 
-    @OnMessage("downvote-song")
-    @EmitOnSuccess("song-downvoted")
-    public async downvoteSong(@MessageBody() message: SocketMessage<any>): Promise<SocketMessage<any>> {
-        let a = this.authenticationService.authenticate(message.token);
-        if (a.valid) {
-            let user = this.partyDBService.findUserById(a.data.partyId, a.data.userId);
-            this.partyDBService.downvoteSong(a.data.partyId, message.data.songId, user);
-            return {
-                token: message.token,
-                data: {}
-            };
-        } else {
-            throw new Error('Invalid token! Please Leave!');
-        }
+
+    @OnMessage("playlist-downvote-song")
+    public async downvoteSong(@MessageBody() message: SocketMessage<any>) {
+        this.authenticationService.authenticate(message.token).then(tokenData => {
+            console.log('playlist-downvote-song');
+        }).catch(err => {
+            logger.error(err);
+        });
     }
 
     @OnMessage("playlist-clear")
     public async clearPlaylist(@MessageBody() message: SocketMessage<any>) {
-        let a = this.authenticationService.authenticate(message.token);
-        if (a.valid) {
-            let party = this.partyDBService.findPartyById(a.data.partyId);
-            this.partyDBService.clearThePlaylist(party.id);
-        } else {
-            throw new Error('Invalid token! Please Leave!');
-        }
+        this.authenticationService.authenticate(message.token).then(tokenData => {
+            console.log('playlist-clear');
+        }).catch(err => {
+            logger.error(err);
+        });
     }
 
     @OnMessage("playlist-clean")
     public async cleanPlaylist(@MessageBody() message: SocketMessage<any>) {
-        let a = this.authenticationService.authenticate(message.token);
-        if (a.valid) {
-            let party = this.partyDBService.findPartyById(a.data.partyId);
-            this.partyDBService.cleanThePlaylist(party.id);
-        } else {
-            throw new Error('Invalid token! Please Leave!');
-        }
+        this.authenticationService.authenticate(message.token).then(tokenData => {
+            console.log('playlist-clean');
+        }).catch(err => {
+            logger.error(err);
+        });
     }
 
     @OnMessage("playlist-remove-song")
-    @EmitOnSuccess("song-removed")
-    public async removeSong(@MessageBody() message: SocketMessage<any>): Promise<SocketMessage<any>> {
-        let a = this.authenticationService.authenticate(message.token);
-        if (a.valid) {
-            let party = this.partyDBService.findPartyById(a.data.partyId);
-            this.partyDBService.removePlaylistEntryById(party.id, message.data.songId);
-            return {
-                token: message.token,
-                data: {}
-            };
-        } else {
-            throw new Error('Invalid token! Please Leave!');
-        }
+    public async removeSong(@MessageBody() message: SocketMessage<any>) {
+        this.authenticationService.authenticate(message.token).then(tokenData => {
+            console.log('playlist-remove-song');
+        }).catch(err => {
+            logger.error(err);
+        });
     }
 
     @OnMessage("playlist-add-song")
-    @EmitOnSuccess("playlist-song-added")
-    public async addSongToPlaylist(@MessageBody() message: SocketMessage<any>): Promise<SocketMessage<any>> {
-        let a = this.authenticationService.authenticate(message.token);
-        if (a.valid) {
-            let party = this.partyDBService.findPartyById(a.data.partyId);
-            let track = await this.spotifyService.getSpotifyAPI().tracks.getTrack(party.token, message.data.songId);
-            let user = this.partyDBService.findUserById(a.data.partyId, a.data.userId);
-            let entry = PlaylistEntryBuilder.make()
-                .withSongId(track.id)
-                .withSongName(track.name)
-                .withUserId(user.id)
-                .withUserName(user.name)
-                .withAlbumArtwork(track.album.images.filter(e => e.width < 100)[0].url)
-                .withArtistName(track.artists.map(e => e.name).join(', '))
-                .build();
-            if (party.playlist.length === 0 && !party.playState.isPlaying) {
-                let res = await this.upNextService.playSong(party, entry.id);
-                if (res.error) {
-                    // If there is nothing to play on, then just add it to the queue
-                    this.partyDBService.addPlaylistEntry(party.id, entry);
-                }
-            } else {
-                this.partyDBService.addPlaylistEntry(party.id, entry);
-            }
-            return {
-                token: message.token,
-                data: {
-                    songId: message.data.songId
-                }
-            };
-        } else {
-            throw new Error('Invalid token! Please Leave!');
-        }
+    public async addSongToPlaylist(@MessageBody() message: SocketMessage<any>) {
+        this.authenticationService.authenticate(message.token).then(tokenData => {
+            console.log('playlist-add-song');
+        }).catch(err => {
+            logger.error(err);
+        });
     }
 }

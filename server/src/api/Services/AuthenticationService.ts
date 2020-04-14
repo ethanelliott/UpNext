@@ -1,8 +1,8 @@
 import { Service } from "typedi";
 import WebTokenService from "./WebTokenService";
 import logger from "../../util/Log";
-import AuthenticationResponse from "../Types/AuthenticationResponse";
-import PartyDBService from "./PartyDBService";
+import WebTokenData from "../Types/general/WebTokenData";
+import { PartyDatabaseService } from "./Database/PartyDatabaseService";
 
 
 @Service()
@@ -10,19 +10,23 @@ export default class AuthenticationService {
 
     constructor(
         private webTokenService: WebTokenService,
-        private partyDBService: PartyDBService
+        private partyDatabaseService: PartyDatabaseService,
     ) {
     }
 
-    public authenticate(token: string): AuthenticationResponse {
-        let verification = this.webTokenService.verify(token);
-        let p = this.partyDBService.findPartyById(verification.data.partyId);
-        if (p) {
-            return {valid: !verification.error, data: verification.data};
-        } else {
-            return {valid: false, data: verification.data};
-        }
-
+    public authenticate(token: string): Promise<WebTokenData> {
+        return new Promise((resolve, reject) => {
+            const verification = this.webTokenService.verify<WebTokenData>(token);
+            if (verification.error) {
+                reject("Invalid token");
+            } else {
+                if (this.partyDatabaseService.doesPartyExistById(verification.data.partyId)) {
+                    resolve(verification.data);
+                } else {
+                    reject("Party doesn't exist!");
+                }
+            }
+        });
     }
 
     public generateToken(partyID: string, userID: string): string {
@@ -34,7 +38,7 @@ export default class AuthenticationService {
             return this.webTokenService.generateFrom(data);
         } catch (e) {
             logger.error(e.stack);
+            return "";
         }
-        return "";
     }
 }

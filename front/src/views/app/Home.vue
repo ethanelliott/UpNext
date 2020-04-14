@@ -1,5 +1,5 @@
 <template>
-    <v-container :style="backgroundString" class="fill-height ma-0 pa-0">
+    <v-content :style="backgroundString" class="fill-height ma-0 pt-0">
         <v-app-bar app color="darker" dark>
             <v-icon color="primary">mdi-music-note-plus</v-icon>
             <v-toolbar-title class="headline text-uppercase ml-3">
@@ -9,10 +9,12 @@
             <v-spacer/>
             <v-toolbar-items>
                 <v-btn @click="sharePartyCode" text x-large>
-                    <span class="text-uppercase" style="letter-spacing: 10px;font-family: monospace;">{{ code }}</span>
+                    <span class="text-uppercase" style="letter-spacing: 10px;font-family: monospace;">
+                        {{ code }}
+                    </span>
                 </v-btn>
                 <v-btn @click="openAdminMenu" color="primary" icon v-if="isAdmin">
-                    <v-icon>mdi-settings</v-icon>
+                    <v-icon>mdi-cog</v-icon>
                 </v-btn>
                 <v-menu offset-y v-else>
                     <template v-slot:activator="{ on }">
@@ -52,19 +54,6 @@
                     </v-row>
                 </v-container>
             </v-card>
-            <v-card color="transparent" flat>
-                <v-container class="ma-0 pa-0">
-                    <v-row align="center" class="ma-0 pa-0" justify="center">
-                        <v-col align="center" justify="center">
-                            <v-btn @click="playbackDeviceDialog = true" block tile>
-                                <v-icon left>mdi-cast</v-icon>
-                                {{ device.name }}
-                            </v-btn>
-                        </v-col>
-                    </v-row>
-                </v-container>
-            </v-card>
-            <v-divider/>
             <v-list flat subheader two-line>
                 <v-subheader>Chrome Stop Error</v-subheader>
                 <v-list-item-group multiple>
@@ -79,18 +68,6 @@
             <v-list flat subheader two-line>
                 <v-subheader>Playback Settings</v-subheader>
                 <v-list-item-group multiple>
-                    <v-list-item>
-                        <template v-slot:default="{ active, toggle }">
-                            <v-list-item-action>
-                                <v-switch color="primary" v-model="autoPlay"/>
-                            </v-list-item-action>
-
-                            <v-list-item-content>
-                                <v-list-item-title>AutoPlay</v-list-item-title>
-                                <v-list-item-subtitle>Auto-fill an empty queue</v-list-item-subtitle>
-                            </v-list-item-content>
-                        </template>
-                    </v-list-item>
                     <v-list-item>
                         <v-list-item-content>
                             <v-btn @click="cleanTheQueue" color="primary">Clean the Queue</v-btn>
@@ -121,7 +98,7 @@
                     Are you sure you want to Delete the party?
                 </v-card-title>
                 <v-card-text>
-                    This cannot be un-done... once it's gone it's gone for good!
+                    This cannot be un-done... once it's gone, it's gone for good!
                 </v-card-text>
                 <v-card-actions>
                     <v-spacer/>
@@ -130,26 +107,6 @@
                     </v-btn>
                     <v-btn @click="deleteSafetyDialog=false" color="primary" large>
                         Cancel
-                    </v-btn>
-                </v-card-actions>
-            </v-card>
-        </v-dialog>
-        <v-dialog dark v-model="playbackDeviceDialog" width="500">
-            <v-card>
-                <v-card-title>
-                    Select Device
-                </v-card-title>
-                <v-card-text>
-                    <v-select :items="devices" item-text="name" item-value="id" label="Playback Device"
-                              outlined return-object v-model="selectedDevice"/>
-                </v-card-text>
-                <v-card-actions>
-                    <v-spacer/>
-                    <v-btn @click="playbackDeviceDialog=false" large>
-                        Cancel
-                    </v-btn>
-                    <v-btn @click="transferPlaybackToSelected" color="primary" large>
-                        Apply
                     </v-btn>
                 </v-card-actions>
             </v-card>
@@ -176,59 +133,50 @@
                 </v-card-actions>
             </v-card>
         </v-dialog>
-        <v-container class="ma-0 pa-0" v-if="hasState">
-            <v-row class="ma-0 pa-0">
-                <v-col align="center" class="ma-0 pa-0" justify="center">
-                    <v-card color="transparent" flat max-width="600">
-                        <v-card color="transparent" flat>
-                            <v-img :src="albumArtwork" @click="overlay = true" class="mx-5 elevation-20" max-width="600"
-                                   min-height="300"/>
-                            <v-overlay :value="overlay" absolute opacity="0.8">
-                                <v-card color="transparent" flat height="35vh" width="100vw">
-                                    <v-container class="fill-height">
-                                        <v-container>
-                                            <v-row align="center" justify="center">
-                                                <v-col>
-                                                    <v-btn @click="openSpotifyUri" color="primary" x-large>
-                                                        Open In Spotify
-                                                    </v-btn>
-
-                                                </v-col>
+        <v-container class="ma-0 pa-0 fill-height" fluid v-if="hasState">
+            <v-col class="ma-0 pa-0 mb-10">
+                <v-row align="center" class="ma-0 pa-0" justify="center">
+                    <v-card color="transparent" flat>
+                        <v-skeleton-loader boilerplate type="image">
+                            <v-dialog v-model="albumArtworkDialog" width="300">
+                                <template v-slot:activator="{ on }">
+                                    <v-img :src="albumArtwork" class="mx-5 elevation-20" max-width="600"
+                                           min-height="300"
+                                           v-on="on">
+                                    </v-img>
+                                </template>
+                                <v-card height="200">
+                                    <v-toolbar color="darker">
+                                        <v-toolbar-title>
+                                            About
+                                        </v-toolbar-title>
+                                        <v-spacer></v-spacer>
+                                        <v-btn @click="albumArtworkDialog = false" color="primary" icon>
+                                            <v-icon>mdi-close</v-icon>
+                                        </v-btn>
+                                    </v-toolbar>
+                                    <v-container class="ma-0 pa-0" fluid>
+                                        <v-col class="ma-0 pa-0">
+                                            <v-row align="center" class="ma-0 pa-0" justify="center">
+                                                <v-btn @click="openSpotifyUri" color="primary" text x-large>
+                                                    Open In Spotify
+                                                </v-btn>
                                             </v-row>
-                                        </v-container>
+                                        </v-col>
                                     </v-container>
-                                    <v-btn @click="overlay = false" absolute color="secondary" fab right top>
-                                        <v-icon>mdi-close</v-icon>
-                                    </v-btn>
                                 </v-card>
-                            </v-overlay>
-                        </v-card>
-                        <v-card-text align="start" class="mx-5">
+                            </v-dialog>
+                        </v-skeleton-loader>
+                        <v-card-text align="start" class="px-8">
                             <span class="trackName headline font-weight-medium text--primary">{{trackName}}</span>
                             <br>
-                            <span class="trackArtist font-weight-thin font-italic text--primary">{{trackArtist}}</span>
+                            <span class="trackArtist font-weight-thin font-italic text--primary">{{artistName}}</span>
                         </v-card-text>
                     </v-card>
-                </v-col>
-            </v-row>
+                </v-row>
+            </v-col>
         </v-container>
-        <v-container class="ma-0 pa-0 mb-12" v-if="hasState">
-            <v-row class="ma-0 pa-0">
-                <v-col align="center" class="ma-0 pa-0" justify="center">
-                    <v-card color="transparent" flat max-width="600">
-                        <v-container>
-                            <v-row align-content="space-around" justify="space-around">
-                                <queue ref="queue" v-bind:playlist="playlist"
-                                       v-bind:playlistId="playlistId" v-on:dialog="handleDialog"
-                                       v-on:downvote="downvoteSong" v-on:upvote="upvoteSong"/>
-                                <add ref="add" v-on:add="addItem" v-on:dialog="handleDialog" v-on:search="search"/>
-                            </v-row>
-                        </v-container>
-                    </v-card>
-                </v-col>
-            </v-row>
-        </v-container>
-        <v-container class="ma-0 pa-0 mb-12" v-else>
+        <v-container class="ma-0 pa-0 mb-12" fluid v-else>
             <v-row class="ma-0 pa-0">
                 <v-col align="center" class="ma-0 pa-0" justify="center">
                     <v-card color="transparent" flat max-width="600">
@@ -249,14 +197,30 @@
                 {{ snackbarButton }}
             </v-btn>
         </v-snackbar>
-        <v-footer dark fixed>
-            <v-container align="center" justify="center">
-                <v-row align="center" justify="center">
-                    <v-progress-linear :color="progressColour" class="my-0" height="10" v-model="songProgress"/>
+        <v-footer class="elevation-0" color="transparent" fixed>
+            <v-container fluid>
+                <v-row align="center" class="ma-0 pa-0" justify="center">
+                    <v-col class="ma-0 pa-0" cols="12" lg="4" md="10" sm="12">
+                        <v-row align="center" class="ma-0 pa-0" justify="center">
+                            <v-col cols="6">
+                                <v-row align="center" class="ma-0 pa-0" justify="center">
+                                    <queue ref="queue" v-bind:playlist="playlist"
+                                           v-bind:playlistId="playlistId" v-on:dialog="handleDialog"
+                                           v-on:downvote="downvoteSong" v-on:upvote="upvoteSong"/>
+                                </v-row>
+                            </v-col>
+                            <v-col cols="6">
+                                <v-row align="center" class="ma-0 pa-0" justify="center">
+                                    <add ref="add" v-on:add="addItem" v-on:dialog="handleDialog"
+                                         v-on:search="search"/>
+                                </v-row>
+                            </v-col>
+                        </v-row>
+                    </v-col>
                 </v-row>
             </v-container>
         </v-footer>
-    </v-container>
+    </v-content>
 </template>
 
 <script>
@@ -272,16 +236,13 @@
             isLoading: true,
             socket: null,
             token: null,
-            eventLoop: null,
             code: '',
             albumArtwork: '',
             trackName: '',
-            trackArtist: '',
+            artistName: '',
             trackId: '',
-            songProgress: 0,
             playlist: [],
             playlistId: '',
-            autoPlay: false,
             openDialogs: [],
             safetyDialog: false,
             safeToLeave: false,
@@ -296,11 +257,7 @@
             isAdmin: false,
             adminDrawer: false,
             backgroundString: '',
-            progressColour: 'primary',
-            devices: [],
-            device: {},
-            selectedDevice: {},
-            playbackDeviceDialog: false
+            albumArtworkDialog: false
         }),
         components: {
             'queue': Queue,
@@ -359,23 +316,17 @@
                         title: 'UpNext Party Code',
                         text: 'Join the party!',
                         url: `https://upnext.cool/join?c=${this.code}`,
-                    })
-                        .then(() => {
-                        })
-                        .catch((error) => {
-                        });
+                    });
                 }
             },
             openSpotifyUri: function () {
+                this.overlay = false;
                 window.open(`https://open.spotify.com/track/${this.trackId}`);
             },
             addItem(songId) {
-                let t = this;
                 this.socket.emit('playlist-add-song', {
-                    token: t.token,
-                    data: {
-                        songId
-                    }
+                    token: this.token,
+                    data: {songId}
                 });
             },
             search() {
@@ -389,36 +340,39 @@
                 });
             },
             cleanTheQueue() {
-                // remove songs with a negative score
                 this.socket.emit('playlist-clean', {
                     token: this.token,
                     data: {}
                 });
             },
             downvoteSong(songId) {
-                this.socket.emit('downvote-song', {
+                this.socket.emit('playlist-downvote-song', {
                     token: this.token,
-                    data: {
-                        songId
-                    }
+                    data: {songId}
                 });
             },
             upvoteSong(songId) {
-                this.socket.emit('upvote-song', {
+                this.socket.emit('playlist-upvote-song', {
                     token: this.token,
-                    data: {
-                        songId
-                    }
+                    data: {songId}
                 });
             },
             transferPlaybackToSelected() {
                 this.socket.emit('party-playback-transfer', {
                     token: this.token,
-                    data: {
-                        deviceId: this.selectedDevice.id
-                    }
+                    data: {deviceId: this.selectedDevice.id}
                 });
                 this.playbackDeviceDialog = false;
+            },
+            requestStateData() {
+                this.socket.emit('party-state', {
+                    token: this.token,
+                    data: null
+                });
+                this.socket.emit('playlist-state', {
+                    token: this.token,
+                    data: null
+                });
             }
         },
         beforeRouteLeave(to, from, next) {
@@ -436,89 +390,50 @@
         },
         beforeDestroy() {
             this.socket.disconnect();
-            clearInterval(this.eventLoop);
         },
         mounted() {
             window.scrollTo(0, 0);
-            let t = this;
-            t.token = session.getItem('token');
-            t.socket = io(t.$socketPath);
-            t.socket.on('connect', () => {
-                t.eventLoop = setInterval(() => {
-                    t.socket.emit('get-state', {
-                        token: t.token,
-                        data: null
-                    });
-                    t.socket.emit('get-state-playlist', {
-                        token: t.token,
-                        data: null
-                    });
-                }, 1000);
+            this.token = session.getItem('token');
+            this.socket = io(this.$socketPath);
+            this.socket.on('connect', () => {
+                this.requestStateData();
+                this.socket.emit('join', {token: this.token, data: null});
             });
-            t.socket.on('party-leave', () => {
-                t.navigateAway();
+            this.socket.on('party-leave', () => {
+                this.navigateAway();
             });
-            t.socket.on('got-state', (message) => {
-                t.isLoading = false;
-                let state = message.data.state;
-                if (state.trackName) {
-                    t.hasState = true;
-                    t.device = state.device;
-                    t.albumArtwork = state.albumArtwork.filter(e => e.width > 500)[0].url;
-                    t.trackName = state.trackName;
-                    t.trackArtist = state.artistName;
-                    t.songProgress = state.progress / state.duration * 100;
-                    t.trackId = state.trackId;
-                    let v = message.data.colours.vibrant;
-                    let lv = message.data.colours.lightVibrant;
-                    t.backgroundString = `background-image: linear-gradient(rgba(${lv.r}, ${lv.g}, ${lv.b}, 0.5) 10%, rgba(0,0,0,1) 80%);`;
-                    t.progressColour = `rgb(${v.r}, ${v.g}, ${v.b})`;
-                } else {
-                    t.hasState = false;
-                }
-                t.devices = message.data.state.availableDevices;
-                t.isAdmin = message.data.admin;
-                t.code = message.data.code;
+            this.socket.on('party-state', (data) => {
+                this.isLoading = false;
+                console.table(data.playstate);
+                this.trackName = data.playstate.trackName;
+                this.albumArtwork = data.playstate.albumArtwork;
+                this.artistName = data.playstate.artistName;
+                this.trackId = data.playstate.trackId;
+                this.code = data.party.code;
+                let lv = data.playstate.colourLightVibrant;
+                this.backgroundString = `background-image: linear-gradient(#${lv}ff 0%, rgba(0,0,0,1) 100%);`;
             });
-            t.socket.on('got-state-playlist', (message) => {
-                t.playlistId = message.data.playlistId;
-                t.playlist = message.data.playlist;
+            this.socket.on('playlist-state', (data) => {
+                console.table(data);
             });
-
-            t.socket.on('song-upvoted', (message) => {
-                t.showSnackbar('Song Upvoted', '', () => {
-                })
+            this.socket.on('state-change', (data) => {
+                console.table(data.playstate);
+                this.isLoading = false;
+                this.trackName = data.playstate.trackName;
+                this.albumArtwork = data.playstate.albumArtwork;
+                this.artistName = data.playstate.artistName;
+                this.trackId = data.playstate.trackId;
+                this.code = data.party.code;
+                let lv = data.playstate.colourLightVibrant;
+                this.backgroundString = `background-image: linear-gradient(#${lv}ff 0%, rgba(0,0,0,1) 100%);`;
             });
-            t.socket.on('song-downvoted', (message) => {
-                t.showSnackbar('Song Downvoted', '', () => {
-                })
+            this.socket.on('playlist-update', (data) => {
+                console.table(data);
             });
-            t.socket.on('playlist-song-added', (message) => {
-                t.showSnackbar('Song Added', 'Undo', () => {
-                    // emit an undo socket message
-                    t.socket.emit('playlist-remove-song', {
-                        token: this.token,
-                        data: {
-                            songId: message.data.songId
-                        }
-                    });
-                })
-            });
-            t.socket.on('search-success', (message) => {
-                t.searchResult = message.data;
-                t.$refs.add.$refs.search.gotResult(message.data);
-            });
-
-            t.socket.on('search-fail', (message) => {
-                // console.log(message);
-                //UH-OH SOMETHING HAPPENED
+            this.socket.on('search-success', (message) => {
+                this.searchResult = message.data;
+                this.$refs.add.$refs.search.gotResult(message.data);
             });
         }
     }
 </script>
-
-<style>
-    .cool-background {
-        background-image: linear-gradient(rgba(0, 176, 255, 0.5) 5%, #303030 70%);
-    }
-</style>

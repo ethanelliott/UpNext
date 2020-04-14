@@ -1,5 +1,5 @@
 <template>
-    <v-app dark>
+    <v-app dark style="overflow: hidden">
         <v-content align="center" justify="center">
             <transition :name="transitionName" mode="out-in">
                 <router-view name="content"/>

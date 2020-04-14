@@ -52,6 +52,13 @@
                 </v-card-actions>
             </v-card>
         </v-dialog>
+        <!--        <v-toolbar app class="elevation-0">-->
+        <!--            <v-btn @click="aboutDialog=true" block class="my-10" color="primary" height="20px" small-->
+        <!--                   text>-->
+        <!--                What is UpNext-->
+        <!--                <v-icon dark right>mdi-help-box</v-icon>-->
+        <!--            </v-btn>-->
+        <!--        </v-toolbar>-->
         <v-content>
             <v-container class="fill-height">
                 <v-container>
@@ -62,23 +69,23 @@
                                 <span class="font-weight-bold">Up</span>
                                 <span class="font-weight-light">Next</span>
                             </p>
-                            <p class="my-10 subheading">Join a party, or start your own!</p>
-                            <v-btn @click="aboutDialog=true" block class="my-10" color="primary" height="20px" small
-                                   text>
-                                What is UpNext
-                                <v-icon dark right>mdi-help-box</v-icon>
-                            </v-btn>
-                            <v-btn block class="my-5" color="primary" height="80px" to="/join" x-large>
-                                Join a Party
-                            </v-btn>
-                            <v-btn block color="primary" height="80px" outlined to="/start" x-large>
-                                Start a Party
-                            </v-btn>
                         </v-col>
                     </v-row>
                 </v-container>
             </v-container>
         </v-content>
+        <v-footer class="ma-0 pa-0" color="transparent" height="300">
+            <v-btn block class="ma-0 elevation-0" color="primary" height="150" tile to="/join" x-large>
+                <h1 class="heading font-weight-thin">
+                    Join a Party
+                </h1>
+            </v-btn>
+            <v-btn block class="ma-0 elevation-0 darken-3" color="primary" height="150" tile to="/start" x-large>
+                <h1 class="heading font-weight-thin">
+                    Start a Party
+                </h1>
+            </v-btn>
+        </v-footer>
     </v-app>
 </template>
 

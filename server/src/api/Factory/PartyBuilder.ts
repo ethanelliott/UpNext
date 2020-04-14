@@ -1,19 +1,15 @@
-import Party from "../Types/Party";
-import PartyPlayState from "../Types/PartyPlayState";
-import PlaylistEntry from "../Types/PlaylistEntry";
-import User from "../Types/User";
-import VoteSkipEntry from "../Types/VoteSkipEntry";
-import { PartyStateEnum } from "../Types/PartyStateEnum";
+import { PartyDB } from "../Types/DatabaseMaps/PartyDB";
+import moment from "moment";
 
 export default class PartyBuilder {
+    private id: string;
     private name: string;
     private code: string;
-    private id: string;
-    private token: string;
-    private refreshToken: string;
-    private tokenExpire: number;
-    private userId: string;
-    private playlistId: string;
+    private spotifyToken: string;
+    private spotifyRefreshToken: string;
+    private spotifyTokenExpire: number;
+    private spotifyUserId: string;
+    private spotifyPlaylistId: string;
 
     constructor() {
     }
@@ -47,49 +43,41 @@ export default class PartyBuilder {
     }
 
     public withToken(token: string): PartyBuilder {
-        this.token = token;
+        this.spotifyToken = token;
         return this;
     }
 
     public withRefreshToken(refreshToken: string): PartyBuilder {
-        this.refreshToken = refreshToken;
+        this.spotifyRefreshToken = refreshToken;
         return this;
     }
 
     public withTokenExpire(expire: number): PartyBuilder {
-        this.tokenExpire = expire;
+        this.spotifyTokenExpire = expire;
         return this;
     }
 
     public withUserId(userId: string): PartyBuilder {
-        this.userId = userId;
+        this.spotifyUserId = userId;
         return this;
     }
 
     public withPlaylistId(playlistId: string): PartyBuilder {
-        this.playlistId = playlistId;
+        this.spotifyPlaylistId = playlistId;
         return this;
     }
 
-    public build(): Party {
-        let p = new Party();
-        p.admin = new Array<User>();
+    public build(): PartyDB {
+        let p = new PartyDB();
         p.name = this.name;
         p.code = this.code;
         p.id = this.id;
-        p.start = (new Date()).valueOf();
-        p.token = this.token;
-        p.refreshToken = this.refreshToken;
-        p.tokenExpire = (new Date()).valueOf() + (1000 * this.tokenExpire) ;
-        p.userId = this.userId;
-        p.playlistId = this.playlistId;
-        p.state = PartyStateEnum.PLAYING;
-        p.previousSong = '';
-        p.playState = new PartyPlayState();
-        p.playlist = new Array<PlaylistEntry>();
-        p.users = new Array<User>();
-        p.voteSkipList = new Array<VoteSkipEntry>();
-        p.history = new Array<string>();
+        p.startTime = (new Date()).valueOf();
+        p.spotifyToken = this.spotifyToken;
+        p.spotifyRefreshToken = this.spotifyRefreshToken;
+        p.spotifyTokenExpire = moment().valueOf() + (1000 * this.spotifyTokenExpire);
+        p.spotifyUserId = this.spotifyUserId;
+        p.spotifyPlaylistId = this.spotifyPlaylistId;
         return p;
     }
 

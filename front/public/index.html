@@ -6,13 +6,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimal-ui">
     <link href="<%= BASE_URL %>favicon.ico" rel="icon">
     <meta name="theme-color" content="#000000">
-    <!--    <link href="<%= BASE_URL %>icon.ico" rel="icon">-->
     <link href="/manifest.json" rel="manifest">
     <title>UpNext</title>
     <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/@mdi/font@latest/css/materialdesignicons.min.css" rel="stylesheet">
+    <style>
+        body::-webkit-scrollbar {
+            width: 0.1em;
+        }
+
+        body::-webkit-scrollbar-track {
+            background-color: transparent;
+        }
+
+        body::-webkit-scrollbar-thumb {
+            background-color: transparent;
+            outline: 1px solid slategrey;
+        }
+    </style>
 </head>
-<body style="background: #303030;overflow: hidden;">
+<body style="background: #303030;">
 <noscript>
     <strong>We're sorry but UpNext doesn't work properly without JavaScript enabled. Please enable it to
         continue.</strong>

@@ -9,9 +9,11 @@ import { HomeLoader } from "./loaders/HomeLoader";
 import { FileLoader } from "./loaders/FileLoader";
 import { SocketLoader } from "./loaders/SocketLoader";
 import { UpNextLoader } from "./loaders/UpNextLoader";
+import { DatabaseLoader } from "./loaders/DatabaseLoader";
 
 bootstrapMicroframework({
     loaders: [
+        DatabaseLoader,
         IocLoader,
         ExpressLoader,
         SocketLoader,
