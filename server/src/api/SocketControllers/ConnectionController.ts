@@ -33,20 +33,17 @@ export class ConnectionController {
     }
 
     @OnMessage('join')
-    public join(@ConnectedSocket() socket: SocketIO.Socket, @MessageBody() message: SocketMessage<any>) {
+    public async join(@ConnectedSocket() socket: SocketIO.Socket, @MessageBody() message: SocketMessage<any>) {
         logger.debug(`[SOCKET] New Client Joined Party`);
-        this.authenticationService.authenticate(message.token).then(tokenData => {
-            this.eventQueueService.joinPartyEvents(tokenData.partyId,
-                PartyEventEmitterBuilder
-                    .make()
-                    .withEvent(PartyEvent.STATE_CHANGE, data => socket.emit('state-change', data))
-                    .withEvent(PartyEvent.PLAYLIST_UPDATE, data => socket.emit('playlist-update', data))
-                    .withEvent(PartyEvent.USERS_UPDATE, data => socket.emit('users-update', data))
-                    .build()
-            );
-        }).catch(err => {
-            logger.error(err);
-        });
+        const tokenData = await this.authenticationService.authenticate(message.token);
+        this.eventQueueService.joinPartyEvents(tokenData.partyId,
+            PartyEventEmitterBuilder
+                .make()
+                .withEvent(PartyEvent.STATE_CHANGE, data => socket.emit('state-change', data))
+                .withEvent(PartyEvent.PLAYLIST_UPDATE, data => socket.emit('playlist-update', data))
+                .withEvent(PartyEvent.USERS_UPDATE, data => socket.emit('users-update', data))
+                .build()
+        );
     }
 
 }

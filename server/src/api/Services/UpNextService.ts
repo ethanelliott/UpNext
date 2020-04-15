@@ -167,7 +167,7 @@ export default class UpNextService {
         const party = this.partyDatabaseService.getPartyById(partyId);
         return async () => {
             logger.silly(`[UPNEXT] loop for ${party.id}`);
-            await this.checkForValidToken(party);
+            await this.checkForValidToken(party.id);
             try {
                 const storedPartyState = this.partyStateDatabaseService.getPartyStateByPartyId(party.id);
                 const spotifyPlayState = await this.spotifyService.getSpotifyAPI().player.getPlayingContext(party.spotifyToken);
@@ -257,6 +257,7 @@ export default class UpNextService {
             } catch (e) {
                 logger.error(`[UPNEXT] Error in the main party thread with party: ${party.id}`);
                 console.error(e);
+                debugger;
             }
         };
     }
@@ -282,7 +283,8 @@ export default class UpNextService {
         );
     }
 
-    private async checkForValidToken(party: PartyDB): Promise<void> {
+    private async checkForValidToken(partyId: string): Promise<void> {
+        const party = this.partyDatabaseService.getPartyById(partyId);
         let now = moment().valueOf();
         // console.log(now, party.spotifyTokenExpire, party.spotifyTokenExpire - now, 60000 * 5, party.spotifyTokenExpire - now <= 60000 * 5);
         if (party.spotifyTokenExpire - now <= 60000 * 5) {

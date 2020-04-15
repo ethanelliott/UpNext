@@ -425,7 +425,7 @@
                 this.backgroundString = `background-image: linear-gradient(#${lv}ff 0%, rgba(0,0,0,1) 100%);`;
             });
             this.socket.on('playlist-state', (data) => {
-                console.table(data);
+                this.playlist = data.playlist;
             });
             this.socket.on('state-change', (data) => {
                 console.table(data.playstate);
@@ -440,7 +440,7 @@
                 this.backgroundString = `background-image: linear-gradient(#${lv}ff 0%, rgba(0,0,0,1) 100%);`;
             });
             this.socket.on('playlist-update', (data) => {
-                console.table(data);
+                this.playlist = data.playlist;
             });
             this.socket.on('search-success', (message) => {
                 this.searchResult = message.data;
