@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import { EmitOnSuccess, MessageBody, OnMessage, SocketController } from "socket-controllers";
 import SocketMessage from "../Types/general/SocketMessage";
 import logger from "../../util/Log";
-import AuthenticationService from "../Services/AuthenticationService";
+import { AuthenticationService } from "../Services/AuthenticationService";
 
 @SocketController()
 export class SpotifyController {

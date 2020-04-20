@@ -1,8 +1,8 @@
 import { Service } from "typedi";
-import UUIDService from "./UUIDService";
-import WebTokenService from "./WebTokenService";
+import { UUIDService } from "./UUIDService";
+import { WebTokenService } from "./WebTokenService";
 import { NewPartyService } from "./NewPartyService";
-import SpotifyService from "./SpotifyService";
+import { SpotifyService } from "./SpotifyService";
 import { env } from "../../env";
 import AuthAPI from "../Spotify/apis/AuthAPI";
 import { SpotifyOAuthState } from "../Types/general/SpotifyOAuthState";

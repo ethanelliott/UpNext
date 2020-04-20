@@ -1,12 +1,12 @@
 import { Service } from "typedi";
-import UUIDService from "./UUIDService";
+import { UUIDService } from "./UUIDService";
 import { NewPartyService } from "./NewPartyService";
-import SpotifyService from "./SpotifyService";
+import { SpotifyService } from "./SpotifyService";
 import { env } from "../../env";
 import { SpotifyOAuthState } from "../Types/general/SpotifyOAuthState";
 import { PartyDB } from "../Types/DatabaseMaps/PartyDB";
-import PartyBuilder from "../Factory/PartyBuilder";
-import UpNextService from "./UpNextService";
+import { PartyBuilder } from "../Factory/PartyBuilder";
+import { UpNextService } from "./UpNextService";
 import { PartyDatabaseService } from "./Database/PartyDatabaseService";
 import { PartyStateDB } from "../Types/DatabaseMaps/PartyStateDB";
 import { PartyStateBuilder } from "../Factory/PartyStateBuilder";
@@ -14,7 +14,7 @@ import { PartyStateDatabaseService } from "./Database/PartyStateDatabaseService"
 import { PartyHistoryDatabaseService } from "./Database/PartyHistoryDatabaseService";
 import { UserDatabaseService } from "./Database/UserDatabaseService";
 import { UserDB } from "../Types/DatabaseMaps/UserDB";
-import UserBuilder from "../Factory/UserBuilder";
+import { UserBuilder } from "../Factory/UserBuilder";
 import { PartyJoinToken } from "../Types/general/PartyJoinToken";
 import { UserPermissionEnum } from "../Types/Enums/UserPermissionEnum";
 import { PlaylistEntryDatabaseService } from "./Database/PlaylistEntryDatabaseService";

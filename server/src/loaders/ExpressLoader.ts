@@ -5,6 +5,7 @@ import { Container } from "typedi";
 
 import { env } from '../env';
 import logger from "../util/Log";
+import { WebTokenService } from "../api/Services/WebTokenService";
 // Middleware
 import { LogMiddleware } from "../middleware/LogMiddleware";
 import { SecurityMiddleware } from "../middleware/SecurityMiddleware";
@@ -12,7 +13,6 @@ import { ErrorMiddleware } from "../middleware/ErrorMiddleware";
 // Controllers
 import { PartyController } from "../api/Controllers/PartyController";
 import { SpotifyOAuthController } from "../api/Controllers/SpotifyOAuthController";
-import WebTokenService from "../api/Services/WebTokenService";
 
 
 export const ExpressLoader: MicroframeworkLoader = (settings: MicroframeworkSettings | undefined) => {

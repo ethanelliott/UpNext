@@ -3,7 +3,7 @@ import { Service } from "typedi";
 import QRCode from 'qrcode';
 
 @Service()
-export default class QRService {
+export class QRService {
 
     constructor() {
     }

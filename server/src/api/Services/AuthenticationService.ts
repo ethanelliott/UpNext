@@ -1,12 +1,12 @@
 import { Service } from "typedi";
-import WebTokenService from "./WebTokenService";
+import { WebTokenService } from "./WebTokenService";
 import logger from "../../util/Log";
 import WebTokenData from "../Types/general/WebTokenData";
 import { PartyDatabaseService } from "./Database/PartyDatabaseService";
 
 
 @Service()
-export default class AuthenticationService {
+export class AuthenticationService {
 
     constructor(
         private webTokenService: WebTokenService,

@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { EmitOnFail, EmitOnSuccess, MessageBody, OnMessage, SocketController } from "socket-controllers";
 import SocketMessage from "../Types/general/SocketMessage";
-import AuthenticationService from "../Services/AuthenticationService";
+import { AuthenticationService } from "../Services/AuthenticationService";
 import { PartyService } from "../Services/PartyService";
 
 @SocketController()

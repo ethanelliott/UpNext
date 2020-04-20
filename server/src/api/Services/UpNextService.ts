@@ -1,13 +1,13 @@
 import { Service } from "typedi";
 import logger from "../../util/Log";
 import { PartyStateEnum } from "../Types/Enums/PartyStateEnum";
-import EventEmitterService from "./EventEmitterService";
+import { EventEmitterService } from "./EventEmitterService";
 import { PartyDatabaseService } from "./Database/PartyDatabaseService";
 import { PartyStateDatabaseService } from "./Database/PartyStateDatabaseService";
 import { PlaylistEntryDB } from "../Types/DatabaseMaps/PlaylistEntryDB";
 import { UserDB } from "../Types/DatabaseMaps/UserDB";
 import { PartyDB } from "../Types/DatabaseMaps/PartyDB";
-import SpotifyService from "./SpotifyService";
+import { SpotifyService } from "./SpotifyService";
 import Vibrant from "node-vibrant";
 import { Vec3 } from "node-vibrant/lib/color";
 import { PartyStateDB } from "../Types/DatabaseMaps/PartyStateDB";
@@ -17,14 +17,14 @@ import moment from "moment";
 import { EventProcessorService, ProcessorEvents } from "./EventProcessorService";
 import { PlaylistEntryDatabaseService } from "./Database/PlaylistEntryDatabaseService";
 import { PartyEvent } from "../Factory/PartyEventEmitterBuilder";
-import UUIDService from "./UUIDService";
+import { UUIDService } from "./UUIDService";
 import { PlaylistVoteDatabaseService } from "./Database/PlaylistVoteDatabaseService";
 import { PlaylistVoteEnum } from "../Types/Enums/PlaylistVoteEnum";
 import { PartyHistoryDatabaseService } from "./Database/PartyHistoryDatabaseService";
 import { UserDatabaseService } from "./Database/UserDatabaseService";
 
 @Service()
-export default class UpNextService {
+export class UpNextService {
 
     private readonly currentEventLoopParties: Map<string, NodeJS.Timeout>;
 

@@ -9,9 +9,9 @@ import {
     SocketIO
 } from "socket-controllers";
 import logger from "../../util/Log";
-import EventEmitterService from "../Services/EventEmitterService";
+import { EventEmitterService } from "../Services/EventEmitterService";
 import SocketMessage from "../Types/general/SocketMessage";
-import AuthenticationService from "../Services/AuthenticationService";
+import { AuthenticationService } from "../Services/AuthenticationService";
 import { PartyEvent, PartyEventEmitterBuilder } from "../Factory/PartyEventEmitterBuilder";
 
 @SocketController()

@@ -10,7 +10,7 @@ import {
 import SocketMessage from "../Types/general/SocketMessage";
 import { Socket } from "socket.io";
 import logger from "../../util/Log";
-import AuthenticationService from "../Services/AuthenticationService";
+import { AuthenticationService } from "../Services/AuthenticationService";
 import { PartyService } from "../Services/PartyService";
 
 @SocketController()

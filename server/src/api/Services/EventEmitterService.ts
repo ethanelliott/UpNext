@@ -7,7 +7,7 @@ class PartyEventEmitter extends EventEmitter {
 }
 
 @Service()
-export default class EventEmitterService {
+export class EventEmitterService {
     private static readonly maxListener = 500;
     private partyEventEmitters: Map<string, PartyEventEmitter>;
 

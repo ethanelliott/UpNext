@@ -1,11 +1,11 @@
 import 'reflect-metadata';
 import { BodyParam, ContentType, Get, JsonController, Post, QueryParam } from 'routing-controllers';
 import { env } from "../../env";
-import QRService from "../Services/QRService";
+import { QRService } from "../Services/QRService";
 import { PartyService } from "../Services/PartyService";
-import WebTokenService from "../Services/WebTokenService";
+import { WebTokenService } from "../Services/WebTokenService";
 import { PartyJoinToken } from "../Types/general/PartyJoinToken";
-import AuthenticationService from "../Services/AuthenticationService";
+import { AuthenticationService } from "../Services/AuthenticationService";
 
 @JsonController('/party')
 export class PartyController {

@@ -1,7 +1,7 @@
 import { Service } from "typedi";
 
 import cron from 'node-cron';
-import UUIDService from "./UUIDService";
+import { UUIDService } from "./UUIDService";
 import logger from "../../util/Log";
 
 @Service()

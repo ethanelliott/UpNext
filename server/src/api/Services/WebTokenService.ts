@@ -3,7 +3,7 @@ import { sign, SignOptions, verify, VerifyOptions } from 'jsonwebtoken';
 import { env } from "../../env";
 
 @Service()
-export default class WebTokenService {
+export class WebTokenService {
     private readonly secretKey: string;
     private readonly encryptionOptions: SignOptions;
     private readonly algorithm = 'HS512';

@@ -9,7 +9,7 @@ import {
 } from "socket-controllers";
 import SocketMessage from "../Types/general/SocketMessage";
 import { Socket } from "socket.io";
-import AuthenticationService from "../Services/AuthenticationService";
+import { AuthenticationService } from "../Services/AuthenticationService";
 
 @SocketController()
 export class UserController {

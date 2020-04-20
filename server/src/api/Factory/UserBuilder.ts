@@ -3,7 +3,7 @@ import { UserPermissionEnum } from "../Types/Enums/UserPermissionEnum";
 import moment from "moment";
 
 
-export default class UserBuilder {
+export class UserBuilder {
     private nickname: string;
     private id: string;
     private score: number = 0;

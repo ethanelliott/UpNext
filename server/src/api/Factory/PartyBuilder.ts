@@ -1,7 +1,7 @@
 import { PartyDB } from "../Types/DatabaseMaps/PartyDB";
 import moment from "moment";
 
-export default class PartyBuilder {
+export class PartyBuilder {
     private id: string;
     private name: string;
     private code: string;
