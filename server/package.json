@@ -6,12 +6,12 @@
   "scripts": {
     "postinstall": "npm run generate-secret",
     "build": "tsc",
-    "serve": "node ./pack/server.js",
+    "serve": "node ./dist/app.js",
     "watch-ts": "tsc -w",
-    "watch-pack": "webpack --watch",
-    "watch-node": "nodemon ./pack/server.js",
-    "dev": "concurrently \"npm:watch-ts\" \"npm:watch-pack\" \"npm:watch-node\"\n",
-    "generate-secret": "openssl ecparam -name prime256v1 -genkey -noout -out ./key.pem"
+    "watch-node": "nodemon ./dist/app.js",
+    "dev": "concurrently \"npm:watch-ts\" \"npm:watch-node\"\n",
+    "generate-secret": "openssl ecparam -name prime256v1 -genkey -noout -out ./key.pem",
+    "watch-pack": "webpack --watch"
   },
   "engines": {
     "node": ">=8.0.0"
