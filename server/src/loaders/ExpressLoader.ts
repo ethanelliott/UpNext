@@ -1,9 +1,11 @@
 import { Application } from 'express';
 import { MicroframeworkLoader, MicroframeworkSettings } from 'microframework-w3tec';
-import { createExpressServer } from 'routing-controllers';
+import { Action, createExpressServer } from 'routing-controllers';
+import { Container } from "typedi";
 
 import { env } from '../env';
 import logger from "../util/Log";
+import { WebTokenService } from "../api/Services/WebTokenService";
 // Middleware
 import { LogMiddleware } from "../middleware/LogMiddleware";
 import { SecurityMiddleware } from "../middleware/SecurityMiddleware";
@@ -11,7 +13,7 @@ import { ErrorMiddleware } from "../middleware/ErrorMiddleware";
 // Controllers
 import { PartyController } from "../api/Controllers/PartyController";
 import { SpotifyOAuthController } from "../api/Controllers/SpotifyOAuthController";
-import { SpotifyController } from "../api/Controllers/SpotifyController";
+
 
 export const ExpressLoader: MicroframeworkLoader = (settings: MicroframeworkSettings | undefined) => {
     if (settings) {
@@ -24,14 +26,19 @@ export const ExpressLoader: MicroframeworkLoader = (settings: MicroframeworkSett
             defaultErrorHandler: false,
             controllers: [
                 PartyController,
-                SpotifyOAuthController,
-                SpotifyController
+                SpotifyOAuthController
             ],
             middlewares: [
                 LogMiddleware,
                 SecurityMiddleware,
                 ErrorMiddleware
-            ]
+            ],
+            authorizationChecker: async (action: Action, roles: string[]) => {
+                const token = action.request.headers['authorization'];
+                const tokenService: WebTokenService = Container.get(WebTokenService);
+                let cleanToken = tokenService.verify(token);
+                return cleanToken.error === null;
+            }
         });
 
         if (!env.isTest) {

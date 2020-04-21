@@ -3,7 +3,7 @@ import { sign, SignOptions, verify, VerifyOptions } from 'jsonwebtoken';
 import { env } from "../../env";
 
 @Service()
-export default class WebTokenService {
+export class WebTokenService {
     private readonly secretKey: string;
     private readonly encryptionOptions: SignOptions;
     private readonly algorithm = 'HS512';
@@ -30,7 +30,7 @@ export default class WebTokenService {
         return sign(data, this.secretKey, this.encryptionOptions);
     }
 
-    public verify(jwt: string): VerifyResponse<any> {
+    public verify<T>(jwt: string): VerifyResponse<T> {
         let data = {};
         let error = null;
         try {
@@ -38,7 +38,7 @@ export default class WebTokenService {
         } catch (e) {
             error = {name: e.name, message: e.message};
         }
-        return {error, data};
+        return {error, data: (data as T)};
     }
 }
 

@@ -41,12 +41,12 @@
                             <v-list-item-content>
                                 <v-list-item-title class="font-weight-bold">{{track.name}}</v-list-item-title>
                                 <v-list-item-subtitle>{{track.artist}}</v-list-item-subtitle>
-                                <v-list-item-subtitle>Added By: {{track.added.name}}</v-list-item-subtitle>
+                                <v-list-item-subtitle>Added By: {{track.addedBy}}</v-list-item-subtitle>
                             </v-list-item-content>
                             <v-list-item-action>
-                                <span class="overline green--text">+{{track.upVoters.length}}</span>
+                                <!--                                <span class="overline green&#45;&#45;text">+{{track.upVoters.length}}</span>-->
                                 <span class="title">{{track.votes}}</span>
-                                <span class="overline red--text">-{{track.downVoters.length}}</span>
+                                <!--                                <span class="overline red&#45;&#45;text">-{{track.downVoters.length}}</span>-->
                             </v-list-item-action>
                         </v-list-item>
                         <v-divider :key="'div-' + index" v-if="index + 1 < playlist.length"/>

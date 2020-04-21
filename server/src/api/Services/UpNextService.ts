@@ -1,236 +1,335 @@
 import { Service } from "typedi";
 import logger from "../../util/Log";
-import PartyDBService from "./PartyDBService";
-import Party from "../Types/Party";
-import SpotifyService from "./SpotifyService";
-import { env } from "../../env";
-import CurrentlyPlayingObject from "../Spotify/Types/CurrentlyPlayingObject";
-import PartyPlayState from "../Types/PartyPlayState";
-import PlaylistEntry from "../Types/PlaylistEntry";
-import deep from 'deepcopy';
-import { PartyStateEnum } from "../Types/PartyStateEnum";
+import { PartyStateEnum } from "../Types/Enums/PartyStateEnum";
+import { EventEmitterService } from "./EventEmitterService";
+import { PartyDatabaseService } from "./Database/PartyDatabaseService";
+import { PartyStateDatabaseService } from "./Database/PartyStateDatabaseService";
+import { PlaylistEntryDB } from "../Types/DatabaseMaps/PlaylistEntryDB";
+import { UserDB } from "../Types/DatabaseMaps/UserDB";
+import { PartyDB } from "../Types/DatabaseMaps/PartyDB";
+import { SpotifyService } from "./SpotifyService";
+import Vibrant from "node-vibrant";
 import { Vec3 } from "node-vibrant/lib/color";
-import Colour from "../Types/Colours";
-import DeviceObject from "../Spotify/Types/DeviceObject";
-import Vibrant = require('node-vibrant');
+import { PartyStateDB } from "../Types/DatabaseMaps/PartyStateDB";
+import CurrentlyPlayingObject from "../Spotify/Types/CurrentlyPlayingObject";
+import { env } from "../../env";
+import moment from "moment";
+import { EventProcessorService, ProcessorEvents } from "./EventProcessorService";
+import { PlaylistEntryDatabaseService } from "./Database/PlaylistEntryDatabaseService";
+import { PartyEvent } from "../Factory/PartyEventEmitterBuilder";
+import { UUIDService } from "./UUIDService";
+import { PlaylistVoteDatabaseService } from "./Database/PlaylistVoteDatabaseService";
+import { PlaylistVoteEnum } from "../Types/Enums/PlaylistVoteEnum";
+import { PartyHistoryDatabaseService } from "./Database/PartyHistoryDatabaseService";
+import { UserDatabaseService } from "./Database/UserDatabaseService";
 
 @Service()
-export default class UpNextService {
+export class UpNextService {
 
-    private currentEventLoopParties = {};
+    private readonly currentEventLoopParties: Map<string, NodeJS.Timeout>;
 
     private static readonly CLOCK_CYCLE = 1000;
 
     constructor(
-        private partyDBService: PartyDBService,
-        private spotifyService: SpotifyService
+        private uuidService: UUIDService, // extract this out later
+        private userDatabaseService: UserDatabaseService,
+        private spotifyService: SpotifyService,
+        private eventEmitterService: EventEmitterService,
+        private partyDatabaseService: PartyDatabaseService,
+        private partyStateDatabaseService: PartyStateDatabaseService,
+        private eventProcessorService: EventProcessorService,
+        private playlistEntryDatabaseService: PlaylistEntryDatabaseService,
+        private playlistVoteDatabaseService: PlaylistVoteDatabaseService,
+        private partyHistoryDatabaseService: PartyHistoryDatabaseService
     ) {
-        logger.info(`[UPNEXT] Starting UpNext....`);
-        this.startPartyEventLoop();
-        logger.info(`[UPNEXT] UpNext Running`);
+        this.currentEventLoopParties = new Map<string, NodeJS.Timeout>();
+    }
+
+    private static vec3ToHexString(rgb: Vec3): string {
+        return `${UpNextService.decToHex(Math.floor(rgb[0]))}${UpNextService.decToHex(Math.floor(rgb[1]))}${UpNextService.decToHex(Math.floor(rgb[2]))}`;
+    }
+
+    private static decToHex(dec: number) {
+        const d = dec.toString(16);
+        return d.length == 2 ? d : `0${d}`;
     }
 
     public startPartyEventLoop() {
-        let allParties = this.partyDBService.getAllParties();
-        allParties.forEach((globParty) => {
-            if (this.currentEventLoopParties[globParty.id] === undefined) {
-                logger.info(`[UPNEXT] Starting party ${globParty._id}`);
-                let ref = this;
-                ref.currentEventLoopParties[globParty.id] = setInterval(async () => {
-                    try {
-                        let party = ref.partyDBService.findPartyById(globParty.id);
-                        await ref.checkForValidToken(party);
-                        let playState = await this.spotifyService.getSpotifyAPI().player.getPlayingContext(party.token);
-                        let devices = (await this.spotifyService.getSpotifyAPI().player.getDevices(party.token)).devices;
-                        // logger.info(`[S] ${party.state}`)
-                        switch (party.state) {
-                            case PartyStateEnum.PLAYING:
-                                if (playState && playState.item) {
-                                    if (playState.item.duration_ms - playState.progress_ms <= 2000) {
-                                        ref.setPartyState(party, PartyStateEnum.SKIPPING);
-                                    }
-                                    if (playState.item.id !== party.previousSong) {
-                                        ref.setPartyState(party, PartyStateEnum.NEW_SONG);
-                                    }
-                                    ref.updatePartyPlaystate(party, playState, devices);
-                                } else {
-                                    ref.setPartyState(party, PartyStateEnum.NOTHING_PLAYING);
-                                }
-                                break;
-                            case PartyStateEnum.SKIPPING:
-                                await ref.nextSong(party);
-                                ref.setPartyState(party, PartyStateEnum.NEW_SONG);
-                                break;
-                            case PartyStateEnum.NEW_SONG:
-                                if (playState.item && party.previousSong !== playState.item.id) {
-                                    await ref.addSongToPlaylist(party, playState.item.id);
-                                }
-                                ref.updatePreviousSong(party, playState.item.id);
-                                ref.setPartyState(party, PartyStateEnum.PLAYING);
-                                ref.updatePartyPlaystate(party, playState, devices);
-                                // update the colours
-                                ref.updatePartyColours(ref.partyDBService.findPartyById(party.id));
-                                break;
-                            case PartyStateEnum.NOTHING_PLAYING:
-                                if (playState && playState.item) {
-                                    ref.setPartyState(party, PartyStateEnum.PLAYING);
-                                }
-                                break;
+        logger.info(`[UPNEXT] Starting Party Event Loop`);
+        let allParties = this.partyDatabaseService.getAllParties();
+        allParties.forEach((party) => {
+            if (this.currentEventLoopParties.get(party.id) === undefined) {
+                logger.info(`[UPNEXT] Starting party ${party.id}`);
+                this.eventEmitterService.newParty(party.id);
+                this.currentEventLoopParties.set(party.id, setInterval(this.upnextEventLoop(party.id), UpNextService.CLOCK_CYCLE));
+                this.eventProcessorService.newPartyProcessor(party.id);
+                this.bindEventHandlers(party.id);
+            }
+        });
+    }
+
+    public emitEventToProcess(partyId: string, event: ProcessorEvents, data: any) {
+        this.eventProcessorService.emitEventAt(partyId, event, data);
+    }
+
+    private bindEventHandlers(partyId: string) {
+        this.eventProcessorService.addEventHandler(
+            partyId,
+            ProcessorEvents.PLAYLIST_ADD_SONG,
+            async (data) => {
+                console.table(data);
+                const playlist = this.playlistEntryDatabaseService.getAllPlaylistEntriesForParty(partyId);
+                if (playlist.filter(e => e.spotifySongId === data.songId).length === 0) {
+                    const party = this.partyDatabaseService.getPartyById(partyId);
+                    const song = await this.spotifyService.getSpotifyAPI().tracks.getTrack(party.spotifyToken, data.songId);
+                    const playlistEntryId = this.uuidService.new();
+                    this.playlistEntryDatabaseService.insertPlaylistEntry({
+                        id: playlistEntryId,
+                        addedAt: moment().valueOf(),
+                        albumArtwork: song.album.images.filter(e => e.width === Math.min(...song.album.images.map(d => d.width)))[0].url,
+                        addedBy: data.userId,
+                        artist: song.artists.map(e => e.name).join(', '),
+                        name: song.name,
+                        partyId,
+                        spotifySongId: data.songId,
+                        votes: 1
+                    });
+                    this.playlistVoteDatabaseService.insertVote({
+                        playlistEntryId,
+                        type: PlaylistVoteEnum.UPVOTE,
+                        userId: data.userId
+                    });
+                    this.emitPlaylistChange(partyId);
+                } else {
+                    // the song is in the playlist already, we should upvote it if we didn't add it
+                }
+            }
+        );
+
+        this.eventProcessorService.addEventHandler(
+            partyId,
+            ProcessorEvents.PLAYLIST_REMOVE_SONG,
+            (data) => {
+                console.table(data);
+                this.emitPlaylistChange(partyId);
+            }
+        );
+
+        this.eventProcessorService.addEventHandler(
+            partyId,
+            ProcessorEvents.PLAYLIST_UPVOTE_SONG,
+            (data) => {
+                console.table(data);
+                this.emitPlaylistChange(partyId);
+            }
+        );
+
+        this.eventProcessorService.addEventHandler(
+            partyId,
+            ProcessorEvents.PLAYLIST_DOWNVOTE_SONG,
+            (data) => {
+                console.table(data);
+                this.emitPlaylistChange(partyId);
+            }
+        );
+    }
+
+    public setPartyState(partyId: string, partyState: PartyStateEnum) {
+        this.partyStateDatabaseService.updatePartyStateValue(partyId, partyState);
+    }
+
+    public async getColoursFor(albumArtworkUrl: string) {
+        const palette = await Vibrant.from(albumArtworkUrl).getPalette();
+        return {
+            vibrant: UpNextService.vec3ToHexString(palette.Vibrant.getRgb()),
+            darkVibrant: UpNextService.vec3ToHexString(palette.DarkVibrant.getRgb()),
+            lightVibrant: UpNextService.vec3ToHexString(palette.LightVibrant.getRgb()),
+            muted: UpNextService.vec3ToHexString(palette.Muted.getRgb()),
+            darkMuted: UpNextService.vec3ToHexString(palette.DarkMuted.getRgb()),
+            lightMuted: UpNextService.vec3ToHexString(palette.LightMuted.getRgb()),
+        };
+    }
+
+    public stopPartyByPartyId(partyId: string): void {
+        if (this.currentEventLoopParties.has(partyId)) {
+            clearInterval(this.currentEventLoopParties.get(partyId));
+        }
+    }
+
+    public stopPartyBySpotifyUserId(spotifyUserId: string): void {
+        const party: PartyDB = this.partyDatabaseService.getPartyBySpotifyUserId(spotifyUserId);
+        if (party && this.currentEventLoopParties.has(party.id)) {
+            clearInterval(this.currentEventLoopParties.get(party.id));
+        }
+    }
+
+    private upnextEventLoop(partyId: string): () => Promise<void> {
+        const party = this.partyDatabaseService.getPartyById(partyId);
+        return async () => {
+            logger.silly(`[UPNEXT] loop for ${party.id}`);
+            await this.checkForValidToken(party.id);
+            try {
+                const storedPartyState = this.partyStateDatabaseService.getPartyStateByPartyId(party.id);
+                const spotifyPlayState = await this.spotifyService.getSpotifyAPI().player.getPlayingContext(party.spotifyToken);
+                // each of these states have entry and exit conditions, and on those conditions,
+                // we can trigger the event emitter
+                switch (storedPartyState.state) {
+                    case PartyStateEnum.PLAYING:
+                        if (spotifyPlayState && spotifyPlayState.item) {
+                            this.updatePartyStateProgress(storedPartyState, spotifyPlayState.progress_ms);
+                            if (!spotifyPlayState.is_playing) {
+                                this.setPartyState(party.id, PartyStateEnum.PAUSED);
+                                this.emitStateChange(party.id);
+                            } else if (spotifyPlayState.item.duration_ms - spotifyPlayState.progress_ms <= 2000) {
+                                this.setPartyState(party.id, PartyStateEnum.SKIPPING);
+                            } else if (spotifyPlayState.item.id !== storedPartyState.trackId) {
+                                this.setPartyState(party.id, PartyStateEnum.SONG_CHANGED_MANUALLY);
+                            } else if (Math.abs((storedPartyState.progress - spotifyPlayState.progress_ms)) > 3000) {
+                                this.setPartyState(party.id, PartyStateEnum.SCRUBBING);
+                            }
+                        } else {
+                            this.setPartyState(party.id, PartyStateEnum.NOTHING_PLAYING);
                         }
-                    } catch (e) {
-                        logger.error(`Error in the main party thread with party: ${globParty.id}`);
-                        console.log(e);
-                    }
-                }, UpNextService.CLOCK_CYCLE);
+                        break;
+                    case PartyStateEnum.PAUSED:
+                        if (spotifyPlayState && spotifyPlayState.item) {
+                            if (spotifyPlayState.is_playing) {
+                                this.setPartyState(party.id, PartyStateEnum.PLAYING);
+                                this.emitStateChange(party.id);
+                            }
+                        } else {
+                            this.setPartyState(party.id, PartyStateEnum.NOTHING_PLAYING);
+                        }
+                        break;
+                    case PartyStateEnum.SCRUBBING:
+                        this.setPartyState(party.id, PartyStateEnum.PLAYING);
+                        this.emitStateChange(party.id);
+                        break;
+                    case PartyStateEnum.SKIPPING:
+                        // this is an upnext state, where the current song has ended and a new song is going
+                        // to be played, once this is done, we can move to the new_song state
+                        // update the added_by on the state db
+                        const playlist = this.playlistEntryDatabaseService.getAllPlaylistEntriesForParty(party.id).sort(playlistSort);
+                        if (playlist.length > 0) {
+                            const nextSong = playlist.shift();
+                            this.playlistVoteDatabaseService.deleteVotesForEntry(nextSong.id);
+                            this.playlistEntryDatabaseService.removePlaylistEntryById(nextSong.id);
+                            this.partyHistoryDatabaseService.insertHistory({
+                                addedAt: nextSong.addedAt,
+                                addedBy: nextSong.addedBy,
+                                albumArtwork: nextSong.albumArtwork,
+                                artist: nextSong.artist,
+                                name: nextSong.name,
+                                partyId: party.id,
+                                playedAt: moment().valueOf(),
+                                spotifyId: nextSong.spotifySongId,
+                                votes: nextSong.votes
+                            });
+                            const user = this.userDatabaseService.getUserById(nextSong.addedBy);
+                            this.emitPlaylistChange(party.id);
+                            this.partyStateDatabaseService.updatePartyStateAddedBy(party.id, user.nickname);
+                            await this.spotifyService.getSpotifyAPI().player.playSong(party.spotifyToken, nextSong.spotifySongId);
+                        } else {
+                            // there is nothing in the queue, what do we do?
+                            this.partyStateDatabaseService.updatePartyStateAddedBy(party.id, '');
+                        }
+                        this.setPartyState(party.id, PartyStateEnum.NEW_SONG);
+                        break;
+                    case PartyStateEnum.SONG_CHANGED_MANUALLY:
+                        this.partyStateDatabaseService.updatePartyStateAddedBy(party.id, '');
+                        this.setPartyState(party.id, PartyStateEnum.NEW_SONG);
+                        break;
+                    case PartyStateEnum.NEW_SONG:
+                        await this.updatePartyStateSongData(storedPartyState, spotifyPlayState);
+                        this.setPartyState(party.id, PartyStateEnum.PLAYING);
+                        this.emitStateChange(party.id);
+                        break;
+                    case PartyStateEnum.NOTHING_PLAYING:
+                        if (spotifyPlayState && spotifyPlayState.item) {
+                            if (spotifyPlayState.is_playing) {
+                                this.setPartyState(party.id, PartyStateEnum.PLAYING);
+                            } else {
+                                this.setPartyState(party.id, PartyStateEnum.PAUSED);
+                            }
+                        }
+                        break;
+                }
+            } catch (e) {
+                logger.error(`[UPNEXT] Error in the main party thread with party: ${party.id}`);
+                console.error(e);
+                debugger;
             }
-        });
-    }
-
-    public updatePartyColours(party: Party) {
-        let t = this;
-        Vibrant.from(party.playState.albumArtwork.filter(e => e.width < 100)[0].url).getPalette().then((palette) => {
-            this.partyDBService.updatePartyColours(party.id, {
-                vibrant: t.vec3ToColour(palette.Vibrant.getRgb()),
-                darkVibrant: t.vec3ToColour(palette.DarkVibrant.getRgb()),
-                lightVibrant: t.vec3ToColour(palette.LightVibrant.getRgb()),
-                muted: t.vec3ToColour(palette.Muted.getRgb()),
-                darkMuted: t.vec3ToColour(palette.DarkMuted.getRgb()),
-                lightMuted: t.vec3ToColour(palette.LightMuted.getRgb()),
-            });
-        });
-    }
-
-    private vec3ToColour(rgb: Vec3): Colour {
-        return {
-            r: Math.floor(rgb[0]),
-            g: Math.floor(rgb[1]),
-            b: Math.floor(rgb[2])
         };
     }
 
-    public async fixChromecastBug(partyId: string) {
-        let p = this.partyDBService.findPartyById(partyId);
-        await this.playSong(p, p.playState.trackId);
-    }
-
-    public async addSongToPlaylist(party: Party, id: string) {
-        await this.spotifyService.getSpotifyAPI().playlist.addTracks(party.token, party.playlistId, [id]);
-    }
-
-    public updatePreviousSong(party: Party, id: string) {
-        this.partyDBService.updatePreviousSong(party.id, id);
-    }
-
-    public setPartyState(party: Party, partyState: PartyStateEnum) {
-        this.partyDBService.updatePartyState(party.id, partyState);
-    }
-
-    public addSongToHistory(party: Party, songId: string) {
-        this.partyDBService.updatePartyHistory(party.id, songId);
-    }
-
-    public updatePartyPlaylist(party: Party, playlist: Array<PlaylistEntry>) {
-        this.partyDBService.updatePartyPlaylist(party.id, playlist);
-    }
-
-    public async playSong(party: Party, songId: string) {
-        // playing a song should also possibly return a state to represent the error
-        try {
-            // the idea here is that with 2 calls to play, the chrome bug might not happen
-            await this.spotifyService.getSpotifyAPI().player.playSong(party.token, songId);
-            await this.spotifyService.getSpotifyAPI().player.playSong(party.token, songId);
-        } catch (e) {
-            if (e.name === 404) {
-                return {
-                    error: true,
-                    message: 'No Active Devices.'
-                };
-            } else if (e.name === 403) {
-                return {
-                    error: true,
-                    message: 'Not a Premium Member.'
-                };
+    private emitStateChange(partyId: string) {
+        this.eventEmitterService.emitEventAt(
+            partyId,
+            PartyEvent.STATE_CHANGE,
+            {
+                party: this.partyDatabaseService.getPartyById(partyId),
+                playstate: this.partyStateDatabaseService.getPartyStateByPartyId(partyId)
             }
-        }
-        return {
-            error: false,
-            message: null
-        };
+        );
     }
 
-    public async nextSong(party: Party) {
-        this.addSongToHistory(party, party.previousSong);
-        if (party.playlist.length > 0) {
-            let playlist: Array<PlaylistEntry> = deep(party.playlist);
-            playlist.sort(playlistSort);
-            let nextSong = playlist.shift();
-            this.updatePartyPlaylist(party, playlist);
-            await this.playSong(party, nextSong.id);
-        } else {
-            // auto play a song -> use spotify to guess based on history
-            // await this.playSong(party, "7I3skNaQdvZSS7zXY2VHId");
-        }
+    private emitPlaylistChange(partyId: string) {
+        this.eventEmitterService.emitEventAt(
+            partyId,
+            PartyEvent.PLAYLIST_UPDATE,
+            {
+                playlist: this.playlistEntryDatabaseService.getAllPlaylistEntriesForParty(partyId)
+            }
+        );
     }
 
-    public updatePartyPlaystate(party: Party, currentlyPlaying: CurrentlyPlayingObject, devices: Array<DeviceObject>) {
-        let ps = new PartyPlayState();
-        ps.isPlaying = currentlyPlaying.is_playing;
-        ps.trackId = currentlyPlaying.item.id;
-        ps.trackName = currentlyPlaying.item.name;
-        ps.artistName = currentlyPlaying.item.artists.map(e => e.name).join(', ');
-        ps.albumName = currentlyPlaying.item.album.name;
-        ps.albumArtwork = currentlyPlaying.item.album.images;
-        ps.duration = currentlyPlaying.item.duration_ms;
-        ps.progress = currentlyPlaying.progress_ms;
-        ps.device = currentlyPlaying.device;
-        ps.availableDevices = devices;
-        this.partyDBService.updatePartyPlaystate(party.id, ps);
-    }
-
-    private async checkForValidToken(party: Party): Promise<void> {
-        let now = (new Date()).valueOf();
-        if (party.tokenExpire - now <= 60000 * 5) {
+    private async checkForValidToken(partyId: string): Promise<void> {
+        const party = this.partyDatabaseService.getPartyById(partyId);
+        let now = moment().valueOf();
+        // console.log(now, party.spotifyTokenExpire, party.spotifyTokenExpire - now, 60000 * 5, party.spotifyTokenExpire - now <= 60000 * 5);
+        if (party.spotifyTokenExpire - now <= 60000 * 5) {
             let refreshTokenData = await this.spotifyService.getSpotifyAPI()
                 .auth
                 .refreshAuthToken(
                     env.app.spotify.clientId,
                     env.app.spotify.clientSecret,
-                    party.refreshToken
+                    party.spotifyRefreshToken
                 );
-            this.partyDBService.refreshPartyToken(party.id, refreshTokenData.access_token, refreshTokenData.expires_in);
+            this.partyDatabaseService.refreshPartyToken(party.id, refreshTokenData.access_token, refreshTokenData.expires_in);
         }
     }
 
-    public stopPartyByUserId(userId: string) {
-        let p = this.partyDBService.findPartyByUserId(userId);
-        if (p) {
-            clearInterval(this.currentEventLoopParties[p.id]);
-            delete this.currentEventLoopParties[p.id];
-        }
+    private updatePartyStateProgress(currentState: PartyStateDB, progress: number) {
+        this.partyStateDatabaseService.updatePartyStateProgress(currentState.id, progress);
     }
 
-    public stopPartyByPartyId(partyId: string) {
-        let p = this.partyDBService.findPartyById(partyId);
-        if (p) {
-            clearInterval(this.currentEventLoopParties[p.id]);
-            delete this.currentEventLoopParties[p.id];
-        }
-    }
-
-    public async togglePlayback(partyId: string) {
-        let p = this.partyDBService.findPartyById(partyId);
-        if (p) {
-            if (p.playState.isPlaying) {
-                await this.spotifyService.getSpotifyAPI().player.pause(p.token);
-            } else {
-                await this.spotifyService.getSpotifyAPI().player.play(p.token);
-            }
-        }
+    private async updatePartyStateSongData(currentState: PartyStateDB, spotifyPlayState: CurrentlyPlayingObject) {
+        // is there a better way to do this
+        currentState.progress = spotifyPlayState.progress_ms;
+        currentState.duration = spotifyPlayState.item.duration_ms;
+        currentState.previousTrackId = currentState.trackId;
+        currentState.trackId = spotifyPlayState.item.id;
+        currentState.artistName = spotifyPlayState.item.artists.map(e => e.name).join(', ');
+        currentState.albumArtwork = spotifyPlayState.item.album.images.filter(e => e.width === Math.max(...spotifyPlayState.item.album.images.map(e => e.width)))[0].url;
+        currentState.trackName = spotifyPlayState.item.name;
+        // colour is cool
+        const colours = await this.getColoursFor(currentState.albumArtwork);
+        currentState.colourVibrant = colours.vibrant;
+        currentState.colourMuted = colours.muted;
+        currentState.colourDarkVibrant = colours.darkVibrant;
+        currentState.colourDarkMuted = colours.darkMuted;
+        currentState.colourLightVibrant = colours.lightVibrant;
+        currentState.colourLightMuted = colours.lightMuted;
+        this.partyStateDatabaseService.updatePartyState(currentState);
     }
 }
 
-export const playlistSort = ($a: PlaylistEntry, $b: PlaylistEntry) => {
-    let n = $b.votes - $a.votes;
+export const playlistSort = ($a: PlaylistEntryDB, $b: PlaylistEntryDB) => {
+    const n = $b.votes - $a.votes;
     if (n !== 0) return n;
     return $a.addedAt - $b.addedAt;
+};
+
+export const userSort = ($a: UserDB, $b: UserDB) => {
+    return $b.score - $a.score;
 };

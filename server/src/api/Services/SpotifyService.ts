@@ -3,7 +3,7 @@ import SpotifyAPI from "../Spotify/SpotifyAPI";
 
 
 @Service()
-export default class SpotifyService {
+export class SpotifyService {
     private readonly _spotifyAPI: SpotifyAPI;
 
     constructor() {

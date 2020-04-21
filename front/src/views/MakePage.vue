@@ -34,7 +34,7 @@
             axios.post(`/party/join?token=${joinToken}`).then(res => {
                 let userToken = res.data.token;
                 session.setItem('token', userToken); // set token for reqs to the party
-                //then make the user wait so they can look at the pretty screen
+                // then make the user wait so they can look at the pretty screen
                 setTimeout(() => {
                     context.$router.push('/app/home')
                 }, 1500)

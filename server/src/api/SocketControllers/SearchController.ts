@@ -1,16 +1,14 @@
 import 'reflect-metadata';
-import SpotifyService from "../Services/SpotifyService";
 import { EmitOnFail, EmitOnSuccess, MessageBody, OnMessage, SocketController } from "socket-controllers";
-import SocketMessage from "../Types/SocketMessage";
-import AuthenticationService from "../Services/AuthenticationService";
-import PartyDBService from "../Services/PartyDBService";
+import SocketMessage from "../Types/general/SocketMessage";
+import { AuthenticationService } from "../Services/AuthenticationService";
+import { PartyService } from "../Services/PartyService";
 
 @SocketController()
 export class SearchController {
     constructor(
-        private spotifyService: SpotifyService,
         private authenticationService: AuthenticationService,
-        private partyDBService: PartyDBService
+        private partyService: PartyService
     ) {
     }
 
@@ -18,17 +16,7 @@ export class SearchController {
     @EmitOnSuccess("search-success")
     @EmitOnFail("search-fail")
     public async search(@MessageBody() message: SocketMessage<any>) {
-        let a = this.authenticationService.authenticate(message.token);
-        if (a.valid) {
-            let token = this.partyDBService.getTokenFromParty(a.data.partyId);
-            let q = message.data.query;
-            let x = await this.spotifyService.getSpotifyAPI().search.searchEverything(token, q, 20);
-            return {
-                token: message.token,
-                data: x
-            };
-        } else {
-            return {};
-        }
+        const tokenData = await this.authenticationService.authenticate(message.token);
+        return await this.partyService.search(tokenData.partyId, message.data.query);
     }
 }

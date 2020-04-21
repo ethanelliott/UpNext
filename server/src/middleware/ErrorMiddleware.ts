@@ -22,7 +22,11 @@ export class ErrorMiddleware implements ExpressErrorMiddlewareInterface {
         if (this.isProduction) {
             logger.error(`${error.name} ${error.message}`);
         } else {
-            logger.error(`${error.name} ${error.message}\n${error.stack}`);
+            if (error.message) {
+                logger.error(`${error.name} ${error.message}\n${error.stack}`);
+            } else {
+                logger.error(`${error}`);
+            }
         }
 
     }

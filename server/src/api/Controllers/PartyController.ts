@@ -1,152 +1,80 @@
 import 'reflect-metadata';
-import { BodyParam, JsonController, Post, QueryParam } from 'routing-controllers';
-import PartyDBService from "../Services/PartyDBService";
-import WebTokenService from "../Services/WebTokenService";
-import UserBuilder from "../Factory/UserBuilder";
-import UUIDService from "../Services/UUIDService";
-import AuthenticationService from "../Services/AuthenticationService";
-import SpotifyService from "../Services/SpotifyService";
-import UpNextService from "../Services/UpNextService";
+import { BodyParam, ContentType, Get, JsonController, Post, QueryParam } from 'routing-controllers';
+import { env } from "../../env";
+import { QRService } from "../Services/QRService";
+import { PartyService } from "../Services/PartyService";
+import { WebTokenService } from "../Services/WebTokenService";
+import { PartyJoinToken } from "../Types/general/PartyJoinToken";
+import { AuthenticationService } from "../Services/AuthenticationService";
 
 @JsonController('/party')
 export class PartyController {
     constructor(
-        private partyDBService: PartyDBService,
+        private qrService: QRService,
+        private partyService: PartyService,
         private webTokenService: WebTokenService,
-        private uuidService: UUIDService,
-        private authenticationService: AuthenticationService,
-        private spotifyService: SpotifyService,
-        private upNextService: UpNextService
+        private authenticationService: AuthenticationService
     ) {
     }
 
-    @Post('/get/all')
-    public getAllParties(): any {
-        return this.partyDBService.getAllParties();
-    }
-
     @Post('/delete')
-    public deleteParty(@QueryParam("id") partyId: string): any {
-        this.upNextService.stopPartyByPartyId(partyId);
-        this.partyDBService.removePartyByPartyId(partyId);
+    public async deleteParty(@QueryParam("id") partyId: string): Promise<any> {
+        this.partyService.removePartyByPartyId(partyId);
         return {};
     }
 
     @Post('/join')
-    public joinParty(@QueryParam("token") token: string): any {
-        let decodeToken = this.webTokenService.verify(token);
-        if (decodeToken.error === null) {
-            let uid = this.uuidService.new();
-            let user = UserBuilder.make()
-                .withId(uid)
-                .withName(decodeToken.data.name)
-                .build();
-            this.partyDBService.newUser(
-                decodeToken.data.pid,
-                user
-            );
-            this.partyDBService.addAdminUser(decodeToken.data.pid, user);
-            let userToken = this.authenticationService.generateToken(decodeToken.data.pid, uid);
+    public async joinParty(@QueryParam("token") token: string): Promise<any> {
+        const decodedToken = this.webTokenService.verify<PartyJoinToken>(token);
+        if (decodedToken.error == null) {
+            const userId = await this.partyService.joinParty(decodedToken.data);
+            const userToken = this.authenticationService.generateToken(decodedToken.data.partyId, userId, decodedToken.data.admin);
             return {token: userToken};
         } else {
-            return {token: ""};
+            return {token: null};
         }
     }
 
     @Post('/validate')
     public authenticatePartyCode(@BodyParam('code') code: string, @BodyParam('name') nickName: string): any {
-        let party = this.partyDBService.findPartyByCode(code);
-        if (party) {
-            let userJoinToken = this.webTokenService.generateFrom({
-                pid: party.id,
-                name: nickName,
-                admin: false
-            });
-            return {
-                valid: true,
-                token: userJoinToken
-            };
+        const partyId = this.partyService.getPartyIdFromCode(code);
+        if (partyId) {
+            const userJoinToken = this.webTokenService.generateFrom({partyId, name: nickName, admin: false});
+            return {valid: true, token: userJoinToken};
         } else {
-            return {
-                valid: false,
-                token: null
-            };
+            return {valid: false, token: null};
         }
     }
 
     @Post('/admin/join')
     public newAdminJoin(@BodyParam('partyId') partyId: string, @BodyParam('name') nickName: string): any {
-        let party = this.partyDBService.findPartyById(partyId);
-        if (party) {
-            let userJoinToken = this.webTokenService.generateFrom({
-                pid: party.id,
+        return {
+            valid: true,
+            token: this.webTokenService.generateFrom({
+                pid: partyId,
                 name: nickName,
                 admin: true
-            });
-            return {
-                valid: true,
-                token: userJoinToken
-            };
-        } else {
-            return {
-                valid: false,
-                token: null
-            };
-        }
+            })
+        };
     }
 
     @Post('/leave')
-    public leaveParty(@BodyParam('token') token: string): any {
-        let decodeToken = this.webTokenService.verify(token);
-        if (decodeToken.error === null) {
-            this.partyDBService.removeUser(decodeToken.data.partyId, decodeToken.data.userId);
-            return {
-                removed: true,
-                error: false
-            };
-        } else {
-            return {
-                removed: false,
-                error: true
-            };
-        }
-    }
-
-    @Post('/recommended')
-    public async getRecommended(@BodyParam('token') token: string) {
-        let decodeToken = this.webTokenService.verify(token);
-        if (decodeToken.error === null) {
-            let party = this.partyDBService.findPartyById(decodeToken.data.partyId);
-            if (party.history.length > 0) {
-                let recommended = await this.spotifyService.getSpotifyAPI().browse.getRecommendations(party.token, party.history);
-                return {
-                    recommended
-                };
-            } else {
-                return { };
-            }
-        } else {
-            return null;
-        }
-    }
-
-    @Post('/featured')
-    public async getFeatured(@BodyParam('token') token: string) {
-        let decodeToken = this.webTokenService.verify(token);
-        if (decodeToken.error === null) {
-            let party = this.partyDBService.findPartyById(decodeToken.data.partyId);
-            let featured = await this.spotifyService.getSpotifyAPI().browse.getFeaturedPlaylists(party.token);
-            return {
-                featured
-            };
-        } else {
-            return null;
-        }
+    public async leaveParty(@BodyParam('token') token: string): Promise<any> {
+        const data = await this.authenticationService.authenticate(token);
+        this.partyService.removeUser(data.partyId, data.userId);
+        return {};
     }
 
     @Post('/fix')
     public async fixChromeError(@BodyParam('partyId') partyId: string): Promise<any> {
-        await this.upNextService.fixChromecastBug(partyId);
+        // await this.upNextService.fixChromecastBug(partyId);
         return {};
+    }
+
+    @Get('/qr.png')
+    @ContentType('image/png')
+    public async shareQRCode(@QueryParam('code') code: string, @QueryParam('back') back: string, @QueryParam('front') front: string) {
+        const data = await this.qrService.generateFrom(`${env.app.front.url}/join?c=${code}`, `#${front}ff`, `#${back}ff`);
+        return Buffer.from(data.split(',')[1], 'base64');
     }
 }

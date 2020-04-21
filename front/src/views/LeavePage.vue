@@ -30,13 +30,11 @@
         mounted() {
             let context = this;
             let token = session.getItem('token');
-            axios.post(`/party/leave`, {token}).then(res => {
-                session.removeItem('token');
-                setTimeout(() => {
-                    context.$router.push('/')
-                }, 2000)
-            }).catch(err => {
-            })
+            axios.post(`/party/leave`, {token});
+            session.removeItem('token');
+            setTimeout(() => {
+                context.$router.push('/')
+            }, 2000)
         }
     }
 </script>

@@ -1,8 +1,14 @@
-import User from "../Types/User";
+import { UserDB } from "../Types/DatabaseMaps/UserDB";
+import { UserPermissionEnum } from "../Types/Enums/UserPermissionEnum";
+import moment from "moment";
 
-export default class UserBuilder {
-    private name: string;
+
+export class UserBuilder {
+    private nickname: string;
     private id: string;
+    private score: number = 0;
+    private partyId: string;
+    private permission: UserPermissionEnum = UserPermissionEnum.DEFAULT;
 
     constructor() {
     }
@@ -11,8 +17,8 @@ export default class UserBuilder {
         return new UserBuilder();
     }
 
-    public withName(name: string): UserBuilder {
-        this.name = name;
+    public withName(nickname: string): UserBuilder {
+        this.nickname = nickname;
         return this;
     }
 
@@ -21,10 +27,32 @@ export default class UserBuilder {
         return this;
     }
 
-    public build(): User {
-        let p = new User();
-        p.name = this.name;
+    public withScore(score: number): UserBuilder {
+        this.score = score;
+        return this;
+    }
+
+    public withPartyId(partyId: string): UserBuilder {
+        this.partyId = partyId;
+        return this;
+    }
+
+    public withPermission(permission: UserPermissionEnum): UserBuilder {
+        this.permission = permission;
+        return this;
+    }
+
+    public build(): UserDB {
+        let p = new UserDB();
+        p.nickname = this.nickname;
         p.id = this.id;
+        p.score = this.score;
+        p.partyId = this.partyId;
+        p.joinedAt = moment().valueOf();
+        p.userPermission = this.permission;
+        p.spotifyToken = '';
+        p.spotifyRefreshToken = '';
+        p.spotifyTokenExpire = 0;
         return p;
     }
 

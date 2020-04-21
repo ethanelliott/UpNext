@@ -1,6 +1,7 @@
-export default class WebTokenData {
+export class PartyJoinToken {
     partyId: string;
-    userId: string;
+    name: string;
+    admin: boolean;
     iat: number;
     exp: number;
     iss: string;

@@ -57,6 +57,18 @@ const routes = [
                 }
             },
             {
+                path: 'cast',
+                name: 'appCast',
+                props: {
+                    default: false,
+                    content: true
+                },
+                components: {
+                    default: () => import('../views/app/Main.vue'),
+                    content: () => import('../views/app/Cast.vue')
+                }
+            },
+            {
                 path: 'search',
                 name: 'appSearch',
                 props: {

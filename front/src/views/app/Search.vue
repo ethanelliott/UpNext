@@ -147,7 +147,7 @@
             t.socket.on('connect', () => {
             });
             t.socket.on('search-success', (message) => {
-                t.gotResult(message.data);
+                t.gotResult(message);
             });
             t.socket.on('playlist-song-added', (message) => {
                 t.showSnackbar('Song Added', 'Undo', () => {

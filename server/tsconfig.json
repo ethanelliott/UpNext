@@ -1,8 +1,9 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "target": "es3",
     "module": "commonjs",
     "pretty": true,
+    "emitBOM": true,
     "sourceMap": true,
     "outDir": "dist",
     "importHelpers": true,
@@ -20,8 +21,8 @@
     "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "resolveJsonModule": true,
     "esModuleInterop": true,
+    "skipLibCheck": true,
     "lib": [
       "es2017",
       "esnext.array"
