@@ -3,3 +3,4 @@ node_modules/
 /key.pem
 /pack/
 *.db
+*.env
