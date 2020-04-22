@@ -6,11 +6,7 @@ import { env } from "../../env";
 import { SpotifyOAuthState } from "../Types/general/SpotifyOAuthState";
 import { PartyDB } from "../Types/DatabaseMaps/PartyDB";
 import { PartyBuilder } from "../Factory/PartyBuilder";
-import { UpNextService } from "./UpNextService";
 import { PartyDatabaseService } from "./Database/PartyDatabaseService";
-import { PartyStateDB } from "../Types/DatabaseMaps/PartyStateDB";
-import { PartyStateBuilder } from "../Factory/PartyStateBuilder";
-import { PartyStateDatabaseService } from "./Database/PartyStateDatabaseService";
 import { PartyHistoryDatabaseService } from "./Database/PartyHistoryDatabaseService";
 import { UserDatabaseService } from "./Database/UserDatabaseService";
 import { UserDB } from "../Types/DatabaseMaps/UserDB";
@@ -18,9 +14,7 @@ import { UserBuilder } from "../Factory/UserBuilder";
 import { PartyJoinToken } from "../Types/general/PartyJoinToken";
 import { UserPermissionEnum } from "../Types/Enums/UserPermissionEnum";
 import { PlaylistEntryDatabaseService } from "./Database/PlaylistEntryDatabaseService";
-import { PlaylistVoteDatabaseService } from "./Database/PlaylistVoteDatabaseService";
 import { PlaylistEntryDB } from "../Types/DatabaseMaps/PlaylistEntryDB";
-import { ProcessorEvents } from "./EventProcessorService";
 
 @Service()
 export class PartyService {
@@ -29,13 +23,11 @@ export class PartyService {
         private uuidService: UUIDService,
         private newPartyService: NewPartyService,
         private spotifyService: SpotifyService,
-        private upNextService: UpNextService,
+        // private upNextService: SpotifyStateService,
         private userDatabaseService: UserDatabaseService,
         private partyDatabaseService: PartyDatabaseService,
-        private partyStateDatabaseService: PartyStateDatabaseService,
         private partyHistoryDatabaseService: PartyHistoryDatabaseService,
         private playlistEntryDatabaseService: PlaylistEntryDatabaseService,
-        private playlistVoteDatabaseService: PlaylistVoteDatabaseService,
     ) {
 
     }
@@ -69,24 +61,17 @@ export class PartyService {
             .withUserId(userData.id)
             .withPlaylistId(playlistData.id)
             .build();
-        const partyState: PartyStateDB = PartyStateBuilder
-            .make()
-            .withId(this.uuidService.new())
-            .withPartyId(state.partyId)
-            .build();
         // remove parties that the user already has running
-        this.upNextService.stopPartyBySpotifyUserId(userData.id);
+        // this.upNextService.stopPartyBySpotifyUserId(userData.id);
         this.partyDatabaseService.removePartyBySpotifyUserId(userData.id);
         // create all the new party data
         this.partyDatabaseService.insertParty(party);
-        this.partyStateDatabaseService.insertPartyState(partyState);
         // start the event loop
-        this.upNextService.startPartyEventLoop();
+        // this.upNextService.startPartyEventLoop();
     }
 
     public removePartyByPartyId(partyId: string): void {
-        this.upNextService.stopPartyByPartyId(partyId);
-        this.partyStateDatabaseService.removePartyStateByPartyId(partyId);
+        // this.upNextService.stopPartyByPartyId(partyId);
         this.partyHistoryDatabaseService.removeHistoryForParty(partyId);
         this.userDatabaseService.removeAllUsersWithPartyId(partyId);
         this.partyDatabaseService.removePartyByPartyId(partyId);
@@ -123,10 +108,6 @@ export class PartyService {
         return undefined;
     }
 
-    public getPartyState(partyId: string): PartyStateDB {
-        return this.partyStateDatabaseService.getPartyStateByPartyId(partyId);
-    }
-
     public getPartyFromId(partyId: string): PartyDB {
         return this.partyDatabaseService.getPartyById(partyId);
     }
@@ -136,23 +117,33 @@ export class PartyService {
     }
 
     // all of this is wrong
-    public upvoteSong(partyId: string): void {
-        this.playlistVoteDatabaseService.getVotesForEntry(partyId);
+    public upvoteSong(partyId: string, userId: string, playlistEntryId: string): void {
+        // this.upNextService.emitEventToProcess(partyId, ProcessorEvents.PLAYLIST_UPVOTE_SONG, {userId, playlistEntryId});
+    }
+
+    public downvoteSong(partyId: string, userId: string, playlistEntryId: string): void {
+        // this.upNextService.emitEventToProcess(partyId, ProcessorEvents.PLAYLIST_DOWNVOTE_SONG, {userId, playlistEntryId});
     }
 
     public addSongToPlaylist(partyId: string, userId: string, songId: string) {
-        this.upNextService.emitEventToProcess(partyId, ProcessorEvents.PLAYLIST_ADD_SONG, {userId, songId});
+        // this.upNextService.emitEventToProcess(partyId, ProcessorEvents.PLAYLIST_ADD_SONG, {userId, songId});
     }
 
     public removeSongFromPlaylist(partyId: string, userId: string, songId: string) {
-        this.upNextService.emitEventToProcess(partyId, ProcessorEvents.PLAYLIST_REMOVE_SONG, {userId, songId});
+        // this.upNextService.emitEventToProcess(partyId, ProcessorEvents.PLAYLIST_REMOVE_SONG, {userId, songId});
     }
 
     public async search(partyId: string, searchTerm: string): Promise<any> {
         const token = this.partyDatabaseService.getPartyById(partyId).spotifyToken;
-        const results = await this.spotifyService.getSpotifyAPI().search.searchEverything(token, searchTerm, 20);
-        return results;
+        return await this.spotifyService.getSpotifyAPI().search.searchEverything(token, searchTerm, 20);
     }
 
+    // this seems like a code smell
+    public getUserById(userId: string): UserDB {
+        return this.userDatabaseService.getUserById(userId);
+    }
 
+    public getPartyState(partyId: string) {
+        return null;
+    }
 }

@@ -4,21 +4,28 @@ import './registerServiceWorker';
 import router from './router';
 import vuetify from './plugins/vuetify';
 import axios from 'axios';
+import LogRocket from 'logrocket';
 
-Vue.config.productionTip = false;
+LogRocket.init('ayfxcp/upnext');
 
+const LOCAL_URI = `http://192.168.1.58`;
 const PROD = process.env.NODE_ENV !== 'development';
+const API_URL = (PROD ? 'https://api.upnext.cool/api' : `${LOCAL_URI}:8884/api`);
+const SOCKET_URL = (PROD ? 'https://socket.upnext.cool' : `${LOCAL_URI}:8885`);
+const FRONT_URL = (PROD ? 'https://upnext.cool' : `${LOCAL_URI}:8080`);
 
-axios.defaults.baseURL = (PROD ? 'https://api.upnext.cool/api' : 'http://192.168.69.100:8884/api');
-Vue.prototype.$socketPath = (PROD ? 'https://socket.upnext.cool' : 'http://192.168.69.100:8885');
-Vue.config.productionTip = false;
+axios.defaults.baseURL = API_URL;
 
 Vue.prototype.$PROD = PROD;
-Vue.prototype.$API_URL = (PROD ? 'https://api.upnext.cool/api' : 'http://192.168.69.100:8884/api');
+Vue.prototype.$apiUrl = API_URL;
+Vue.prototype.$socketUrl = SOCKET_URL;
+Vue.prototype.$frontUrl = FRONT_URL;
+
+Vue.config.productionTip = false;
 
 new Vue({
     router,
     // @ts-ignore
-    vuetify, // vuetify has no nice type definitions
-    render: h => h(App)
+    vuetify,
+    render: (h: any) => h(App)
 }).$mount('#app');

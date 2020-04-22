@@ -49,7 +49,7 @@
                                     {{ artistName }}</h1>
                             </v-row>
                             <v-row class="ma-0 pa-0">
-                                <h1 class="heading font-weight-regular text-left"
+                                <h1 class="heading font-weight-regular text-left" v-if="addedBy"
                                     style="height: 1.2em; text-overflow: ellipsis;white-space: nowrap;overflow: hidden;">
                                     Added By: {{ addedBy }}
                                 </h1>
@@ -95,7 +95,7 @@
                                     <v-container class="ma-0 pa-0 fill-height" fluid>
                                         <v-col cols="12">
                                             <v-row align="center" class="ma-0 pa-0" justify="center">
-                                                <v-img :src="`${$API_URL}/party/qr.png?code=${code}&back=${qrBack}&front=${qrFront}`"
+                                                <v-img :src="`${$apiUrl}/party/qr.png?code=${code}&back=${qrBack}&front=${qrFront}`"
                                                        class="elevation-0" max-width="400"
                                                        v-if="qrFront !== ''"></v-img>
                                             </v-row>
@@ -120,7 +120,8 @@
                                                v-if="e.albumArtwork"
                                                position="center">
                                             <v-overlay absolute opacity="0.7">
-                                                <h1 class="display-3 font-weight-bold">{{ e.votes }}</h1>
+                                                <h1 class="display-3 font-weight-bold">{{ e.UpVotes - e.DownVotes
+                                                    }}</h1>
                                             </v-overlay>
                                         </v-img>
                                         <div class="font-weight-bold"
@@ -132,7 +133,7 @@
                                             {{ e.artist }}
                                         </div>
                                         <div style="text-overflow: ellipsis;white-space: nowrap;overflow: hidden;">
-                                            Added: {{ e.addedBy }}
+                                            + {{ e.addedBy }}
                                         </div>
                                     </v-card>
                                 </v-row>
@@ -180,7 +181,7 @@
         mounted() {
             window.scrollTo(0, 0);
             this.token = session.getItem('token');
-            this.socket = io(this.$socketPath);
+            this.socket = io(this.$socketUrl);
             this.socket.on('connect', () => {
                 this.requestStateData();
                 this.socket.emit('join', {token: this.token, data: null});
@@ -196,6 +197,7 @@
                 this.trackId = data.playstate.trackId;
                 this.addedBy = data.playstate.addedBy;
                 this.code = data.party.code;
+                this.partyName = data.party.name
                 let lv = data.playstate.colourLightVibrant;
                 let v = data.playstate.colourVibrant;
                 let dv = data.playstate.colourDarkVibrant;
@@ -225,6 +227,7 @@
                 this.trackId = data.playstate.trackId;
                 this.addedBy = data.playstate.addedBy;
                 this.code = data.party.code;
+                this.partyName = data.party.name
                 let lv = data.playstate.colourLightVibrant;
                 let v = data.playstate.colourVibrant;
                 let dv = data.playstate.colourDarkVibrant;

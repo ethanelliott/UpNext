@@ -29,7 +29,7 @@ export class PartyController {
         if (decodedToken.error == null) {
             const userId = await this.partyService.joinParty(decodedToken.data);
             const userToken = this.authenticationService.generateToken(decodedToken.data.partyId, userId, decodedToken.data.admin);
-            return {token: userToken};
+            return {token: userToken, userId};
         } else {
             return {token: null};
         }

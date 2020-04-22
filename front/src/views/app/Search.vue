@@ -143,7 +143,7 @@
             window.scrollTo(0, 0);
             let t = this;
             t.token = session.getItem('token');
-            t.socket = io(t.$socketPath);
+            t.socket = io(t.$socketUrl);
             t.socket.on('connect', () => {
             });
             t.socket.on('search-success', (message) => {

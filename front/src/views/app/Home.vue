@@ -172,7 +172,7 @@
                             <br>
                             <span class="font-weight-thin font-italic text--primary">{{artistName}}</span>
                             <br>
-                            <span>Added by: {{ addedBy }}</span>
+                            <span v-if="addedBy">Added by: {{ addedBy }}</span>
                         </v-card-text>
                     </v-card>
                 </v-row>
@@ -348,16 +348,16 @@
                     data: {}
                 });
             },
-            downvoteSong(songId) {
+            downvoteSong(playlistEntryId) {
                 this.socket.emit('playlist-downvote-song', {
                     token: this.token,
-                    data: {songId}
+                    data: {playlistEntryId}
                 });
             },
-            upvoteSong(songId) {
+            upvoteSong(playlistEntryId) {
                 this.socket.emit('playlist-upvote-song', {
                     token: this.token,
-                    data: {songId}
+                    data: {playlistEntryId}
                 });
             },
             transferPlaybackToSelected() {
@@ -401,7 +401,7 @@
         mounted() {
             window.scrollTo(0, 0);
             this.token = session.getItem('token');
-            this.socket = io(this.$socketPath);
+            this.socket = io(this.$socketUrl);
             this.socket.on('connect', () => {
                 this.requestStateData();
                 this.socket.emit('join', {token: this.token, data: null});

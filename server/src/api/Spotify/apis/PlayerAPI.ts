@@ -72,4 +72,14 @@ export default class PlayerAPI {
             .execute();
         return plainToClass(DevicesObject, d);
     }
+
+    public async addSongToEndOfQueue(token: string, trackId: string): Promise<void> {
+        await WebAPIRequestBuilder
+            .make(token)
+            .withMethod(HttpMethods.POST)
+            .withPath("/v1/me/player/queue")
+            .withQueryParameters({uri: `spotify:track:${trackId}`})
+            .build()
+            .execute();
+    }
 }

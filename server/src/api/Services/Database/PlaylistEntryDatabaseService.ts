@@ -57,6 +57,14 @@ export class PlaylistEntryDatabaseService {
         });
     }
 
+    public getPlaylistEntryById(playlistEntryId: string): PlaylistEntryDB {
+        return this.databaseService.queryOne<PlaylistEntryDB>({
+            from: this.tableName,
+            select: ['*'],
+            where: [{key: 'id', operator: '=', value: playlistEntryId}]
+        });
+    }
+
     public getAllPlaylistEntriesForParty(partyId: string): Array<PlaylistEntryDB> {
         return this.databaseService.queryAll<PlaylistEntryDB>({
             from: this.tableName,
@@ -73,6 +81,49 @@ export class PlaylistEntryDatabaseService {
         });
     }
 
+    public addUpVote(playlistEntryId: string) {
+        const entry = this.getPlaylistEntryById(playlistEntryId);
+        this.databaseService.update({
+            update: this.tableName,
+            set: {
+                UpVotes: entry.UpVotes + 1
+            },
+            where: [{key: 'id', operator: '=', value: playlistEntryId}]
+        });
+    }
+
+    public removeUpVote(playlistEntryId: string) {
+        const entry = this.getPlaylistEntryById(playlistEntryId);
+        this.databaseService.update({
+            update: this.tableName,
+            set: {
+                UpVotes: entry.UpVotes - 1
+            },
+            where: [{key: 'id', operator: '=', value: playlistEntryId}]
+        });
+    }
+
+    public addDownVote(playlistEntryId: string) {
+        const entry = this.getPlaylistEntryById(playlistEntryId);
+        this.databaseService.update({
+            update: this.tableName,
+            set: {
+                UpVotes: entry.DownVotes + 1
+            },
+            where: [{key: 'id', operator: '=', value: playlistEntryId}]
+        });
+    }
+
+    public removeDownVote(playlistEntryId: string) {
+        const entry = this.getPlaylistEntryById(playlistEntryId);
+        this.databaseService.update({
+            update: this.tableName,
+            set: {
+                UpVotes: entry.DownVotes - 1
+            }
+        });
+    }
+
     private buildTable() {
         this.databaseService.db.prepare(QueryFactory.buildCreateFrom({
             name: this.tableName,
@@ -85,7 +136,8 @@ export class PlaylistEntryDatabaseService {
                 {name: 'addedAt', type: 'INTEGER', notNull: true},
                 {name: 'partyId', type: 'TEXT', notNull: true, foreignKey: {table: 'parties', name: 'id'}},
                 {name: 'spotifySongId', type: 'TEXT', notNull: true},
-                {name: 'votes', type: 'INTEGER', notNull: true},
+                {name: 'UpVotes', type: 'INTEGER', notNull: true},
+                {name: 'DownVotes', type: 'INTEGER', notNull: true},
             ]
         })).run();
     }
