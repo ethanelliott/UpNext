@@ -48,6 +48,16 @@ export class PlaylistVoteDatabaseService {
         });
     }
 
+    public deleteVote(playlistEntryId: string, userId: string) {
+        this.databaseService.delete({
+            from: this.tableName,
+            where: [
+                {key: 'playlistEntryId', operator: '=', value: playlistEntryId},
+                {key: 'userId', operator: '=', value: userId}
+            ]
+        });
+    }
+
     private buildTable() {
         this.databaseService.db.prepare(QueryFactory.buildCreateFrom({
             name: this.tableName,

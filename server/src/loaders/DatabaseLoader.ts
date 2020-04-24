@@ -9,7 +9,6 @@ import { PlaylistVoteDatabaseService } from "../api/Services/Database/PlaylistVo
 import { UserDatabaseService } from "../api/Services/Database/UserDatabaseService";
 import { PartyHistoryDatabaseService } from "../api/Services/Database/PartyHistoryDatabaseService";
 import { UserPermissionDatabaseService } from "../api/Services/Database/UserPermissionDatabaseService";
-import { PartyStateDatabaseService } from "../api/Services/Database/PartyStateDatabaseService";
 
 export const DatabaseLoader: MicroframeworkLoader = (settings: MicroframeworkSettings | undefined) => {
     if (settings) {
@@ -18,7 +17,6 @@ export const DatabaseLoader: MicroframeworkLoader = (settings: MicroframeworkSet
         Container.get(UserPermissionDatabaseService);
         Container.get(NewPartyDatabaseService);
         Container.get(PartyDatabaseService);
-        Container.get(PartyStateDatabaseService);
         Container.get(PartyHistoryDatabaseService);
         Container.get(PlaylistEntryDatabaseService);
         Container.get(PlaylistVoteDatabaseService);

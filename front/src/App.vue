@@ -4,8 +4,9 @@
     </transition>
 </template>
 
-<script lang="ts">
+<script>
     import Vue from 'vue';
+    import LogRocket from 'logrocket';
 
     const DEFAULT_TRANSITION = 'fade';
     export default Vue.extend({
@@ -13,6 +14,11 @@
         data: () => ({
             transitionName: DEFAULT_TRANSITION
         }),
+        mounted() {
+            if (localStorage.getItem('userId')) {
+                LogRocket.identify(localStorage.getItem('userId'));
+            }
+        },
         created() {
             this.$router.beforeEach((to, from, next) => {
                 let transitionName = to.meta.transitionName || from.meta.transitionName;

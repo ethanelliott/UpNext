@@ -7,5 +7,6 @@ export class PlaylistEntryDB {
     addedAt: number;
     partyId: string;
     spotifySongId: string;
-    votes: number;
+    UpVotes: number;
+    DownVotes: number;
 }
