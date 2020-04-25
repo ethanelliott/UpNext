@@ -3,7 +3,6 @@ import logger from "../../util/Log";
 import { EventEmitter } from "events";
 import { PartyDatabaseService } from "./Database/PartyDatabaseService";
 import { SpotifyService } from "./SpotifyService";
-import moment from "moment";
 import { env } from "../../env";
 import CurrentlyPlayingObject from "../Spotify/Types/CurrentlyPlayingObject";
 
@@ -13,32 +12,40 @@ export class SpotifyStateService {
     private static readonly CLOCK_CYCLE = 1500;
     public readonly spotifyEventEmitters: Map<string, SpotifyEventEmitter>;
     private readonly spotifyEventLoops: Map<string, NodeJS.Timeout>;
-    private readonly spotifyEventLoopStates: Map<string, StoredSpotifyState>;
+    public readonly spotifyEventLoopStates: Map<string, StoredSpotifyState>;
     private readonly spotifyEventLoopStateEndOfSong: Map<string, boolean>;
 
     constructor(
         private spotifyService: SpotifyService,
         private partyDatabaseService: PartyDatabaseService,
     ) {
+        this.spotifyEventEmitters = new Map<string, SpotifyEventEmitter>();
         this.spotifyEventLoops = new Map<string, NodeJS.Timeout>();
         this.spotifyEventLoopStates = new Map<string, StoredSpotifyState>();
         this.spotifyEventLoopStateEndOfSong = new Map<string, boolean>();
-        this.spotifyEventEmitters = new Map<string, SpotifyEventEmitter>();
         this.startSpotifyEventLoops();
     }
 
-    private startSpotifyEventLoops() {
+    public startSpotifyEventLoops() {
         logger.info(`[SPOTIFY] Starting Spotify Event Loops`);
         this.partyDatabaseService.getAllParties().forEach(party => {
             if (!this.spotifyEventEmitters.has(party.id)) {
                 this.spotifyEventEmitters.set(party.id, new SpotifyEventEmitter());
             }
             if (!this.spotifyEventLoops.has(party.id)) {
-                this.spotifyEventLoopStates.set(party.id, {state: SpotifyState.NOTHING, spotifyState: null});
+                this.spotifyEventLoopStates.set(party.id, {state: SpotifyState.FIRST_RUN, spotifyState: null});
                 this.spotifyEventLoopStateEndOfSong.set(party.id, false);
                 this.spotifyEventLoops.set(party.id, setInterval(this.spotifyEventLoop(party.id), SpotifyStateService.CLOCK_CYCLE));
             }
         });
+    }
+
+    public stopSpotifyStateForParty(partyId: string) {
+        clearInterval(this.spotifyEventLoops.get(partyId));
+        this.spotifyEventLoopStateEndOfSong.delete(partyId);
+        this.spotifyEventLoops.delete(partyId);
+        this.spotifyEventEmitters.delete(partyId);
+        this.spotifyEventLoopStates.delete(partyId);
     }
 
     private spotifyEventLoop(partyId: string): () => Promise<void> {
@@ -50,8 +57,19 @@ export class SpotifyStateService {
             const hasTriggeredEndOfSong = this.spotifyEventLoopStateEndOfSong.get(partyId);
             let nextState: SpotifyState;
             if (storedState) {
-                // logger.info(`[SUP] LOOP ${partyId} ${SpotifyState[storedState.state]}`);
                 switch (storedState.state) {
+                    case SpotifyState.FIRST_RUN:
+                        this.spotifyEventEmitters.get(partyId).emit(SpotifyStateEvents.UPDATE_FIRST_RUN.toString(), spotifyPlayState);
+                        this.spotifyEventLoopStateEndOfSong.set(partyId, false);
+                        nextState = SpotifyState.NOTHING;
+                        if (spotifyPlayState && spotifyPlayState.item) {
+                            if (spotifyPlayState.is_playing) {
+                                nextState = SpotifyState.PLAYING;
+                            } else {
+                                nextState = SpotifyState.PAUSED;
+                            }
+                        }
+                        break;
                     case SpotifyState.PLAYING:
                         nextState = SpotifyState.PLAYING;
                         if (spotifyPlayState && spotifyPlayState.item) {
@@ -119,20 +137,21 @@ export class SpotifyStateService {
             if (nextState !== storedState.state) {
                 switch (nextState) {
                     case SpotifyState.PLAYING:
-                        this.spotifyEventEmitters.get(partyId).emit(SpotifyStateEvents.UPDATE_PLAYING.toString());
+                        this.spotifyEventEmitters.get(partyId).emit(SpotifyStateEvents.UPDATE_PLAYING.toString(), spotifyPlayState);
                         break;
                     case SpotifyState.PAUSED:
-                        this.spotifyEventEmitters.get(partyId).emit(SpotifyStateEvents.UPDATE_PAUSED.toString());
+                        this.spotifyEventEmitters.get(partyId).emit(SpotifyStateEvents.UPDATE_PAUSED.toString(), spotifyPlayState);
                         break;
                     case SpotifyState.SCRUBBING:
-                        this.spotifyEventEmitters.get(partyId).emit(SpotifyStateEvents.UPDATE_SCRUBBING.toString());
+                        this.spotifyEventEmitters.get(partyId).emit(SpotifyStateEvents.UPDATE_SCRUBBING.toString(), spotifyPlayState);
                         break;
                     case SpotifyState.SONG_CHANGED:
-                        this.spotifyEventEmitters.get(partyId).emit(SpotifyStateEvents.UPDATE_SONG_CHANGE.toString());
+                        this.spotifyEventEmitters.get(partyId).emit(SpotifyStateEvents.UPDATE_SONG_CHANGE.toString(), spotifyPlayState);
                         break;
                 }
             }
-
+            // emit an update event on every update with the play state
+            this.spotifyEventEmitters.get(partyId).emit(SpotifyStateEvents.UPDATE.toString(), spotifyPlayState);
             this.spotifyEventLoopStates.set(partyId, {
                 state: nextState,
                 spotifyState: spotifyPlayState
@@ -142,17 +161,16 @@ export class SpotifyStateService {
 
     private checkForValidToken(partyId: string) {
         return () => {
+            logger.info(`[SPOTIFY] Updating token on ${partyId}`);
             const party = this.partyDatabaseService.getPartyById(partyId);
-            let now = moment().valueOf();
             this.spotifyService.getSpotifyAPI().auth
                 .refreshAuthToken(env.app.spotify.clientId, env.app.spotify.clientSecret, party.spotifyRefreshToken)
                 .then(refreshTokenData => {
-                    this.partyDatabaseService.refreshPartyToken(party.id, refreshTokenData.access_token, refreshTokenData.expires_in);
+                    this.partyDatabaseService.refreshPartyToken(partyId, refreshTokenData.access_token, refreshTokenData.expires_in);
+                    setTimeout(this.checkForValidToken(partyId), refreshTokenData.expires_in * 1000);
                 });
-            setTimeout(this.checkForValidToken(partyId), party.spotifyTokenExpire - now - (60000 * 5));
         };
     }
-
 }
 
 class SpotifyEventEmitter extends EventEmitter {
@@ -164,6 +182,7 @@ class StoredSpotifyState {
 }
 
 enum SpotifyState {
+    FIRST_RUN,
     NOTHING,
     PLAYING,
     PAUSED,
@@ -172,6 +191,8 @@ enum SpotifyState {
 }
 
 export enum SpotifyStateEvents {
+    UPDATE_FIRST_RUN,
+    UPDATE,
     UPDATE_PLAYING,
     UPDATE_PAUSED,
     UPDATE_SCRUBBING,

@@ -17,7 +17,7 @@ import { PartyService } from "../Services/PartyService";
 export class StateController {
     constructor(
         private authenticationService: AuthenticationService,
-        private partyService: PartyService
+        private partyActionWrapperService: PartyService
     ) {
     }
 
@@ -27,8 +27,8 @@ export class StateController {
     public async getState(@ConnectedSocket() socket: Socket, @MessageBody() message: SocketMessage<any>) {
         const tokenData = await this.authenticationService.authenticate(message.token);
         return {
-            party: this.partyService.getPartyFromId(tokenData.partyId),
-            playstate: this.partyService.getPartyState(tokenData.partyId)
+            party: this.partyActionWrapperService.getPartyFromId(tokenData.partyId),
+            // playstate: this.partyActionWrapperService.getPartyState(tokenData.partyId)
         };
     }
 

@@ -15,6 +15,8 @@ import { PartyJoinToken } from "../Types/general/PartyJoinToken";
 import { UserPermissionEnum } from "../Types/Enums/UserPermissionEnum";
 import { PlaylistEntryDatabaseService } from "./Database/PlaylistEntryDatabaseService";
 import { PlaylistEntryDB } from "../Types/DatabaseMaps/PlaylistEntryDB";
+import { UpNextService } from "./UpNextService";
+import { SpotifyStateService } from "./SpotifyStateService";
 
 @Service()
 export class PartyService {
@@ -23,17 +25,14 @@ export class PartyService {
         private uuidService: UUIDService,
         private newPartyService: NewPartyService,
         private spotifyService: SpotifyService,
-        // private upNextService: SpotifyStateService,
+        private spotifyStateService: SpotifyStateService,
         private userDatabaseService: UserDatabaseService,
         private partyDatabaseService: PartyDatabaseService,
         private partyHistoryDatabaseService: PartyHistoryDatabaseService,
         private playlistEntryDatabaseService: PlaylistEntryDatabaseService,
+        private upNextService: UpNextService,
     ) {
 
-    }
-
-    public removeNewPartyEntry(partyId: string): void {
-        this.newPartyService.remove(partyId);
     }
 
     public async newParty(state: SpotifyOAuthState, code: string): Promise<any> {
@@ -42,10 +41,10 @@ export class PartyService {
         const userData = await this.spotifyService.getSpotifyAPI().users.getCurrent(callbackData.access_token);
         if (userData.product !== 'premium') {
             // must be premium to play songs
-            return {token: 'error'};
+            return {token: null, error: 'Must have premium spotify!'};
         }
         const playlistData = await this.spotifyService.getSpotifyAPI().playlist.create(callbackData.access_token, userData.id, {
-            name: `${state.partyName}🎵`,
+            name: `${state.partyName} 🎵`,
             description: `${state.partyName} archive, brought to you by UpNext.cool`,
             public: true,
             collaborative: false
@@ -62,19 +61,31 @@ export class PartyService {
             .withPlaylistId(playlistData.id)
             .build();
         // remove parties that the user already has running
-        // this.upNextService.stopPartyBySpotifyUserId(userData.id);
-        this.partyDatabaseService.removePartyBySpotifyUserId(userData.id);
+        // this needs to be watched for FK constraint violation
+        this.removePartyBySpotifyUserId(userData.id);
         // create all the new party data
         this.partyDatabaseService.insertParty(party);
-        // start the event loop
-        // this.upNextService.startPartyEventLoop();
+    }
+
+    public removePartyBySpotifyUserId(userId: string): void {
+        const p = this.partyDatabaseService.getPartyBySpotifyUserId(userId);
+        if (p) {
+            const partyId = p.id;
+            this.removePartyByPartyId(partyId);
+        }
     }
 
     public removePartyByPartyId(partyId: string): void {
-        // this.upNextService.stopPartyByPartyId(partyId);
+        this.upNextService.stopPartyByPartyId(partyId);
+        this.spotifyStateService.stopSpotifyStateForParty(partyId);
         this.partyHistoryDatabaseService.removeHistoryForParty(partyId);
         this.userDatabaseService.removeAllUsersWithPartyId(partyId);
         this.partyDatabaseService.removePartyByPartyId(partyId);
+    }
+
+
+    public removeNewPartyEntry(partyId: string): void {
+        this.newPartyService.remove(partyId);
     }
 
     public async joinParty(token: PartyJoinToken): Promise<string> {
@@ -143,7 +154,11 @@ export class PartyService {
         return this.userDatabaseService.getUserById(userId);
     }
 
-    public getPartyState(partyId: string) {
-        return null;
+    public getAllParties(): Array<PartyDB> {
+        return this.partyDatabaseService.getAllParties();
+    }
+
+    public getPartyById(partyId: string): PartyDB {
+        return this.partyDatabaseService.getPartyById(partyId);
     }
 }

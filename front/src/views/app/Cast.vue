@@ -198,17 +198,17 @@
                 this.addedBy = data.playstate.addedBy;
                 this.code = data.party.code;
                 this.partyName = data.party.name
-                let lv = data.playstate.colourLightVibrant;
-                let v = data.playstate.colourVibrant;
-                let dv = data.playstate.colourDarkVibrant;
-                let lm = data.playstate.colourLightVibrant;
+                let lv = data.playstate.colours.lightVibrant;
+                let v = data.playstate.colours.vibrant;
+                let dv = data.playstate.colours.darkVibrant;
+                let lm = data.playstate.colours.lightVibrant;
                 this.backgroundString = `background-image: linear-gradient(#${lv}ff 0%, rgba(0,0,0,1) 100%);`;
                 this.progressColour = `#${v}`;
                 this.qrBack = encodeURI(`${lm}`);
                 this.qrFront = encodeURI(`${dv}`);
                 this.songProgress = data.playstate.progress / data.playstate.duration * 100
                 clearInterval(this.songProgressLoopTrack);
-                if (data.playstate.state === 0) {
+                if (data.playstate.isPlaying) {
                     const finishTime = moment().add((data.playstate.duration - data.playstate.progress), 'milliseconds').valueOf();
                     this.songProgressLoopTrack = setInterval(() => {
                         const progress = (1 - ((finishTime - moment().valueOf()) / data.playstate.duration)) * 100;
@@ -228,17 +228,17 @@
                 this.addedBy = data.playstate.addedBy;
                 this.code = data.party.code;
                 this.partyName = data.party.name
-                let lv = data.playstate.colourLightVibrant;
-                let v = data.playstate.colourVibrant;
-                let dv = data.playstate.colourDarkVibrant;
-                let lm = data.playstate.colourLightVibrant;
+                let lv = data.playstate.colours.lightVibrant;
+                let v = data.playstate.colours.vibrant;
+                let dv = data.playstate.colours.darkVibrant;
+                let lm = data.playstate.colours.lightVibrant;
                 this.backgroundString = `background-image: linear-gradient(#${lv}ff 0%, rgba(0,0,0,1) 100%);`;
                 this.progressColour = `#${v}`;
                 this.qrBack = encodeURI(`${lm}`);
                 this.qrFront = encodeURI(`${dv}`);
                 this.songProgress = data.playstate.progress / data.playstate.duration * 100
                 clearInterval(this.songProgressLoopTrack);
-                if (data.playstate.state === 0) {
+                if (data.playstate.isPlaying) {
                     const finishTime = moment().add((data.playstate.duration - data.playstate.progress), 'milliseconds').valueOf();
                     this.songProgressLoopTrack = setInterval(() => {
                         const progress = (1 - ((finishTime - moment().valueOf()) / data.playstate.duration)) * 100;

@@ -414,21 +414,19 @@
             });
             this.socket.on('party-state', (data) => {
                 this.isLoading = false;
-                console.table(data.playstate);
                 this.trackName = data.playstate.trackName;
                 this.albumArtwork = data.playstate.albumArtwork;
                 this.artistName = data.playstate.artistName;
                 this.trackId = data.playstate.trackId;
                 this.code = data.party.code;
                 this.addedBy = data.playstate.addedBy;
-                let lv = data.playstate.colourLightVibrant;
+                let lv = data.playstate.colours.lightVibrant;
                 this.backgroundString = `background-image: linear-gradient(#${lv}ff 0%, rgba(0,0,0,1) 100%);`;
             });
             this.socket.on('playlist-state', (data) => {
                 this.playlist = data.playlist;
             });
             this.socket.on('state-change', (data) => {
-                console.table(data.playstate);
                 this.isLoading = false;
                 this.trackName = data.playstate.trackName;
                 this.albumArtwork = data.playstate.albumArtwork;
@@ -436,7 +434,7 @@
                 this.trackId = data.playstate.trackId;
                 this.code = data.party.code;
                 this.addedBy = data.playstate.addedBy;
-                let lv = data.playstate.colourLightVibrant;
+                let lv = data.playstate.colours.lightVibrant;
                 this.backgroundString = `background-image: linear-gradient(#${lv}ff 0%, rgba(0,0,0,1) 100%);`;
             });
             this.socket.on('playlist-update', (data) => {

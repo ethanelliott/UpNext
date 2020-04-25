@@ -2,15 +2,15 @@ import 'reflect-metadata';
 import { EmitOnSuccess, MessageBody, OnMessage, SocketController } from "socket-controllers";
 import SocketMessage from "../Types/general/SocketMessage";
 import { AuthenticationService } from "../Services/AuthenticationService";
-import { PartyService } from "../Services/PartyService";
 import { playlistSort } from "../Services/UpNextService";
+import { PartyService } from "../Services/PartyService";
 
 
 @SocketController()
 export class PlaylistController {
     constructor(
         private authenticationService: AuthenticationService,
-        private partyService: PartyService
+        private partyActionWrapperService: PartyService,
     ) {
     }
 
@@ -18,8 +18,8 @@ export class PlaylistController {
     @EmitOnSuccess("playlist-state")
     public async getPlaylistState(@MessageBody() message: SocketMessage<any>) {
         const tokenData = await this.authenticationService.authenticate(message.token);
-        const playlist = this.partyService.getPlaylistForPartyId(tokenData.partyId).map(e => {
-            e.addedBy = this.partyService.getUserById(e.addedBy).nickname;
+        const playlist = this.partyActionWrapperService.getPlaylistForPartyId(tokenData.partyId).map(e => {
+            e.addedBy = this.partyActionWrapperService.getUserById(e.addedBy).nickname;
             return e;
         }).sort(playlistSort);
         return {playlist};
@@ -27,15 +27,15 @@ export class PlaylistController {
 
     @OnMessage("playlist-upvote-song")
     public async upvoteSong(@MessageBody() message: SocketMessage<any>) {
-        const tokenData = await this.authenticationService.authenticate(message.token);
-        this.partyService.upvoteSong(tokenData.partyId, tokenData.userId, message.data.playlistEntryId);
+        // const tokenData = await this.authenticationService.authenticate(message.token);
+        // this.partyService.upvoteSong(tokenData.partyId, tokenData.userId, message.data.playlistEntryId);
     }
 
 
     @OnMessage("playlist-downvote-song")
     public async downvoteSong(@MessageBody() message: SocketMessage<any>) {
-        const tokenData = await this.authenticationService.authenticate(message.token);
-        this.partyService.downvoteSong(tokenData.partyId, tokenData.userId, message.data.playlistEntryId);
+        // const tokenData = await this.authenticationService.authenticate(message.token);
+        // this.partyService.downvoteSong(tokenData.partyId, tokenData.userId, message.data.playlistEntryId);
     }
 
     @OnMessage("playlist-clear")
@@ -60,6 +60,6 @@ export class PlaylistController {
     public async addSongToPlaylist(@MessageBody() message: SocketMessage<any>) {
         const tokenData = await this.authenticationService.authenticate(message.token);
         console.log('playlist-add-song', tokenData, message);
-        this.partyService.addSongToPlaylist(tokenData.partyId, tokenData.userId, message.data.songId);
+        // this.partyService.addSongToPlaylist(tokenData.partyId, tokenData.userId, message.data.songId);
     }
 }
