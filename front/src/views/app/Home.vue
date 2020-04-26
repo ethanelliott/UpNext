@@ -178,7 +178,7 @@
                 </v-row>
             </v-col>
         </v-container>
-        <v-container class="ma-0 pa-0 mb-12" fluid v-else>
+        <v-container class="ma-0 pa-0 mb-12 fill-height" fluid v-else>
             <v-row class="ma-0 pa-0">
                 <v-col align="center" class="ma-0 pa-0" justify="center">
                     <v-card color="transparent" flat max-width="600">
@@ -413,31 +413,47 @@
                 this.isAdmin = data.admin;
             });
             this.socket.on('party-state', (data) => {
+                console.log(data);
                 this.isLoading = false;
-                console.table(data.playstate);
-                this.trackName = data.playstate.trackName;
-                this.albumArtwork = data.playstate.albumArtwork;
-                this.artistName = data.playstate.artistName;
-                this.trackId = data.playstate.trackId;
-                this.code = data.party.code;
-                this.addedBy = data.playstate.addedBy;
-                let lv = data.playstate.colourLightVibrant;
-                this.backgroundString = `background-image: linear-gradient(#${lv}ff 0%, rgba(0,0,0,1) 100%);`;
+                if (data.playstate) {
+                    this.hasState = true;
+                    this.trackName = data.playstate.trackName;
+                    this.albumArtwork = data.playstate.albumArtwork;
+                    this.artistName = data.playstate.artistName;
+                    this.trackId = data.playstate.trackId;
+                    this.addedBy = data.playstate.addedBy;
+                    let lv = data.playstate.colours.lightVibrant;
+                    this.backgroundString = `background-image: linear-gradient(#${lv}ff 0%, rgba(0,0,0,1) 100%);`;
+                } else {
+                    this.hasState = false;
+                    this.backgroundString = `background-image: linear-gradient(#000000ff 0%, rgba(0,0,0,1) 100%);`;
+                }
+                if (data.party) {
+                    this.code = data.party.code;
+                }
             });
             this.socket.on('playlist-state', (data) => {
                 this.playlist = data.playlist;
             });
             this.socket.on('state-change', (data) => {
-                console.table(data.playstate);
+                console.log(data);
                 this.isLoading = false;
-                this.trackName = data.playstate.trackName;
-                this.albumArtwork = data.playstate.albumArtwork;
-                this.artistName = data.playstate.artistName;
-                this.trackId = data.playstate.trackId;
-                this.code = data.party.code;
-                this.addedBy = data.playstate.addedBy;
-                let lv = data.playstate.colourLightVibrant;
-                this.backgroundString = `background-image: linear-gradient(#${lv}ff 0%, rgba(0,0,0,1) 100%);`;
+                if (data.playstate) {
+                    this.hasState = true;
+                    this.trackName = data.playstate.trackName;
+                    this.albumArtwork = data.playstate.albumArtwork;
+                    this.artistName = data.playstate.artistName;
+                    this.trackId = data.playstate.trackId;
+                    this.addedBy = data.playstate.addedBy;
+                    let lv = data.playstate.colours.lightVibrant;
+                    this.backgroundString = `background-image: linear-gradient(#${lv}ff 0%, rgba(0,0,0,1) 100%);`;
+                } else {
+                    this.hasState = false;
+                    this.backgroundString = `background-image: linear-gradient(#000000ff 0%, rgba(0,0,0,1) 100%);`;
+                }
+                if (data.party) {
+                    this.code = data.party.code;
+                }
             });
             this.socket.on('playlist-update', (data) => {
                 this.playlist = data.playlist;

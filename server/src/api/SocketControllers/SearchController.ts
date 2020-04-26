@@ -8,7 +8,7 @@ import { PartyService } from "../Services/PartyService";
 export class SearchController {
     constructor(
         private authenticationService: AuthenticationService,
-        private partyService: PartyService
+        private partyActionWrapperService: PartyService
     ) {
     }
 
@@ -17,6 +17,6 @@ export class SearchController {
     @EmitOnFail("search-fail")
     public async search(@MessageBody() message: SocketMessage<any>) {
         const tokenData = await this.authenticationService.authenticate(message.token);
-        return await this.partyService.search(tokenData.partyId, message.data.query);
+        return await this.partyActionWrapperService.search(tokenData.partyId, message.data.query);
     }
 }

@@ -3,30 +3,28 @@ import { EmitOnSuccess, MessageBody, OnMessage, SocketController } from "socket-
 import SocketMessage from "../Types/general/SocketMessage";
 import { AuthenticationService } from "../Services/AuthenticationService";
 import { PartyService } from "../Services/PartyService";
-import { playlistSort } from "../Services/UpNextService";
 
 
 @SocketController()
 export class PlaylistController {
     constructor(
         private authenticationService: AuthenticationService,
-        private partyService: PartyService
+        private partyService: PartyService,
     ) {
     }
 
     @OnMessage("playlist-state")
     @EmitOnSuccess("playlist-state")
     public async getPlaylistState(@MessageBody() message: SocketMessage<any>) {
+        console.log('playlist-state');
         const tokenData = await this.authenticationService.authenticate(message.token);
-        const playlist = this.partyService.getPlaylistForPartyId(tokenData.partyId).map(e => {
-            e.addedBy = this.partyService.getUserById(e.addedBy).nickname;
-            return e;
-        }).sort(playlistSort);
+        const playlist = this.partyService.getPlaylistForPartyId(tokenData.partyId);
         return {playlist};
     }
 
     @OnMessage("playlist-upvote-song")
     public async upvoteSong(@MessageBody() message: SocketMessage<any>) {
+        console.log('playlist-upvote-song');
         const tokenData = await this.authenticationService.authenticate(message.token);
         this.partyService.upvoteSong(tokenData.partyId, tokenData.userId, message.data.playlistEntryId);
     }
@@ -34,6 +32,7 @@ export class PlaylistController {
 
     @OnMessage("playlist-downvote-song")
     public async downvoteSong(@MessageBody() message: SocketMessage<any>) {
+        console.log('playlist-downvote-song');
         const tokenData = await this.authenticationService.authenticate(message.token);
         this.partyService.downvoteSong(tokenData.partyId, tokenData.userId, message.data.playlistEntryId);
     }
@@ -58,8 +57,8 @@ export class PlaylistController {
 
     @OnMessage("playlist-add-song")
     public async addSongToPlaylist(@MessageBody() message: SocketMessage<any>) {
+        console.log('playlist-add-song');
         const tokenData = await this.authenticationService.authenticate(message.token);
-        console.log('playlist-add-song', tokenData, message);
-        this.partyService.addSongToPlaylist(tokenData.partyId, tokenData.userId, message.data.songId);
+        await this.partyService.addSongToPlaylist(tokenData.partyId, tokenData.userId, message.data.songId);
     }
 }

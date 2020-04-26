@@ -6,13 +6,11 @@ import { SpotifyService } from "./SpotifyService";
 import { env } from "../../env";
 import AuthAPI from "../Spotify/apis/AuthAPI";
 import { SpotifyOAuthState } from "../Types/general/SpotifyOAuthState";
-import { PartyService } from "./PartyService";
 import { PartyJoinToken } from "../Types/general/PartyJoinToken";
+import { PartyService } from "./PartyService";
 
 @Service()
 export class SpotifyOAuthService {
-
-
     constructor(
         private uuidService: UUIDService,
         private webTokenService: WebTokenService,
@@ -20,20 +18,13 @@ export class SpotifyOAuthService {
         private spotifyService: SpotifyService,
         private partyService: PartyService,
     ) {
-
     }
 
     public start(partyName: string, nickName: string): string {
         const partyId = this.uuidService.new();
-        const state = this.webTokenService.generateFrom({
-            partyName,
-            nickName,
-            partyId
-        }, '10m');
+        const state = this.webTokenService.generateFrom({partyName, nickName, partyId}, '10m');
         this.newPartyService.create(partyId, state);
-        return this.spotifyService
-            .getSpotifyAPI()
-            .auth
+        return this.spotifyService.getSpotifyAPI().auth
             .getAuthStartURL(env.app.spotify.clientId, env.app.spotify.redirectURI, AuthAPI.ALL_SCOPE, state);
     }
 
@@ -58,7 +49,6 @@ export class SpotifyOAuthService {
             return {token: userJoinToken};
 
         } else {
-            // invalid token or already setup
             return {token: 'error'};
         }
     }

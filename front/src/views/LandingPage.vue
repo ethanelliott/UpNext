@@ -76,12 +76,12 @@
         </v-content>
         <v-footer class="ma-0 pa-0" color="transparent" height="300">
             <v-btn block class="ma-0 elevation-0" color="primary" height="150" tile to="/join" x-large>
-                <h1 class="heading font-weight-thin">
+                <h1 class="heading font-weight-regular">
                     Join a Party
                 </h1>
             </v-btn>
             <v-btn block class="ma-0 elevation-0 darken-3" color="primary" height="150" tile to="/start" x-large>
-                <h1 class="heading font-weight-thin">
+                <h1 class="heading font-weight-regular">
                     Start a Party
                 </h1>
             </v-btn>

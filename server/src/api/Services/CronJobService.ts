@@ -22,7 +22,6 @@ export class CronJobService {
             logger.debug(`[CRON] Running job: ${cronJobId}`);
             cronJob.method();
         });
-
     }
 }
 

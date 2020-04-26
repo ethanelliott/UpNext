@@ -113,21 +113,20 @@
                 });
             },
             updateContent() {
-                let t = this;
-                axios.post('/party/featured', {token: this.token})
-                    .then(res => {
-                        t.motd = res.data.featured.message;
-                        t.topPlaylists = res.data.featured.playlists.items.slice(0, 5);
-                        window.scrollTo(0, 0);
-                    }).catch(err => {
-                    }
-                )
-                axios.post('/party/recommended', {token: this.token})
-                    .then(res => {
-                        t.recommended = res.data.recommended.tracks.slice(0, 5);
-                    }).catch(err => {
-                    }
-                )
+                // axios.post('/party/featured', {token: this.token})
+                //     .then(res => {
+                //         this.motd = res.data.featured.message;
+                //         this.topPlaylists = res.data.featured.playlists.items.slice(0, 5);
+                //         window.scrollTo(0, 0);
+                //     }).catch(err => {
+                //     }
+                // )
+                // axios.post('/party/recommended', {token: this.token})
+                //     .then(res => {
+                //         this.recommended = res.data.recommended.tracks.slice(0, 5);
+                //     }).catch(err => {
+                //     }
+                // )
             },
             goToSearch() {
                 this.$emit('search');
