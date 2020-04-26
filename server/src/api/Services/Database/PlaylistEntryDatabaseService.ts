@@ -2,6 +2,7 @@ import { Service } from "typedi";
 import { DatabaseService } from "./DatabaseService";
 import QueryFactory from "../../Factory/QueryFactory";
 import { PlaylistEntryDB } from "../../Types/DatabaseMaps/PlaylistEntryDB";
+import { playlistSort } from "../sorts";
 
 @Service()
 export class PlaylistEntryDatabaseService {
@@ -64,12 +65,16 @@ export class PlaylistEntryDatabaseService {
         });
     }
 
-    public getAllPlaylistEntriesForParty(partyId: string): Array<PlaylistEntryDB> {
+    public getEntriesForParty(partyId: string): Array<PlaylistEntryDB> {
         return this.databaseService.queryAll<PlaylistEntryDB>({
             from: this.tableName,
             select: ['*'],
             where: [{key: 'partyId', operator: '=', value: partyId}]
         });
+    }
+
+    public getAllPlaylistEntriesForParty(partyId: string): Array<PlaylistEntryDB> {
+        return this.getEntriesForParty(partyId).sort(playlistSort);
     }
 
     public getAllPlaylistEntriesByUser(userId: string): Array<PlaylistEntryDB> {

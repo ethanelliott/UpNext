@@ -1,7 +1,7 @@
 <template>
     <v-dialog fullscreen hide-overlay transition="dialog-bottom-transition" v-model="dialog">
         <template v-slot:activator="{ on }">
-            <v-btn color="primary" dark icon v-on="on">
+            <v-btn color="primary" dark icon v-on="on" x-large>
                 <v-icon>mdi-qrcode-scan</v-icon>
             </v-btn>
         </template>
@@ -67,7 +67,3 @@
         }
     }
 </script>
-
-<style scoped>
-
-</style>

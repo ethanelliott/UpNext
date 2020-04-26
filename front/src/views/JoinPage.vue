@@ -8,43 +8,56 @@
                     permanent
                     width="100%"
             >
-                <v-toolbar class="elevation-0" color="transparent" fixed>
-                    <v-btn icon to="/" x-large>
-                        <v-icon>mdi-arrow-left</v-icon>
-                    </v-btn>
-                    <v-spacer></v-spacer>
-                    <app-qr-scanner v-on:code="codeScan"></app-qr-scanner>
-                </v-toolbar>
-                <v-container class="fill-height ma-0 pa-0" fluid>
-                    <v-row align="start" class="ma-0 pa-0" justify="start">
-                        <v-col align="center" class="ma-0 pa-0" cols="12" justify="center" lg="6" md="8" sm="8">
-                            <v-icon color="primary" size="120">mdi-music-note-plus</v-icon>
-                            <p class="display-2 text-uppercase mb-10">
-                                <span class="font-weight-bold">Up</span>
-                                <span class="font-weight-light">Next</span>
-                            </p>
-                            <p class="my-10 subheading">Join a party!</p>
-                            <p class="mb-4 subheading error--text" v-if="error">Invalid Party Code!</p>
-                        </v-col>
-                    </v-row>
-                </v-container>
+                <template v-slot:prepend>
+                    <v-toolbar class="elevation-0" color="transparent" fixed>
+                        <v-btn icon to="/" x-large>
+                            <v-icon>mdi-arrow-left</v-icon>
+                        </v-btn>
+                        <v-spacer></v-spacer>
+                        <app-qr-scanner v-on:code="codeScan"></app-qr-scanner>
+                    </v-toolbar>
+                </template>
+                <template v-slot:default>
+                    <v-container class="fill-height ma-0 pa-0" fluid>
+                        <v-row align="center" class="ma-0 pa-0" justify="center">
+                            <v-col align="center" class="ma-0 pa-0" cols="12" justify="center" lg="6" md="8" sm="8">
+                                <v-icon color="primary" size="120">mdi-music-note-plus</v-icon>
+                                <p class="display-2 text-uppercase mb-10">
+                                    <span class="font-weight-bold">Up</span>
+                                    <span class="font-weight-light">Next</span>
+                                </p>
+                                <p class="my-10 subheading">Join a party!</p>
+                                <p class="mb-4 subheading error--text" v-if="error">Invalid Party Code!</p>
+                            </v-col>
+                        </v-row>
+                    </v-container>
+                </template>
                 <template v-slot:append>
                     <v-form @submit.prevent="null" ref="form" v-model="valid">
                         <v-container class="ma-0 pa-0" fluid>
                             <v-col class="ma-0 pa-0" cols="12">
-                                <v-row class="ma-0 pa-0 px-3">
-                                    <v-text-field :disabled="disableTextInput"
-                                                  :rules="[rules.required, rules.counter]"
-                                                  @input="formatForm"
-                                                  aria-autocomplete="none" autofocus class="ma-0"
-                                                  hint="" label="Party Code"
-                                                  maxlength="4" outlined v-model="partyCode"/>
+                                <v-row align="center" class="ma-0 pa-0 px-3" justify="center">
+                                    <v-col class="ma-0 pa-0" cols="12" lg="4">
+                                        <v-row align="center" class="ma-0 pa-0" justify="center">
+                                            <v-text-field :disabled="disableTextInput"
+                                                          :rules="[rules.required, rules.counter]"
+                                                          @input="formatForm"
+                                                          aria-autocomplete="none" autofocus class="ma-0"
+                                                          hint="" label="Party Code"
+                                                          maxlength="4" outlined v-model="partyCode"/>
+                                        </v-row>
+                                    </v-col>
                                 </v-row>
-                                <v-row class="ma-0 pa-0 px-3">
-                                    <v-text-field :disabled="disableTextInput" :rules="[rules.required, rules.nick]"
-                                                  @input="formatForm"
-                                                  aria-autocomplete="none" class="ma-0" hint=""
-                                                  label="Nickname" outlined v-model="nickname"/>
+                                <v-row align="center" class="ma-0 pa-0 px-3" justify="center">
+                                    <v-col class="ma-0 pa-0" cols="12" lg="4">
+                                        <v-row align="center" class="ma-0 pa-0" justify="center">
+                                            <v-text-field :disabled="disableTextInput"
+                                                          :rules="[rules.required, rules.nick]"
+                                                          @input="formatForm"
+                                                          aria-autocomplete="none" class="ma-0" hint=""
+                                                          label="Nickname" outlined v-model="nickname"/>
+                                        </v-row>
+                                    </v-col>
                                 </v-row>
                                 <v-row class="ma-0 pa-0 ma-0">
                                     <v-btn :disabled="!isFormValid" :loading="isLoadingButton"

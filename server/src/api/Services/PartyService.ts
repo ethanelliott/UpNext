@@ -15,7 +15,7 @@ import { PartyJoinToken } from "../Types/general/PartyJoinToken";
 import { UserPermissionEnum } from "../Types/Enums/UserPermissionEnum";
 import { PlaylistEntryDatabaseService } from "./Database/PlaylistEntryDatabaseService";
 import { PlaylistEntryDB } from "../Types/DatabaseMaps/PlaylistEntryDB";
-import { playlistSort, UpNextService } from "./UpNextService";
+import { UpNextService } from "./UpNextService";
 import { SpotifyStateService } from "./SpotifyStateService";
 import { PlaylistVoteDatabaseService } from "./Database/PlaylistVoteDatabaseService";
 import { PlaylistVoteEnum } from "../Types/Enums/PlaylistVoteEnum";
@@ -66,6 +66,8 @@ export class PartyService {
             .build();
         this.removePartyBySpotifyUserId(userData.id);
         this.partyDatabaseService.insertParty(party);
+        this.spotifyStateService.startSpotifyEventLoops();
+        await this.upNextService.startParties();
     }
 
     public removePartyBySpotifyUserId(userId: string): void {
@@ -129,7 +131,7 @@ export class PartyService {
         return this.playlistEntryDatabaseService.getAllPlaylistEntriesForParty(partyId).map(e => {
             e.addedBy = this.getUserById(e.addedBy).nickname;
             return e;
-        }).sort(playlistSort);
+        });
     }
 
     public upvoteSong(partyId: string, userId: string, playlistEntryId: string): void {
