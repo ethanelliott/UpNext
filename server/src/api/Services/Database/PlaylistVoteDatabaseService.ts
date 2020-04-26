@@ -2,6 +2,7 @@ import { Service } from "typedi";
 import { DatabaseService } from "./DatabaseService";
 import QueryFactory from "../../Factory/QueryFactory";
 import { PlaylistVotesDB } from "../../Types/DatabaseMaps/PlaylistVotesDB";
+import { PlaylistVoteEnum } from "../../Types/Enums/PlaylistVoteEnum";
 
 @Service()
 export class PlaylistVoteDatabaseService {
@@ -25,6 +26,17 @@ export class PlaylistVoteDatabaseService {
         });
     }
 
+    public updateVote(playlistEntryId: string, userId: string, type: PlaylistVoteEnum): void {
+        this.databaseService.update({
+            update: this.tableName,
+            set: {type},
+            where: [
+                {key: 'userId', operator: '=', value: userId},
+                {key: 'playlistEntryId', operator: '=', value: playlistEntryId}
+            ]
+        });
+    }
+
     public deleteVotesForEntry(playlistEntryId: string): void {
         this.databaseService.delete({
             from: this.tableName,
@@ -45,6 +57,17 @@ export class PlaylistVoteDatabaseService {
             from: this.tableName,
             select: ['*'],
             where: [{key: 'userId', operator: '=', value: userId}]
+        });
+    }
+
+    public getVotesForUserOnEntry(userId: string, playlistEntryId: string): Array<PlaylistVotesDB> {
+        return this.databaseService.queryAll<PlaylistVotesDB>({
+            from: this.tableName,
+            select: ['*'],
+            where: [
+                {key: 'userId', operator: '=', value: userId},
+                {key: 'playlistEntryId', operator: '=', value: playlistEntryId}
+            ]
         });
     }
 
@@ -72,5 +95,14 @@ export class PlaylistVoteDatabaseService {
                 {name: 'type', type: 'INTEGER'}
             ]
         })).run();
+    }
+
+    public deleteVotesForUser(userId: string) {
+        this.databaseService.delete({
+            from: this.tableName,
+            where: [
+                {key: 'userId', operator: '=', value: userId}
+            ]
+        });
     }
 }

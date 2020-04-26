@@ -35,11 +35,10 @@ export class PlaylistEntryDatabaseService {
     public removePlaylistEntryBySongId(partyId: string, spotifySongId: string): void {
         this.databaseService.delete({
             from: this.tableName,
-            where: [{key: 'partyId', operator: '=', value: partyId}, {
-                key: 'spotifySongId',
-                operator: '=',
-                value: spotifySongId
-            }]
+            where: [
+                {key: 'partyId', operator: '=', value: partyId},
+                {key: 'spotifySongId', operator: '=', value: spotifySongId}
+            ]
         });
     }
 
@@ -79,6 +78,18 @@ export class PlaylistEntryDatabaseService {
             select: ['*'],
             where: [{key: 'addedBy', operator: '=', value: userId}]
         });
+    }
+
+    public doesEntryExist(partyId: string, spotifySongId: string): boolean {
+        const playlist = this.databaseService.queryAll<PlaylistEntryDB>({
+            from: this.tableName,
+            select: ['*'],
+            where: [
+                {key: 'partyId', operator: '=', value: partyId},
+                {key: 'spotifySongId', operator: '=', value: spotifySongId}
+            ]
+        });
+        return playlist.length === 1;
     }
 
     public addUpVote(playlistEntryId: string) {

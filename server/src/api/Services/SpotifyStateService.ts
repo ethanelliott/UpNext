@@ -9,7 +9,7 @@ import CurrentlyPlayingObject from "../Spotify/Types/CurrentlyPlayingObject";
 @Service()
 export class SpotifyStateService {
 
-    private static readonly CLOCK_CYCLE = 1500;
+    private static readonly CLOCK_CYCLE = 1000;
     public readonly spotifyEventEmitters: Map<string, SpotifyEventEmitter>;
     private readonly spotifyEventLoops: Map<string, NodeJS.Timeout>;
     public readonly spotifyEventLoopStates: Map<string, StoredSpotifyState>;
@@ -52,7 +52,7 @@ export class SpotifyStateService {
         this.checkForValidToken(partyId)();
         return async () => {
             const party = this.partyDatabaseService.getPartyById(partyId);
-            const spotifyPlayState = await this.spotifyService.getSpotifyAPI().player.getPlayingContext(party.spotifyToken);
+            let spotifyPlayState = await this.spotifyService.getSpotifyAPI().player.getPlayingContext(party.spotifyToken);
             const storedState = this.spotifyEventLoopStates.get(partyId);
             const hasTriggeredEndOfSong = this.spotifyEventLoopStateEndOfSong.get(partyId);
             let nextState: SpotifyState;
@@ -126,6 +126,8 @@ export class SpotifyStateService {
                             } else {
                                 nextState = SpotifyState.PAUSED;
                             }
+                        } else {
+                            spotifyPlayState = null;
                         }
                         break;
                 }

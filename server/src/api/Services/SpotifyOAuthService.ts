@@ -49,7 +49,6 @@ export class SpotifyOAuthService {
             return {token: userJoinToken};
 
         } else {
-            // invalid token or already setup
             return {token: 'error'};
         }
     }

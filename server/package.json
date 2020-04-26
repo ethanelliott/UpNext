@@ -9,9 +9,10 @@
     "serve": "node ./dist/app.js",
     "watch-ts": "tsc -w",
     "watch-node": "nodemon ./dist/app.js",
-    "dev": "concurrently \"npm:watch-ts\" \"npm:watch-node\"\n",
+    "dev": "concurrently \"npm:watch-ts\" \"npm:watch-pack\"\n",
     "generate-secret": "openssl ecparam -name prime256v1 -genkey -noout -out ./key.pem",
-    "watch-pack": "webpack --watch"
+    "watch-pack": "webpack --watch",
+    "serve-pack": "nodemon ./pack/server.js"
   },
   "engines": {
     "node": ">=8.0.0"

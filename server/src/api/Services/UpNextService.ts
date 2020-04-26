@@ -8,6 +8,11 @@ import { PartyEvent } from "../Factory/PartyEventEmitterBuilder";
 import CurrentlyPlayingObject from "../Spotify/Types/CurrentlyPlayingObject";
 import { ColourService } from "./ColourService";
 import { PartyDatabaseService } from "./Database/PartyDatabaseService";
+import { PlaylistEntryDatabaseService } from "./Database/PlaylistEntryDatabaseService";
+import { PartyHistoryDatabaseService } from "./Database/PartyHistoryDatabaseService";
+import moment from "moment";
+import SpotifyAPI from "../Spotify/SpotifyAPI";
+import { PlaylistVoteDatabaseService } from "./Database/PlaylistVoteDatabaseService";
 
 @Service()
 export class UpNextService {
@@ -19,6 +24,10 @@ export class UpNextService {
         private eventEmitterService: EventEmitterService,
         private colourService: ColourService,
         private partyDatabaseService: PartyDatabaseService,
+        private spotifyAPI: SpotifyAPI,
+        private partyHistoryDatabaseService: PartyHistoryDatabaseService,
+        private playlistVoteDatabaseService: PlaylistVoteDatabaseService,
+        private playlistEntryDatabaseService: PlaylistEntryDatabaseService,
     ) {
         this.upNextPartyData = new Map<string, UpNextPartyState>();
         this.startParties();
@@ -50,13 +59,29 @@ export class UpNextService {
             this.updatePartyStateData(partyId, playStateData);
         });
         eventEmitter.on(SpotifyStateEvents.UPDATE_END_OF_SONG.toString(), (playStateData) => {
-                console.log(`END OF SONG`);
-                // this one is where most of the upnext logic will come in place
-                // - get and remove the next song from the queue
-                // - add that song to the play history with the data
-                // - add the song to the queue to play next
+            console.log(`END OF SONG`);
+            const party = this.partyDatabaseService.getPartyById(partyId);
+            const playlist = this.playlistEntryDatabaseService.getAllPlaylistEntriesForParty(partyId).sort(playlistSort);
+            if (playlist.length > 0) {
+                const playlistEntry = playlist.shift();
+                this.playlistVoteDatabaseService.deleteVotesForEntry(playlistEntry.id);
+                this.playlistEntryDatabaseService.removePlaylistEntryById(playlistEntry.id);
+                this.partyHistoryDatabaseService.insertHistory({
+                    partyId,
+                    playedAt: moment().valueOf(),
+                    addedAt: playlistEntry.addedAt,
+                    addedBy: playlistEntry.addedBy,
+                    votes: playlistEntry.UpVotes - playlistEntry.DownVotes,
+                    spotifyId: playlistEntry.spotifySongId,
+                    name: playlistEntry.name,
+                    artist: playlistEntry.artist,
+                    albumArtwork: playlistEntry.albumArtwork
+                });
+                this.spotifyAPI.player.addSongToEndOfQueue(party.spotifyToken, playlistEntry.spotifySongId);
+                this.emitPlaylistUpdate(partyId);
+
             }
-        );
+        });
         eventEmitter.on(SpotifyStateEvents.UPDATE_PLAYING.toString(), (playStateData) => {
             this.updatePartyStateData(partyId, playStateData).then(() => {
                 this.emitStateChange(partyId);
@@ -82,6 +107,17 @@ export class UpNextService {
             {
                 party: this.partyDatabaseService.getPartyById(partyId),
                 playstate: this.upNextPartyData.get(partyId)
+            }
+        );
+    }
+
+    private emitPlaylistUpdate(partyId) {
+        this.eventEmitterService.emitEventAt(
+            partyId,
+            PartyEvent.PLAYLIST_UPDATE,
+            {
+                party: this.partyDatabaseService.getPartyById(partyId),
+                playlist: this.playlistEntryDatabaseService.getAllPlaylistEntriesForParty(partyId)
             }
         );
     }
