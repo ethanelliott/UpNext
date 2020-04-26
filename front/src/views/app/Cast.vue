@@ -26,7 +26,7 @@
                 </v-row>
             </v-container>
         </v-app-bar>
-        <v-container class="fill-height ma-0 pa-0" fluid>
+        <v-container class="fill-height ma-0 pa-0" fluid v-if="hasState">
             <v-overlay :value="isLoading" absolute opacity="0.7">
                 <v-progress-circular color="primary" indeterminate size="200" width="15"></v-progress-circular>
             </v-overlay>
@@ -143,6 +143,21 @@
                 </v-col>
             </v-row>
         </v-container>
+        <v-container class="ma-0 pa-0 mb-12 fill-height" fluid v-else>
+            <v-row class="ma-0 pa-0">
+                <v-col align="center" class="ma-0 pa-0" justify="center">
+                    <v-card color="transparent" flat max-width="600">
+                        <v-icon color="primary" size="90">mdi-music-note-off</v-icon>
+                        <v-card-title class="align-center justify-center">
+                            No Playback Devices Found!
+                        </v-card-title>
+                        <v-card-text>
+                            Start playing music on a device to get the party started!
+                        </v-card-text>
+                    </v-card>
+                </v-col>
+            </v-row>
+        </v-container>
         <v-footer class="ma-0 pa-0 elevation-0" fixed>
             <v-progress-linear :color="progressColour" :value="songProgress" class="ma-0 pa-0"
                                height="30"></v-progress-linear>
@@ -159,6 +174,7 @@
     export default {
         name: "Cast",
         data: () => ({
+            hasState: false,
             isLoading: true,
             eventLoop: null,
             backgroundString: '',
@@ -191,29 +207,40 @@
             });
             this.socket.on('party-state', (data) => {
                 this.isLoading = false;
-                this.trackName = data.playstate.trackName;
-                this.albumArtwork = data.playstate.albumArtwork;
-                this.artistName = data.playstate.artistName;
-                this.trackId = data.playstate.trackId;
-                this.addedBy = data.playstate.addedBy;
-                this.code = data.party.code;
-                this.partyName = data.party.name
-                let lv = data.playstate.colours.lightVibrant;
-                let v = data.playstate.colours.vibrant;
-                let dv = data.playstate.colours.darkVibrant;
-                let lm = data.playstate.colours.lightVibrant;
-                this.backgroundString = `background-image: linear-gradient(#${lv}ff 0%, rgba(0,0,0,1) 100%);`;
-                this.progressColour = `#${v}`;
-                this.qrBack = encodeURI(`${lm}`);
-                this.qrFront = encodeURI(`${dv}`);
-                this.songProgress = data.playstate.progress / data.playstate.duration * 100
-                clearInterval(this.songProgressLoopTrack);
-                if (data.playstate.isPlaying) {
-                    const finishTime = moment().add((data.playstate.duration - data.playstate.progress), 'milliseconds').valueOf();
-                    this.songProgressLoopTrack = setInterval(() => {
-                        const progress = (1 - ((finishTime - moment().valueOf()) / data.playstate.duration)) * 100;
-                        this.songProgress = progress <= 100 && progress >= 0 ? progress : 0;
-                    }, 100);
+                if (data.playstate) {
+                    this.hasState = true;
+                    this.trackName = data.playstate.trackName;
+                    this.albumArtwork = data.playstate.albumArtwork;
+                    this.artistName = data.playstate.artistName;
+                    this.trackId = data.playstate.trackId;
+                    this.addedBy = data.playstate.addedBy;
+                    let lv = data.playstate.colours.lightVibrant;
+                    let v = data.playstate.colours.vibrant;
+                    let dv = data.playstate.colours.darkVibrant;
+                    let lm = data.playstate.colours.lightVibrant;
+                    this.backgroundString = `background-image: linear-gradient(#${lv}ff 0%, rgba(0,0,0,1) 100%);`;
+                    this.progressColour = `#${v}`;
+                    this.qrBack = encodeURI(`${lm}`);
+                    this.qrFront = encodeURI(`${dv}`);
+                    this.songProgress = data.playstate.progress / data.playstate.duration * 100;
+                    clearInterval(this.songProgressLoopTrack);
+                    if (data.playstate.isPlaying) {
+                        const finishTime = moment().add((data.playstate.duration - data.playstate.progress), 'milliseconds').valueOf();
+                        this.songProgressLoopTrack = setInterval(() => {
+                            const progress = (1 - ((finishTime - moment().valueOf()) / data.playstate.duration)) * 100;
+                            this.songProgress = progress <= 100 && progress >= 0 ? progress : 0;
+                        }, 100);
+                    }
+                } else {
+                    this.hasState = false;
+                    this.songProgress = 0;
+                    clearInterval(this.songProgressLoopTrack);
+                    this.backgroundString = `background-image: linear-gradient(#000000ff 0%, rgba(0,0,0,1) 100%);`;
+                    this.progressColour = `primary`;
+                }
+                if (data.party) {
+                    this.code = data.party.code;
+                    this.partyName = data.party.name;
                 }
             });
             this.socket.on('playlist-state', (data) => {
@@ -221,29 +248,40 @@
             });
             this.socket.on('state-change', (data) => {
                 this.isLoading = false;
-                this.trackName = data.playstate.trackName;
-                this.albumArtwork = data.playstate.albumArtwork;
-                this.artistName = data.playstate.artistName;
-                this.trackId = data.playstate.trackId;
-                this.addedBy = data.playstate.addedBy;
-                this.code = data.party.code;
-                this.partyName = data.party.name
-                let lv = data.playstate.colours.lightVibrant;
-                let v = data.playstate.colours.vibrant;
-                let dv = data.playstate.colours.darkVibrant;
-                let lm = data.playstate.colours.lightVibrant;
-                this.backgroundString = `background-image: linear-gradient(#${lv}ff 0%, rgba(0,0,0,1) 100%);`;
-                this.progressColour = `#${v}`;
-                this.qrBack = encodeURI(`${lm}`);
-                this.qrFront = encodeURI(`${dv}`);
-                this.songProgress = data.playstate.progress / data.playstate.duration * 100
-                clearInterval(this.songProgressLoopTrack);
-                if (data.playstate.isPlaying) {
-                    const finishTime = moment().add((data.playstate.duration - data.playstate.progress), 'milliseconds').valueOf();
-                    this.songProgressLoopTrack = setInterval(() => {
-                        const progress = (1 - ((finishTime - moment().valueOf()) / data.playstate.duration)) * 100;
-                        this.songProgress = progress <= 100 && progress >= 0 ? progress : 0;
-                    }, 100);
+                if (data.playstate) {
+                    this.hasState = true;
+                    this.trackName = data.playstate.trackName;
+                    this.albumArtwork = data.playstate.albumArtwork;
+                    this.artistName = data.playstate.artistName;
+                    this.trackId = data.playstate.trackId;
+                    this.addedBy = data.playstate.addedBy;
+                    let lv = data.playstate.colours.lightVibrant;
+                    let v = data.playstate.colours.vibrant;
+                    let dv = data.playstate.colours.darkVibrant;
+                    let lm = data.playstate.colours.lightVibrant;
+                    this.backgroundString = `background-image: linear-gradient(#${lv}ff 0%, rgba(0,0,0,1) 100%);`;
+                    this.progressColour = `#${v}`;
+                    this.qrBack = encodeURI(`${lm}`);
+                    this.qrFront = encodeURI(`${dv}`);
+                    this.songProgress = data.playstate.progress / data.playstate.duration * 100;
+                    clearInterval(this.songProgressLoopTrack);
+                    if (data.playstate.isPlaying) {
+                        const finishTime = moment().add((data.playstate.duration - data.playstate.progress), 'milliseconds').valueOf();
+                        this.songProgressLoopTrack = setInterval(() => {
+                            const progress = (1 - ((finishTime - moment().valueOf()) / data.playstate.duration)) * 100;
+                            this.songProgress = progress <= 100 && progress >= 0 ? progress : 0;
+                        }, 100);
+                    }
+                } else {
+                    this.hasState = false;
+                    this.songProgress = 0;
+                    clearInterval(this.songProgressLoopTrack);
+                    this.backgroundString = `background-image: linear-gradient(#000000ff 0%, rgba(0,0,0,1) 100%);`;
+                    this.progressColour = `primary`;
+                }
+                if (data.party) {
+                    this.code = data.party.code;
+                    this.partyName = data.party.name;
                 }
             });
             this.socket.on('playlist-update', (data) => {

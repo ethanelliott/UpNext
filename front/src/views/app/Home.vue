@@ -8,11 +8,7 @@
             </v-toolbar-title>
             <v-spacer/>
             <v-toolbar-items>
-                <v-btn @click="sharePartyCode" text x-large>
-                    <span class="text-uppercase" style="letter-spacing: 10px;font-family: monospace;">
-                        {{ code }}
-                    </span>
-                </v-btn>
+                <app-share-dialog v-bind:code="code"></app-share-dialog>
                 <v-btn @click="openAdminMenu" color="primary" icon v-if="isAdmin">
                     <v-icon>mdi-cog</v-icon>
                 </v-btn>
@@ -95,9 +91,10 @@
         <v-dialog dark v-model="deleteSafetyDialog" width="500">
             <v-card>
                 <v-card-title>
-                    Are you sure you want to Delete the party?
+                    Delete the party!
                 </v-card-title>
                 <v-card-text>
+                    <span class="font-weight-bold">Are you sure you want to Delete the party?</span><br><br>
                     This cannot be un-done... once it's gone, it's gone for good!
                 </v-card-text>
                 <v-card-actions>
@@ -230,6 +227,7 @@
     import session from 'localStorage'
     import Queue from './DialogQueue'
     import Add from './DialogAdd'
+    import AppShareDialog from "./ShareDialog";
 
     export default {
         name: "Home",
@@ -263,6 +261,7 @@
             albumArtworkDialog: false
         }),
         components: {
+            AppShareDialog,
             'queue': Queue,
             'add': Add
         },
@@ -312,15 +311,6 @@
                     token: this.token,
                     data: {}
                 })
-            },
-            sharePartyCode() {
-                if (navigator.share) {
-                    navigator.share({
-                        title: 'UpNext Party Code',
-                        text: 'Join the party!',
-                        url: `https://upnext.cool/join?c=${this.code}`,
-                    });
-                }
             },
             openSpotifyUri: function () {
                 this.overlay = false;

@@ -1,5 +1,4 @@
 import { Service } from "typedi";
-import { PlaylistEntryDB } from "../Types/DatabaseMaps/PlaylistEntryDB";
 import { UserDB } from "../Types/DatabaseMaps/UserDB";
 import { SpotifyStateEvents, SpotifyStateService } from "./SpotifyStateService";
 import logger from "../../util/Log";
@@ -13,6 +12,8 @@ import { PartyHistoryDatabaseService } from "./Database/PartyHistoryDatabaseServ
 import moment from "moment";
 import SpotifyAPI from "../Spotify/SpotifyAPI";
 import { PlaylistVoteDatabaseService } from "./Database/PlaylistVoteDatabaseService";
+import { UserDatabaseService } from "./Database/UserDatabaseService";
+import { playlistSort } from "./sorts";
 
 @Service()
 export class UpNextService {
@@ -20,6 +21,7 @@ export class UpNextService {
     private readonly upNextPartyData: Map<string, UpNextPartyState>;
 
     constructor(
+        private playlistEntryDatabaseService: PlaylistEntryDatabaseService,
         private spotifyStateService: SpotifyStateService,
         private eventEmitterService: EventEmitterService,
         private colourService: ColourService,
@@ -27,10 +29,11 @@ export class UpNextService {
         private spotifyAPI: SpotifyAPI,
         private partyHistoryDatabaseService: PartyHistoryDatabaseService,
         private playlistVoteDatabaseService: PlaylistVoteDatabaseService,
-        private playlistEntryDatabaseService: PlaylistEntryDatabaseService,
+        private userDatabaseService: UserDatabaseService
     ) {
         this.upNextPartyData = new Map<string, UpNextPartyState>();
         this.startParties();
+
     }
 
     public async startParties() {
@@ -111,13 +114,20 @@ export class UpNextService {
         );
     }
 
+    public getUserById(userId: string): UserDB {
+        return this.userDatabaseService.getUserById(userId);
+    }
+
     private emitPlaylistUpdate(partyId) {
         this.eventEmitterService.emitEventAt(
             partyId,
             PartyEvent.PLAYLIST_UPDATE,
             {
                 party: this.partyDatabaseService.getPartyById(partyId),
-                playlist: this.playlistEntryDatabaseService.getAllPlaylistEntriesForParty(partyId)
+                playlist: this.playlistEntryDatabaseService.getAllPlaylistEntriesForParty(partyId).map(e => {
+                    e.addedBy = this.getUserById(e.addedBy).nickname;
+                    return e;
+                })
             }
         );
     }
@@ -139,16 +149,6 @@ export class UpNextService {
         }
     }
 }
-
-export const playlistSort = ($a: PlaylistEntryDB, $b: PlaylistEntryDB) => {
-    const n = ($b.UpVotes - $b.DownVotes) - ($a.UpVotes - $a.DownVotes);
-    if (n !== 0) return n;
-    return $a.addedAt - $b.addedAt;
-};
-
-export const userSort = ($a: UserDB, $b: UserDB) => {
-    return $b.score - $a.score;
-};
 
 export class UpNextPartyState {
     isPlaying: boolean;
