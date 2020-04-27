@@ -33,7 +33,7 @@ export default class TracksAPI {
     }
 
     // Need to add the AudioAnalysisObject
-    // public async getAudioAnalysis(token: string, trackId: string): Promise<AudioAnalysisObject> {
+    // cast async getAudioAnalysis(token: string, trackId: string): Promise<AudioAnalysisObject> {
     //     let d = await WebAPIRequestBuilder
     //         .make(token)
     //         .withMethod(HttpMethods.GET)

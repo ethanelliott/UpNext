@@ -30,7 +30,16 @@ export class SpotifyOAuthService {
         const state = this.webTokenService.generateFrom({partyName, nickName, partyId, trackingId}, '10m');
         this.newPartyService.create(partyId, state);
         return this.spotifyService.getSpotifyAPI().auth
-            .getAuthStartURL(env.app.spotify.clientId, env.app.spotify.redirectURI, AuthAPI.ALL_SCOPE, state);
+            .getAuthStartURL(env.app.spotify.clientId, env.app.spotify.redirectURI, [
+                AuthAPI.SCOPES.UGC_IMAGE_UPLOAD,
+                AuthAPI.SCOPES.USER_READ_PLAYBACK_STATE,
+                AuthAPI.SCOPES.USER_MODIFY_PLAYBACK_STATE,
+                AuthAPI.SCOPES.USER_READ_CURRENTLY_PLAYING,
+                AuthAPI.SCOPES.STREAMING,
+                AuthAPI.SCOPES.USER_READ_EMAIL,
+                AuthAPI.SCOPES.USER_READ_PRIVATE,
+                AuthAPI.SCOPES.PLAYLIST_MODIFY_PUBLIC,
+            ].join(' '), state);
     }
 
     public verifyState(state: string): SpotifyOAuthState | false {
@@ -65,8 +74,12 @@ export class SpotifyOAuthService {
         return trackingId;
     }
 
-    public userSeen(trackingId: string) {
-        this.userTrackerDatabaseService.updateLastSeen(trackingId, moment().valueOf());
+    public userSeen(trackingId: string, userAgent: string) {
+        if (this.userTrackerDatabaseService.doesTrackingIdExist(trackingId)) {
+            this.userTrackerDatabaseService.updateLastSeen(trackingId, moment().valueOf());
+        } else {
+            this.userTrackerDatabaseService.insertNewUser(trackingId, moment().valueOf(), userAgent);
+        }
         return trackingId;
     }
 

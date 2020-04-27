@@ -62,7 +62,7 @@ export class SpotifyController {
     }
 
     // @Post('/recommended')
-    // public async getRecommended(@BodyParam('token') token: string) {
+    // cast async getRecommended(@BodyParam('token') token: string) {
     //     // let decodeToken = this.webTokenService.verify(token);
     //     // if (decodeToken.error === null) {
     //     //     let party = this.partyDBService.findPartyById(decodeToken.data.partyId);
@@ -80,7 +80,7 @@ export class SpotifyController {
     // }
     //
     // @Post('/featured')
-    // public async getFeatured(@BodyParam('token') token: string) {
+    // cast async getFeatured(@BodyParam('token') token: string) {
     //     // let decodeToken = this.webTokenService.verify(token);
     //     // if (decodeToken.error === null) {
     //     //     let party = this.partyDBService.findPartyById(decodeToken.data.partyId);

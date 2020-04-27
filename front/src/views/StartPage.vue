@@ -30,7 +30,7 @@
                     </v-container>
                 </template>
                 <template v-slot:append>
-                    <v-form @submit.prevent="null" ref="form" v-model="valid">
+                    <v-form @submit.prevent="null" autocomplete="off" ref="form" v-model="valid">
                         <v-container class="ma-0 pa-0" fluid>
                             <v-col class="ma-0 pa-0" cols="12">
                                 <v-row align="center" class="ma-0 pa-0 px-3" justify="center">

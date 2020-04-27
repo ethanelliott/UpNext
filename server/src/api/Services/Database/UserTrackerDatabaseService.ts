@@ -48,4 +48,12 @@ export class UserTrackerDatabaseService {
             ]
         })).run();
     }
+
+    public doesTrackingIdExist(trackingId: string): boolean {
+        return this.databaseService.queryAll({
+            from: this.tableName,
+            select: ['*'],
+            where: [{key: 'id', operator: '=', value: trackingId}]
+        }).length === 1;
+    }
 }

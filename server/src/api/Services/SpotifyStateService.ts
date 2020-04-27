@@ -73,7 +73,7 @@ export class SpotifyStateService {
                     case SpotifyState.PLAYING:
                         nextState = SpotifyState.PLAYING;
                         if (spotifyPlayState && spotifyPlayState.item) {
-                            if (!hasTriggeredEndOfSong && spotifyPlayState.item.duration_ms - spotifyPlayState.progress_ms <= 3000) {
+                            if (!hasTriggeredEndOfSong && spotifyPlayState.item.duration_ms - spotifyPlayState.progress_ms <= 5000) {
                                 this.spotifyEventEmitters.get(partyId).emit(SpotifyStateEvents.UPDATE_END_OF_SONG.toString());
                                 this.spotifyEventLoopStateEndOfSong.set(partyId, true);
                             } else if (spotifyPlayState.item.id !== storedState.spotifyState.item.id) {

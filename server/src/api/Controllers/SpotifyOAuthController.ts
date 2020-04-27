@@ -17,8 +17,8 @@ export class SpotifyOAuthController {
     }
 
     @Post('/seen')
-    public userSeen(@BodyParam("trackingId") trackingId: string): any {
-        return this.spotifyOAuthService.userSeen(trackingId);
+    public userSeen(@HeaderParams() params: any, @BodyParam("trackingId") trackingId: string): any {
+        return this.spotifyOAuthService.userSeen(trackingId, params['user-agent']);
     }
 
     @Post('/exists')
