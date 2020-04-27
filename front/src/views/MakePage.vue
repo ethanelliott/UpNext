@@ -23,7 +23,6 @@
 <script>
     import session from 'localStorage'
     import axios from 'axios'
-    import LogRocket from 'logrocket';
 
     export default {
         name: 'MakePage',
@@ -36,9 +35,6 @@
                 session.setItem('token', res.data.token); // set token for reqs to the party
                 session.setItem('userId', res.data.userId); // set userId for log rocket
                 // then make the user wait so they can look at the pretty screen
-                if (localStorage.getItem('userId')) {
-                    LogRocket.identify(localStorage.getItem('id'));
-                }
                 setTimeout(() => {
                     context.$router.push('/app/home')
                 }, 1500)
