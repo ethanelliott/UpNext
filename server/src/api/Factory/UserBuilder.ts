@@ -8,6 +8,7 @@ export class UserBuilder {
     private id: string;
     private score: number = 0;
     private partyId: string;
+    private trackingId: string;
     private permission: UserPermissionEnum = UserPermissionEnum.DEFAULT;
 
     constructor() {
@@ -42,6 +43,11 @@ export class UserBuilder {
         return this;
     }
 
+    public withTrackingId(trackingId: string): UserBuilder {
+        this.trackingId = trackingId;
+        return this;
+    }
+
     public build(): UserDB {
         let p = new UserDB();
         p.nickname = this.nickname;
@@ -53,6 +59,7 @@ export class UserBuilder {
         p.spotifyToken = '';
         p.spotifyRefreshToken = '';
         p.spotifyTokenExpire = 0;
+        p.trackingId = this.trackingId;
         return p;
     }
 

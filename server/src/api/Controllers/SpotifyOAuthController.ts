@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Get, JsonController, Post, QueryParam, Redirect } from 'routing-controllers';
+import { BodyParam, Get, HeaderParams, JsonController, Post, QueryParam, Redirect } from 'routing-controllers';
 import { env } from "../../env";
 import { SpotifyOAuthService } from "../Services/SpotifyOAuthService";
 
@@ -10,9 +10,25 @@ export class SpotifyOAuthController {
     ) {
     }
 
+    @Post('/new')
+    public newUser(@HeaderParams() params: any): any {
+        // get a new tracking id
+        return this.spotifyOAuthService.newUserJoined(params['user-agent']);
+    }
+
+    @Post('/seen')
+    public userSeen(@BodyParam("trackingId") trackingId: string): any {
+        return this.spotifyOAuthService.userSeen(trackingId);
+    }
+
+    @Post('/exists')
+    public userExists(@BodyParam("trackingId") trackingId: string): any {
+        return this.spotifyOAuthService.userExists(trackingId);
+    }
+
     @Post('/start')
-    public startSpotifyAuth(@QueryParam("partyName") partyName: string, @QueryParam("nickName") nickName: string): any {
-        return this.spotifyOAuthService.start(partyName, nickName);
+    public startSpotifyAuth(@QueryParam("partyName") partyName: string, @QueryParam("nickName") nickName: string, @QueryParam("trackingId") trackingId: string): any {
+        return this.spotifyOAuthService.start(partyName, nickName, trackingId);
     }
 
     @Get('/callback')

@@ -1,0 +1,23 @@
+{
+    "name": "UpNext",
+    "short_name": "UpNext",
+    "icons": [
+        {
+            "src": "/assets/android-chrome-192x192.png?v=M4KGqnyzkJ",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable any"
+        },
+        {
+            "src": "/assets/android-chrome-512x512.png?v=M4KGqnyzkJ",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable any"
+        }
+    ],
+    "start_url": "/?source=pwa",
+    "background_color": "#121212",
+    "display": "standalone",
+    "scope": "/",
+    "theme_color": "#1db954"
+}

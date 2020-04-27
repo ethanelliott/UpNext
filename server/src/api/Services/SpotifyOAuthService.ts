@@ -8,6 +8,9 @@ import AuthAPI from "../Spotify/apis/AuthAPI";
 import { SpotifyOAuthState } from "../Types/general/SpotifyOAuthState";
 import { PartyJoinToken } from "../Types/general/PartyJoinToken";
 import { PartyService } from "./PartyService";
+import { UserTrackerDatabaseService } from "./Database/UserTrackerDatabaseService";
+import moment from "moment";
+import { UserDatabaseService } from "./Database/UserDatabaseService";
 
 @Service()
 export class SpotifyOAuthService {
@@ -17,12 +20,14 @@ export class SpotifyOAuthService {
         private newPartyService: NewPartyService,
         private spotifyService: SpotifyService,
         private partyService: PartyService,
+        private userTrackerDatabaseService: UserTrackerDatabaseService,
+        private userDatabaseService: UserDatabaseService
     ) {
     }
 
-    public start(partyName: string, nickName: string): string {
+    public start(partyName: string, nickName: string, trackingId: string): string {
         const partyId = this.uuidService.new();
-        const state = this.webTokenService.generateFrom({partyName, nickName, partyId}, '10m');
+        const state = this.webTokenService.generateFrom({partyName, nickName, partyId, trackingId}, '10m');
         this.newPartyService.create(partyId, state);
         return this.spotifyService.getSpotifyAPI().auth
             .getAuthStartURL(env.app.spotify.clientId, env.app.spotify.redirectURI, AuthAPI.ALL_SCOPE, state);
@@ -44,12 +49,42 @@ export class SpotifyOAuthService {
             let userJoinToken = this.webTokenService.generateFrom({
                 partyId: decodedState.partyId,
                 admin: true,
-                name: decodedState.nickName
+                name: decodedState.nickName,
+                trackingId: decodedState.trackingId
             } as PartyJoinToken);
+            console.log(userJoinToken);
             return {token: userJoinToken};
-
         } else {
             return {token: 'error'};
         }
+    }
+
+    public newUserJoined(userAgent: string) {
+        const trackingId = this.uuidService.new();
+        this.userTrackerDatabaseService.insertNewUser(trackingId, moment().valueOf(), userAgent);
+        return trackingId;
+    }
+
+    public userSeen(trackingId: string) {
+        this.userTrackerDatabaseService.updateLastSeen(trackingId, moment().valueOf());
+        return trackingId;
+    }
+
+    public userExists(trackingId: string) {
+        const userParties = this.userDatabaseService.getUserByTrackingId(trackingId);
+        if (userParties.length === 1) {
+            const user = userParties[0];
+            const party = this.partyService.getPartyById(user.partyId);
+            return {
+                exists: true,
+                partyId: party.id,
+                name: party.name,
+                code: party.code,
+                nickName: user.nickname
+            };
+        }
+        return {
+            exists: false,
+        };
     }
 }

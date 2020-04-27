@@ -232,7 +232,7 @@
     export default {
         name: "Home",
         data: () => ({
-            hasState: true,
+            hasState: false,
             isLoading: true,
             socket: null,
             token: null,

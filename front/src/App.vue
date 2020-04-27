@@ -6,6 +6,7 @@
 
 <script>
     import Vue from 'vue';
+    import axios from 'axios';
     import LogRocket from 'logrocket';
 
     const DEFAULT_TRANSITION = 'fade';
@@ -15,8 +16,14 @@
             transitionName: DEFAULT_TRANSITION
         }),
         mounted() {
-            if (localStorage.getItem('userId')) {
-                LogRocket.identify(localStorage.getItem('userId'));
+            if (localStorage.getItem('trackingId')) {
+                axios.post('/auth/seen', {trackingId: localStorage.getItem('trackingId')}).catch(console.error)
+                LogRocket.identify(localStorage.getItem('trackingId'));
+            } else {
+                axios.post('/auth/new').then(res => {
+                    localStorage.setItem('trackingId', res.data);
+                    LogRocket.identify(res.data);
+                }).catch(console.error);
             }
         },
         created() {
