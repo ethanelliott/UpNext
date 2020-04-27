@@ -7,7 +7,7 @@ export class WebTokenService {
     private readonly secretKey: string;
     private readonly encryptionOptions: SignOptions;
     private readonly algorithm = 'HS512';
-    private readonly expiry = '12h';
+    private readonly expiry = '24h';
 
     private readonly issuer = 'UpNext';
     private readonly decryptionOptions: VerifyOptions;

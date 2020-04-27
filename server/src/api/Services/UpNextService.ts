@@ -58,10 +58,10 @@ export class UpNextService {
 
     private async addSpotifyListeners(partyId) {
         const eventEmitter = this.spotifyStateService.spotifyEventEmitters.get(partyId);
-        eventEmitter.on(SpotifyStateEvents.UPDATE_FIRST_RUN.toString(), (playStateData) => {
+        eventEmitter.on(SpotifyStateEvents.UPDATE_FIRST_RUN.toString(), (playStateData: CurrentlyPlayingObject) => {
             this.updatePartyStateData(partyId, playStateData);
         });
-        eventEmitter.on(SpotifyStateEvents.UPDATE_END_OF_SONG.toString(), (playStateData) => {
+        eventEmitter.on(SpotifyStateEvents.UPDATE_END_OF_SONG.toString(), (playStateData: CurrentlyPlayingObject) => {
             console.log(`END OF SONG`);
             const party = this.partyDatabaseService.getPartyById(partyId);
             const playlist = this.playlistEntryDatabaseService.getAllPlaylistEntriesForParty(partyId).sort(playlistSort);
@@ -85,20 +85,27 @@ export class UpNextService {
 
             }
         });
-        eventEmitter.on(SpotifyStateEvents.UPDATE_PLAYING.toString(), (playStateData) => {
+        eventEmitter.on(SpotifyStateEvents.UPDATE_PLAYING.toString(), (playStateData: CurrentlyPlayingObject) => {
             this.updatePartyStateData(partyId, playStateData).then(() => {
                 this.emitStateChange(partyId);
             });
         });
-        eventEmitter.on(SpotifyStateEvents.UPDATE_PAUSED.toString(), (playStateData) => {
+        eventEmitter.on(SpotifyStateEvents.UPDATE_PAUSED.toString(), (playStateData: CurrentlyPlayingObject) => {
             this.updatePartyStateData(partyId, playStateData).then(() => {
                 this.emitStateChange(partyId);
             });
         });
-        eventEmitter.on(SpotifyStateEvents.UPDATE_SONG_CHANGE.toString(), (playStateData) => {
-            this.updatePartyStateData(partyId, playStateData);
+        eventEmitter.on(SpotifyStateEvents.UPDATE_SONG_CHANGE.toString(), (playStateData: CurrentlyPlayingObject) => {
+            this.updatePartyStateData(partyId, playStateData).then(() => {
+                const party = this.partyDatabaseService.getPartyById(partyId);
+                this.spotifyAPI.playlist.addTracks(
+                    party.spotifyToken,
+                    party.spotifyPlaylistId,
+                    [playStateData.item.id]
+                );
+            });
         });
-        eventEmitter.on(SpotifyStateEvents.UPDATE_SCRUBBING.toString(), (playStateData) => {
+        eventEmitter.on(SpotifyStateEvents.UPDATE_SCRUBBING.toString(), (playStateData: CurrentlyPlayingObject) => {
             this.updatePartyStateData(partyId, playStateData);
         });
     }

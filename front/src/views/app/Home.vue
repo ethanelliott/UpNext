@@ -9,6 +9,9 @@
             <v-spacer/>
             <v-toolbar-items>
                 <app-share-dialog v-bind:code="code"></app-share-dialog>
+                <v-btn @click="goToCast" icon v-if="isAdmin">
+                    <v-icon>mdi-cast</v-icon>
+                </v-btn>
                 <v-btn @click="openAdminMenu" color="primary" icon v-if="isAdmin">
                     <v-icon>mdi-cog</v-icon>
                 </v-btn>
@@ -266,6 +269,10 @@
             'add': Add
         },
         methods: {
+            goToCast() {
+                this.safeToLeave = true;
+                this.$router.push('/app/cast');
+            },
             navigateAway() {
                 this.safeToLeave = true;
                 this.$router.push('/leave');

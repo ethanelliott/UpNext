@@ -58,7 +58,7 @@ export default class QueryFactory {
                 `, PRIMARY KEY ("${k.name}")`
             ).join('')}`;
             query += `${params.columns.filter(e => !!e.foreignKey).map((k) =>
-                `, FOREIGN KEY ("${k.name}") REFERENCES "${k.foreignKey.table}"("${k.foreignKey.name}")`
+                `, FOREIGN KEY ("${k.name}") REFERENCES "${k.foreignKey.table}"("${k.foreignKey.name}") ON DELETE CASCADE`
             ).join('')}`;
         }
 
