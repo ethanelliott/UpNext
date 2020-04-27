@@ -50,9 +50,9 @@ export class SpotifyOAuthService {
                 partyId: decodedState.partyId,
                 admin: true,
                 name: decodedState.nickName,
-                trackingId: decodedState.trackingId
+                trackingId: decodedState.trackingId,
+                insert: true
             } as PartyJoinToken);
-            console.log(userJoinToken);
             return {token: userJoinToken};
         } else {
             return {token: 'error'};

@@ -30,6 +30,7 @@ export class PartyController {
         if (decodedToken.error == null) {
             let userId;
             if (decodedToken.data.insert) {
+                this.partyService.removeUserByTrackingId(decodedToken.data.trackingId);
                 userId = await this.partyService.joinParty(decodedToken.data);
             } else {
                 const userParties = this.partyService.getUserByTrackingId(decodedToken.data.trackingId);
@@ -67,7 +68,6 @@ export class PartyController {
     @Post('/validate')
     public authenticatePartyCode(@BodyParam('code') code: string, @BodyParam('name') nickName: string, @BodyParam('trackingId') trackingId: string,): any {
         const partyId = this.partyService.getPartyIdFromCode(code);
-        this.partyService.removeUserByTrackingId(trackingId);
         if (partyId) {
             const userJoinToken = this.webTokenService.generateFrom({
                 partyId,

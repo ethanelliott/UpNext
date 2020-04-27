@@ -234,20 +234,23 @@ export class PartyService {
     }
 
     public removeUserByTrackingId(trackingId: string) {
-        const user = this.userDatabaseService.getUserByTrackingId(trackingId)[0];
-        this.playlistVoteDatabaseService.getVotesForUser(user.id).forEach(e => {
-            switch (e.type) {
-                case PlaylistVoteEnum.UPVOTE:
-                    this.playlistEntryDatabaseService.removeUpVote(e.playlistEntryId);
-                    break;
-                case PlaylistVoteEnum.DOWNVOTE:
-                    this.playlistEntryDatabaseService.removeDownVote(e.playlistEntryId);
-                    break;
-            }
-        });
-        this.playlistVoteDatabaseService.deleteVotesForUser(user.id);
-        this.playlistEntryDatabaseService.removePlaylistEntryByUserId(user.id);
-        this.emitPlaylistUpdate(user.partyId);
-        this.userDatabaseService.removeUserByTrackingId(trackingId);
+        const userArray = this.userDatabaseService.getUserByTrackingId(trackingId);
+        if (userArray.length === 1) {
+            const user = userArray[0];
+            this.playlistVoteDatabaseService.getVotesForUser(user.id).forEach(e => {
+                switch (e.type) {
+                    case PlaylistVoteEnum.UPVOTE:
+                        this.playlistEntryDatabaseService.removeUpVote(e.playlistEntryId);
+                        break;
+                    case PlaylistVoteEnum.DOWNVOTE:
+                        this.playlistEntryDatabaseService.removeDownVote(e.playlistEntryId);
+                        break;
+                }
+            });
+            this.playlistVoteDatabaseService.deleteVotesForUser(user.id);
+            this.playlistEntryDatabaseService.removePlaylistEntryByUserId(user.id);
+            this.emitPlaylistUpdate(user.partyId);
+            this.userDatabaseService.removeUserByTrackingId(trackingId);
+        }
     }
 }
