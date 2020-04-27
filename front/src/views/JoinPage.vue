@@ -1,6 +1,29 @@
 <template>
     <v-app>
         <v-content>
+            <v-dialog persistent v-model="dialog" width="450">
+                <v-card color="darker">
+                    <v-toolbar dark>
+                        <v-toolbar-title>Already partying!</v-toolbar-title>
+                        <v-spacer></v-spacer>
+                    </v-toolbar>
+                    <v-card-text class="mt-6" v-if="alreadyJoined">
+                        Looks like you are already a part of a party! <br><br>
+                        Party: {{ alreadyJoined.name }}<br>
+                        Code: {{ alreadyJoined.code }}<br>
+                        Your name: {{ alreadyJoined.nickName }}<br>
+                        <br>
+                        If you want to hop back in, just click on the "Get Back to the Party" button.<br><br>
+                        <v-btn @click="getBackToTheParty" block color="primary">Get Back to the Party</v-btn>
+                        <br>
+                        If you want to join a new party, click on "I understand" and join a party as normal...
+                        but be aware that you and your songs in your current party's queue will be deleted!
+                    </v-card-text>
+                    <v-card-actions>
+                        <v-btn @click="dialog = false" block>I Understand</v-btn>
+                    </v-card-actions>
+                </v-card>
+            </v-dialog>
             <v-navigation-drawer
                     absolute
                     color="darker"
@@ -97,10 +120,19 @@
             },
             isFormValid: false,
             disableTextInput: false,
-            isLoadingButton: false
+            isLoadingButton: false,
+            dialog: false,
+            alreadyJoined: null
         }),
         mounted() {
             this.partyCode = (this.code ? this.code : '')
+            axios.post('/auth/exists', {trackingId: localStorage.getItem('trackingId')}).then(res => {
+                console.log(res.data);
+                if (res.data.exists) {
+                    this.dialog = true;
+                    this.alreadyJoined = res.data;
+                }
+            }).catch(console.error);
         },
         methods: {
             setLoading() {
@@ -119,19 +151,36 @@
                 this.partyCode = code.toUpperCase();
             },
             joinParty() {
-                let context = this;
-                context.error = false;
-                context.setLoading();
-                axios.post('/party/validate', {code: context.partyCode, name: context.nickname}).then(res => {
+                this.error = false;
+                this.setLoading();
+                axios.post('/party/validate', {
+                    code: this.partyCode,
+                    name: this.nickname,
+                    trackingId: localStorage.getItem('trackingId')
+                }).then(res => {
                     if (res.data.valid) {
-                        context.$router.push(`/make/${res.data.token}`)
+                        this.$router.push(`/make/${res.data.token}`)
                     } else {
-                        context.setNotLoading();
-                        context.error = true;
+                        this.setNotLoading();
+                        this.error = true;
                     }
                 }).catch(err => {
                     console.log(err);
-                })
+                });
+            },
+            getBackToTheParty() {
+                this.error = false;
+                this.setLoading();
+                axios.post('/party/rejoin', {trackingId: localStorage.getItem('trackingId')}).then(res => {
+                    if (res.data.valid) {
+                        this.$router.push(`/make/${res.data.token}`)
+                    } else {
+                        this.setNotLoading();
+                        this.error = true;
+                    }
+                }).catch(err => {
+                    console.log(err);
+                });
             }
         }
     }

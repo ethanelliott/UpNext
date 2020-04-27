@@ -91,6 +91,21 @@ export class UserDatabaseService {
         });
     }
 
+    public getUserByTrackingId(trackingId: string): Array<UserDB> {
+        return this.databaseService.queryAll<UserDB>({
+            from: this.tableName,
+            select: ['*'],
+            where: [{key: 'trackingId', operator: '=', value: trackingId}]
+        });
+    }
+
+    public removeUserByTrackingId(trackingId: string) {
+        this.databaseService.delete({
+            from: this.tableName,
+            where: [{key: 'trackingId', operator: '=', value: trackingId}]
+        });
+    }
+
     private buildTable() {
         this.databaseService.db.prepare(QueryFactory.buildCreateFrom({
             name: this.tableName,
@@ -109,7 +124,8 @@ export class UserDatabaseService {
                     notNull: true,
                     defaultValue: 0,
                     foreignKey: {table: 'userPermissions', name: 'id'}
-                }
+                },
+                {name: 'trackingId', type: 'TEXT', notNull: true, foreignKey: {name: 'id', table: 'userTracking'}},
             ]
         })).run();
     }

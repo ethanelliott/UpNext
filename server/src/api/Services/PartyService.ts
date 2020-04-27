@@ -99,20 +99,10 @@ export class PartyService {
             .withPermission(token.admin ? UserPermissionEnum.ADMIN : UserPermissionEnum.DEFAULT)
             .withPartyId(token.partyId)
             .withScore(0)
+            .withTrackingId(token.trackingId)
             .build();
         this.userDatabaseService.insertUser(user);
         return user.id;
-    }
-
-    public removeUser(partyId: string, userId: string) {
-        const users = this.userDatabaseService.getUsersAtParty(partyId);
-        if (users.length > 0) {
-            this.playlistVoteDatabaseService.deleteVotesForUser(userId);
-            this.userDatabaseService.removeUserByUserId(userId);
-            if (users.length === 1 && users[0].id === userId) {
-                this.removePartyByPartyId(partyId);
-            }
-        }
     }
 
     public getPartyIdFromCode(code: string): string | undefined {
@@ -237,5 +227,27 @@ export class PartyService {
 
     public getPartyById(partyId: string): PartyDB {
         return this.partyDatabaseService.getPartyById(partyId);
+    }
+
+    public getUserByTrackingId(trackingId: string): Array<UserDB> {
+        return this.userDatabaseService.getUserByTrackingId(trackingId);
+    }
+
+    public removeUserByTrackingId(trackingId: string) {
+        const user = this.userDatabaseService.getUserByTrackingId(trackingId)[0];
+        this.playlistVoteDatabaseService.getVotesForUser(user.id).forEach(e => {
+            switch (e.type) {
+                case PlaylistVoteEnum.UPVOTE:
+                    this.playlistEntryDatabaseService.removeUpVote(e.playlistEntryId);
+                    break;
+                case PlaylistVoteEnum.DOWNVOTE:
+                    this.playlistEntryDatabaseService.removeDownVote(e.playlistEntryId);
+                    break;
+            }
+        });
+        this.playlistVoteDatabaseService.deleteVotesForUser(user.id);
+        this.playlistEntryDatabaseService.removePlaylistEntryByUserId(user.id);
+        this.emitPlaylistUpdate(user.partyId);
+        this.userDatabaseService.removeUserByTrackingId(trackingId);
     }
 }

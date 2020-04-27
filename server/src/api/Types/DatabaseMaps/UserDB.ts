@@ -10,4 +10,5 @@ export class UserDB {
     spotifyRefreshToken: string;
     spotifyTokenExpire: number;
     userPermission: UserPermissionEnum;
+    trackingId: string;
 }

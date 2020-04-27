@@ -66,7 +66,7 @@
 </template>
 
 <script>
-    import session from 'localStorage'
+    import localStorage from 'localStorage'
     import AppInfoBox from "./InfoBox";
 
     export default {
@@ -91,7 +91,7 @@
             }
         },
         mounted() {
-            if (session.getItem('token')) {
+            if (localStorage.getItem('token')) {
                 this.$router.push('/app/home');
             }
             window.addEventListener('beforeinstallprompt', (e) => {

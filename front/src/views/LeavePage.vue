@@ -34,7 +34,7 @@
             session.removeItem('token');
             setTimeout(() => {
                 context.$router.push('/')
-            }, 2000)
+            }, 1500)
         }
     }
 </script>

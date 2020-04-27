@@ -101,7 +101,7 @@
                 let context = this
                 context.setLoading()
                 axios
-                    .post(`/auth/start?partyName=${context.name}&nickName=${context.nickname}`).then(res => {
+                    .post(`/auth/start?partyName=${context.name}&nickName=${context.nickname}&trackingId=${localStorage.getItem('trackingId')}`).then(res => {
                     window.location.href = res.data;
                 })
             }

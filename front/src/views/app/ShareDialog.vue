@@ -8,7 +8,7 @@
                     </span>
             </v-btn>
         </template>
-        <v-card class="fill-height" color="darker">
+        <v-card color="darker">
             <v-toolbar>
                 <v-toolbar-title>
                     Share

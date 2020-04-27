@@ -157,4 +157,11 @@ export class PlaylistEntryDatabaseService {
             ]
         })).run();
     }
+
+    public removePlaylistEntryByUserId(userId: string) {
+        this.databaseService.delete({
+            from: this.tableName,
+            where: [{key: 'addedBy', operator: '=', value: userId}]
+        });
+    }
 }
