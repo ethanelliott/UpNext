@@ -351,22 +351,13 @@
                     this.songAnalysis = data.playstate.analysis;
                     this.updateMediaMetadata();
                     clearInterval(this.songProgressLoopTrack);
-                    if (data.playstate.isPlaying) {
-                        navigator.mediaSession.playbackState = "playing";
-                        if (this.audio) {
-                            this.audio.play();
-                        }
+                    if (this.isPlaying) {
                         const finishTime = moment().add((data.playstate.duration - data.playstate.progress), 'milliseconds').valueOf();
                         this.songProgressLoopTrack = setInterval(() => {
                             const progress = (1 - ((finishTime - moment().valueOf()) / data.playstate.duration));
                             this.songProgress = progress <= 1 && progress >= 0 ? progress : 0;
                         }, 100);
 
-                    } else {
-                        navigator.mediaSession.playbackState = "paused";
-                        if (this.audio) {
-                            this.audio.pause();
-                        }
                     }
                 } else {
                     this.isPlaying = false;
@@ -384,7 +375,6 @@
                     if (this.audio) {
                         this.audio.play();
                     }
-
                 } else {
                     navigator.mediaSession.playbackState = "paused";
                     if (this.audio) {
