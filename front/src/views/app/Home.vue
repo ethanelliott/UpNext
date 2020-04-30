@@ -402,7 +402,7 @@
                         const options = {
                             body: `${data.body}`,
                             icon: '/assets/apple-touch-icon.png',
-                            vibrate: [100, 50, 100],
+                            vibrate: [500, 100, 500],
                             data: {
                                 dateOfArrival: Date.now(),
                                 primaryKey: 1
