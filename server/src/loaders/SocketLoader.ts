@@ -16,10 +16,9 @@ import { UserController } from "../api/SocketControllers/UserController";
 export const SocketLoader: MicroframeworkLoader = (settings: MicroframeworkSettings | undefined) => {
     if (settings) {
         log.startup("Loading SocketIO");
-
         const socketApp = createSocketServer(env.app.socketPort, {
             controllers: [SearchController, ConnectionController, StateController, PlaylistController, SpotifyController, UserController],
-            middlewares: [AuthenticationSocketMiddleware]
+            middlewares: [AuthenticationSocketMiddleware],
         });
         log.startup(`Socket listening on port ${env.app.socketPort}`);
 
