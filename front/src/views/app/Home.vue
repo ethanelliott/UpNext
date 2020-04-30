@@ -353,9 +353,9 @@
                             const progress = (1 - ((finishTime - moment().valueOf()) / data.playstate.duration)) * 100;
                             this.songProgress = progress <= 100 && progress >= 0 ? progress : 0;
                             navigator.mediaSession.setPositionState({
-                                duration: this.songDuration,
+                                duration: this.songDuration / 1000,
                                 playbackRate: 1,
-                                position: this.songDuration * this.songProgress
+                                position: this.songDuration * this.songProgress / 1000
                             });
                         }, 100);
                     }
