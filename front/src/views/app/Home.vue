@@ -18,7 +18,7 @@
                 <v-spacer/>
                 <v-toolbar-items>
                     <app-share-dialog v-bind:code="code"></app-share-dialog>
-                    <app-admin-dialog v-if="isAdmin" v-on:event="handleEvent"></app-admin-dialog>
+                    <app-admin-dialog @event="handleEvent" @media="addMediaView" v-if="isAdmin"></app-admin-dialog>
                     <v-menu offset-y v-else>
                         <template v-slot:activator="{ on }">
                             <v-btn color="primary" dark icon v-on="on">
@@ -92,11 +92,13 @@
                                 <v-row class="ma-0 pa-0">
                                     <v-col class="text-left"
                                            style="text-overflow: ellipsis;white-space: nowrap;overflow: hidden;">
-                                        <span class="headline font-weight-medium text--primary">{{trackName}}</span>
-                                        <br>
-                                        <span class="font-weight-thin font-italic text--primary">{{artistName}}</span>
-                                        <br>
-                                        <span v-if="addedBy">Added by: {{ addedBy }}</span>
+                                        <v-card class="ma-0 pa-0" color="transparent" elevation="0" max-width="600">
+                                            <span class="headline font-weight-medium text--primary">{{trackName}}</span>
+                                            <br>
+                                            <span class="font-weight-thin font-italic text--primary">{{artistName}}</span>
+                                            <br>
+                                            <span v-if="addedBy">Added by: {{ addedBy }}</span>
+                                        </v-card>
                                     </v-col>
                                 </v-row>
                                 <v-row align="center" class="ma-0 pa-0 mt-4" justify="center">
@@ -343,6 +345,7 @@
                     this.songProgress = data.playstate.progress / data.playstate.duration * 100;
                     this.songDuration = data.playstate.duration;
                     this.songAnalysis = data.playstate.analysis;
+                    this.updateMediaMetadata();
                     clearInterval(this.songProgressLoopTrack);
                     if (data.playstate.isPlaying) {
                         const finishTime = moment().add((data.playstate.duration - data.playstate.progress), 'milliseconds').valueOf();
@@ -357,6 +360,46 @@
                 }
                 if (data.party) {
                     this.code = data.party.code;
+                }
+            },
+            updateMediaMetadata() {
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: this.trackName,
+                    album: 'UpNext',
+                    artist: this.artistName,
+                    artwork: [
+                        {src: this.albumArtwork, sizes: '512x512', type: 'image/png'},
+                    ]
+                });
+            },
+            addMediaView() {
+                if ('mediaSession' in navigator) {
+                    let audio = document.createElement('audio');
+                    audio.src = "https://raw.githubusercontent.com/anars/blank-audio/master/10-seconds-of-silence.mp3";
+                    audio.loop = true;
+                    audio.play().then(() => {
+                        this.updateMediaMetadata();
+                        navigator.mediaSession.setActionHandler('play', () => {
+                            audio.play();
+                            this.socket.emit('party-playback-toggle', {
+                                token: this.token,
+                                data: {}
+                            });
+                        });
+                        navigator.mediaSession.setActionHandler('pause', () => {
+                            audio.pause();
+                            this.socket.emit('party-playback-toggle', {
+                                token: this.token,
+                                data: {}
+                            });
+                        });
+                        navigator.mediaSession.setActionHandler('nexttrack', () => {
+                            this.socket.emit('party-playback-next', {
+                                token: this.token,
+                                data: {}
+                            });
+                        });
+                    });
                 }
             }
         },
@@ -426,51 +469,6 @@
             });
             this.socket.on('user-admin', (data) => {
                 this.isAdmin = data.admin;
-                if (this.isAdmin) {
-                    console.log('is admin');
-                    if ('mediaSession' in navigator) {
-                        console.log('has media session');
-                        let audio = document.createElement('audio');
-                        audio.src = "https://raw.githubusercontent.com/anars/blank-audio/master/10-seconds-of-silence.mp3";
-                        audio.loop = true;
-                        audio.muted = true;
-                        audio.play().then(() => {
-                            navigator.mediaSession.metadata = new MediaMetadata({
-                                title: 'Never Gonna Give You Up',
-                                artist: 'Rick Astley',
-                                album: 'Whenever You Need Somebody',
-                                artwork: [
-                                    {src: 'https://dummyimage.com/96x96', sizes: '96x96', type: 'image/png'},
-                                    {src: 'https://dummyimage.com/128x128', sizes: '128x128', type: 'image/png'},
-                                    {src: 'https://dummyimage.com/192x192', sizes: '192x192', type: 'image/png'},
-                                    {src: 'https://dummyimage.com/256x256', sizes: '256x256', type: 'image/png'},
-                                    {src: 'https://dummyimage.com/384x384', sizes: '384x384', type: 'image/png'},
-                                    {src: 'https://dummyimage.com/512x512', sizes: '512x512', type: 'image/png'},
-                                ]
-                            });
-                            console.log('media session created');
-                            navigator.mediaSession.setActionHandler('play', () => {
-                                console.log('play');
-                                audio.play();
-                                this.socket.emit('party-playback-toggle', {
-                                    token: this.token,
-                                    data: {}
-                                });
-                            });
-                            navigator.mediaSession.setActionHandler('pause', () => {
-                                console.log('pause');
-                                audio.pause();
-                                this.socket.emit('party-playback-toggle', {
-                                    token: this.token,
-                                    data: {}
-                                });
-                            });
-                            navigator.mediaSession.setActionHandler('nexttrack', () => {
-                                console.log('nexttrack');
-                            });
-                        });
-                    }
-                }
             });
             this.socket.on('party-state', this.gotStateData);
             this.socket.on('state-change', this.gotStateData);
