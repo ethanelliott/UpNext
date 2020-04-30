@@ -223,6 +223,7 @@
             snackbarAction: () => {
             },
             searchResult: {},
+            isPlaying: false,
             isAdmin: false,
             backgroundString: '',
             progressColour: '',
@@ -334,6 +335,7 @@
                 this.isLoading = false;
                 if (data.playstate) {
                     this.hasState = true;
+                    this.isPlaying = data.playstate.isPlaying;
                     this.trackName = data.playstate.trackName;
                     this.albumArtwork = data.playstate.albumArtwork;
                     this.artistName = data.playstate.artistName;
@@ -349,9 +351,7 @@
                     this.updateMediaMetadata();
                     clearInterval(this.songProgressLoopTrack);
                     if (data.playstate.isPlaying) {
-                        if (this.media) {
-                            this.media.play();
-                        }
+                        navigator.mediaSession.playbackState = "playing";
                         const finishTime = moment().add((data.playstate.duration - data.playstate.progress), 'milliseconds').valueOf();
                         this.songProgressLoopTrack = setInterval(() => {
                             const progress = (1 - ((finishTime - moment().valueOf()) / data.playstate.duration)) * 100;
@@ -363,13 +363,13 @@
                             });
                         }, 100);
                     } else {
-                        if (this.media) {
-                            this.media.pause();
-                        }
+                        navigator.mediaSession.playbackState = "paused";
                     }
                 } else {
+                    this.isPlaying = false;
                     this.hasState = false;
                     this.backgroundString = `background-image: linear-gradient(#000000ff 0%, rgba(0,0,0,1) 100%);`;
+                    navigator.mediaSession.playbackState = "paused";
                 }
                 if (data.party) {
                     this.code = data.party.code;
@@ -391,16 +391,16 @@
                     this.audio.src = "https://raw.githubusercontent.com/anars/blank-audio/master/10-seconds-of-silence.mp3";
                     this.audio.loop = true;
                     this.audio.play().then(() => {
+                        this.audio.pause();
                         this.updateMediaMetadata();
+                        navigator.mediaSession.playbackState = this.isPlaying ? "playing" : "paused";
                         navigator.mediaSession.setActionHandler('play', () => {
-                            this.audio.play();
                             this.socket.emit('party-playback-toggle', {
                                 token: this.token,
                                 data: {}
                             });
                         });
                         navigator.mediaSession.setActionHandler('pause', () => {
-                            this.audio.pause();
                             this.socket.emit('party-playback-toggle', {
                                 token: this.token,
                                 data: {}
