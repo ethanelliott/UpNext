@@ -360,19 +360,18 @@
                             this.songProgress = progress <= 100 && progress >= 0 ? progress : 0;
                         }, 100);
                         this.mediaSessionLoop = setInterval(() => {
-                            console.log(this.songDuration / 1000, (this.songDuration * (this.songProgress / 100)) / 1000);
                             navigator.mediaSession.setPositionState({
-                                duration: this.songDuration / 1000,
+                                duration: Math.floor(this.songDuration / 1000),
                                 playbackRate: 1,
-                                position: (this.songDuration * (this.songProgress / 100)) / 1000
+                                position: Math.floor((this.songDuration * (this.songProgress / 100)) / 1000)
                             });
                         }, 1000);
                     } else {
                         navigator.mediaSession.playbackState = "paused";
                         navigator.mediaSession.setPositionState({
-                            duration: this.songDuration / 1000,
+                            duration: Math.floor(this.songDuration / 1000),
                             playbackRate: 1,
-                            position: (this.songDuration * (this.songProgress / 100)) / 1000
+                            position: Math.floor((this.songDuration * (this.songProgress / 100)) / 1000)
                         });
                     }
                 } else {
