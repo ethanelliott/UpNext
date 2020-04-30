@@ -4,7 +4,7 @@ import { Action, createExpressServer } from 'routing-controllers';
 import { Container } from "typedi";
 
 import { env } from '../env';
-import logger from "../util/Log";
+import { log } from "../util/Log";
 import { WebTokenService } from "../api/Services/WebTokenService";
 // Middleware
 import { LogMiddleware } from "../middleware/LogMiddleware";
@@ -17,7 +17,7 @@ import { SpotifyOAuthController } from "../api/Controllers/SpotifyOAuthControlle
 
 export const ExpressLoader: MicroframeworkLoader = (settings: MicroframeworkSettings | undefined) => {
     if (settings) {
-        logger.info("[START] Loading Express");
+        log.startup("Loading Express");
 
         const expressApp: Application = createExpressServer({
             cors: true,
@@ -43,7 +43,7 @@ export const ExpressLoader: MicroframeworkLoader = (settings: MicroframeworkSett
 
         if (!env.isTest) {
             const server = expressApp
-                .listen(env.app.port, () => logger.info(`[START] Server Listening ${env.app.port}`));
+                .listen(env.app.port, () => log.startup(`Server Listening ${env.app.port}`));
             settings.setData('express_server', server);
         }
         settings.setData('express_app', expressApp);

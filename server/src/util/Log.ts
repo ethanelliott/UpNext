@@ -1,6 +1,7 @@
 'use strict';
 import winston from "winston";
 import { env } from "../env";
+import chalk from "chalk";
 
 const {createLogger, format, transports} = winston;
 const {combine, timestamp, printf, colorize} = format;
@@ -55,7 +56,100 @@ const logger = createLogger({
 });
 
 winston.addColors({
-    info: 'yellow'
+    info: 'yellow',
+    silly: 'purple'
 });
 
-export default logger;
+function emerg(message: string) {
+    logger.emerg(`${message}`);
+}
+
+function alert(message: string) {
+    logger.alert(`${message}`);
+}
+
+function crit(message: string) {
+    logger.crit(`${message}`);
+}
+
+function error(message: string) {
+    logger.error(`${message}`);
+}
+
+function warning(message: string) {
+    logger.warning(`${message}`);
+}
+
+function notice(message: string) {
+    logger.notice(`${message}`);
+}
+
+function info(message: string) {
+    logger.info(`${message}`);
+}
+
+function debug(message: string) {
+    logger.debug(`${message}`);
+}
+
+function silly(message: string) {
+    logger.silly(`${message}`);
+}
+
+function compose(type: Function, prefix: string): Function {
+    return (message: string) => {
+        type(`${prefix} ${message}`);
+    };
+}
+
+function startup(message: string) {
+    compose(info, `[${chalk.green('START')}]`)(message);
+}
+
+function spotify(message: string) {
+    compose(info, `[${chalk.greenBright.bgBlack('SPOTIFY')}]`)(message);
+}
+
+function socket(message: string) {
+    compose(debug, `[${chalk.keyword('purple')('SOCKET')}]`)(message);
+}
+
+function upnext(message: string) {
+    compose(info, `[${chalk.keyword('pink')('UPNEXT')}]`)(message);
+}
+
+function express(message: string) {
+    compose(debug, `[${chalk.blue('EXPRESS')}]`)(message);
+}
+
+function event(message: string) {
+    compose(debug, `[${chalk.red('EVENT')}]`)(message);
+}
+
+function cron(message: string) {
+    compose(debug, `[${chalk.yellowBright('CRON')}]`)(message);
+}
+
+function db(message: string) {
+    compose(silly, `[${chalk.grey('DB')}]`)(message);
+}
+
+export const log = {
+    emerg,
+    alert,
+    crit,
+    error,
+    warning,
+    notice,
+    info,
+    debug,
+    silly,
+    startup,
+    spotify,
+    socket,
+    upnext,
+    express,
+    event,
+    cron,
+    db
+};

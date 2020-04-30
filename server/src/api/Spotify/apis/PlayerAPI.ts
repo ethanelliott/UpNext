@@ -73,6 +73,15 @@ export default class PlayerAPI {
         return plainToClass(DevicesObject, d);
     }
 
+    public async nextSong(token: string): Promise<void> {
+        await WebAPIRequestBuilder
+            .make(token)
+            .withMethod(HttpMethods.POST)
+            .withPath("/v1/me/player/next")
+            .build()
+            .execute();
+    }
+
     public async addSongToEndOfQueue(token: string, trackId: string): Promise<void> {
         await WebAPIRequestBuilder
             .make(token)

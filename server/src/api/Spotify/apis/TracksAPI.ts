@@ -32,14 +32,14 @@ export default class TracksAPI {
         return plainToClass(AudioFeaturesObject, d);
     }
 
-    // Need to add the AudioAnalysisObject
-    // cast async getAudioAnalysis(token: string, trackId: string): Promise<AudioAnalysisObject> {
-    //     let d = await WebAPIRequestBuilder
-    //         .make(token)
-    //         .withMethod(HttpMethods.GET)
-    //         .withPath(`/v1/audio-analysis/${trackId}`)
-    //         .build()
-    //         .execute();
-    //     return plainToClass(AudioAnalysisObject, d);
-    // }
+    public async getAudioAnalysis(token: string, trackId: string): Promise<any> {
+        let d = await WebAPIRequestBuilder
+            .make(token)
+            .withMethod(HttpMethods.GET)
+            .withPath(`/v1/audio-analysis/${trackId}`)
+            .build()
+            .execute();
+        // return plainToClass(AudioAnalysisObject, d);
+        return d;
+    }
 }

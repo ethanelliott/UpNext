@@ -1,5 +1,5 @@
 import { Service } from "typedi";
-import logger from "../../util/Log";
+import { log } from "../../util/Log";
 import { EventEmitter } from "events";
 import { PartyDatabaseService } from "./Database/PartyDatabaseService";
 import { SpotifyService } from "./SpotifyService";
@@ -27,7 +27,7 @@ export class SpotifyStateService {
     }
 
     public startSpotifyEventLoops() {
-        logger.info(`[SPOTIFY] Starting Spotify Event Loops`);
+        log.spotify(`Starting Spotify Event Loops`);
         this.partyDatabaseService.getAllParties().forEach(party => {
             if (!this.spotifyEventEmitters.has(party.id)) {
                 this.spotifyEventEmitters.set(party.id, new SpotifyEventEmitter());
@@ -52,124 +52,151 @@ export class SpotifyStateService {
         this.checkForValidToken(partyId)();
         return async () => {
             const party = this.partyDatabaseService.getPartyById(partyId);
-            let spotifyPlayState = await this.spotifyService.getSpotifyAPI().player.getPlayingContext(party.spotifyToken);
-            const storedState = this.spotifyEventLoopStates.get(partyId);
-            const hasTriggeredEndOfSong = this.spotifyEventLoopStateEndOfSong.get(partyId);
-            let nextState: SpotifyState;
-            if (storedState) {
-                switch (storedState.state) {
-                    case SpotifyState.FIRST_RUN:
-                        this.spotifyEventEmitters.get(partyId).emit(SpotifyStateEvents.UPDATE_FIRST_RUN.toString(), spotifyPlayState);
-                        this.spotifyEventLoopStateEndOfSong.set(partyId, false);
-                        nextState = SpotifyState.NOTHING;
-                        if (spotifyPlayState && spotifyPlayState.item) {
-                            if (spotifyPlayState.is_playing) {
-                                nextState = SpotifyState.PLAYING;
-                            } else {
-                                nextState = SpotifyState.PAUSED;
-                            }
-                        }
-                        break;
-                    case SpotifyState.PLAYING:
-                        nextState = SpotifyState.PLAYING;
-                        if (spotifyPlayState && spotifyPlayState.item) {
-                            if (!hasTriggeredEndOfSong && spotifyPlayState.item.duration_ms - spotifyPlayState.progress_ms <= 5000) {
-                                this.spotifyEventEmitters.get(partyId).emit(SpotifyStateEvents.UPDATE_END_OF_SONG.toString());
-                                this.spotifyEventLoopStateEndOfSong.set(partyId, true);
-                            } else if (spotifyPlayState.item.id !== storedState.spotifyState.item.id) {
-                                nextState = SpotifyState.SONG_CHANGED;
-                            } else if (Math.abs((storedState.spotifyState.progress_ms - spotifyPlayState.progress_ms)) > 3000) {
-                                nextState = SpotifyState.SCRUBBING;
-                            } else if (!spotifyPlayState.is_playing) {
-                                nextState = SpotifyState.PAUSED;
-                            }
-                        } else {
+            if (party) {
+                let spotifyPlayState = await this.spotifyService.getSpotifyAPI().player.getPlayingContext(party.spotifyToken);
+                const storedState = this.spotifyEventLoopStates.get(partyId);
+                const hasTriggeredEndOfSong = this.spotifyEventLoopStateEndOfSong.get(partyId);
+                let nextState: SpotifyState = null;
+                if (storedState) {
+                    switch (storedState.state) {
+                        case SpotifyState.FIRST_RUN:
+                            nextState = this.spotifyStateFirstRun(partyId, spotifyPlayState, nextState);
+                            break;
+                        case SpotifyState.PLAYING:
+                            nextState = this.spotifyStatePlaying(nextState, spotifyPlayState, hasTriggeredEndOfSong, partyId, storedState);
+                            break;
+                        case SpotifyState.PAUSED:
+                            nextState = this.spotifyStatePaused(nextState, spotifyPlayState, storedState);
+                            break;
+                        case SpotifyState.SCRUBBING:
+                            nextState = this.spotifyStateScrubbing(partyId, spotifyPlayState, nextState);
+                            break;
+                        case SpotifyState.SONG_CHANGED:
+                            nextState = this.spotifyStateSongChanged(partyId, spotifyPlayState, nextState);
+                            break;
+                        case SpotifyState.NOTHING:
+                            this.spotifyEventLoopStateEndOfSong.set(partyId, false);
                             nextState = SpotifyState.NOTHING;
-                        }
-                        break;
-                    case SpotifyState.PAUSED:
-                        nextState = SpotifyState.PAUSED;
-                        if (spotifyPlayState && spotifyPlayState.item) {
-                            if (spotifyPlayState.item.id !== storedState.spotifyState.item.id) {
-                                nextState = SpotifyState.SONG_CHANGED;
-                            } else if (Math.abs((storedState.spotifyState.progress_ms - spotifyPlayState.progress_ms)) > 3000) {
-                                nextState = SpotifyState.SCRUBBING;
-                            } else if (spotifyPlayState.is_playing) {
-                                nextState = SpotifyState.PLAYING;
-                            }
-                        } else {
-                            nextState = SpotifyState.NOTHING;
-                        }
-                        break;
-                    case SpotifyState.SCRUBBING:
-                        this.spotifyEventLoopStateEndOfSong.set(partyId, false);
-                        if (spotifyPlayState.is_playing) {
-                            nextState = SpotifyState.PLAYING;
-                        } else {
-                            nextState = SpotifyState.PAUSED;
-                        }
-                        break;
-                    case SpotifyState.SONG_CHANGED:
-                        this.spotifyEventLoopStateEndOfSong.set(partyId, false);
-                        if (spotifyPlayState.is_playing) {
-                            nextState = SpotifyState.PLAYING;
-                        } else {
-                            nextState = SpotifyState.PAUSED;
-                        }
-                        break;
-                    case SpotifyState.NOTHING:
-                        this.spotifyEventLoopStateEndOfSong.set(partyId, false);
-                        nextState = SpotifyState.NOTHING;
-                        if (spotifyPlayState && spotifyPlayState.item) {
-                            if (spotifyPlayState.is_playing) {
-                                nextState = SpotifyState.PLAYING;
+                            if (spotifyPlayState && spotifyPlayState.item) {
+                                if (spotifyPlayState.is_playing) {
+                                    nextState = SpotifyState.PLAYING;
+                                } else {
+                                    nextState = SpotifyState.PAUSED;
+                                }
                             } else {
-                                nextState = SpotifyState.PAUSED;
+                                spotifyPlayState = null;
                             }
-                        } else {
-                            spotifyPlayState = null;
-                        }
-                        break;
+                            break;
+                    }
+                } else {
+                    nextState = SpotifyState.NOTHING;
                 }
-            } else {
-                nextState = SpotifyState.NOTHING;
-            }
 
-            // emit the changes when they happen
-            if (nextState !== storedState.state) {
-                switch (nextState) {
-                    case SpotifyState.PLAYING:
-                        this.spotifyEventEmitters.get(partyId).emit(SpotifyStateEvents.UPDATE_PLAYING.toString(), spotifyPlayState);
-                        break;
-                    case SpotifyState.PAUSED:
-                        this.spotifyEventEmitters.get(partyId).emit(SpotifyStateEvents.UPDATE_PAUSED.toString(), spotifyPlayState);
-                        break;
-                    case SpotifyState.SCRUBBING:
-                        this.spotifyEventEmitters.get(partyId).emit(SpotifyStateEvents.UPDATE_SCRUBBING.toString(), spotifyPlayState);
-                        break;
-                    case SpotifyState.SONG_CHANGED:
-                        this.spotifyEventEmitters.get(partyId).emit(SpotifyStateEvents.UPDATE_SONG_CHANGE.toString(), spotifyPlayState);
-                        break;
+                // emit the changes when they happen
+                if (nextState !== storedState.state) {
+                    switch (nextState) {
+                        case SpotifyState.PLAYING:
+                            this.spotifyEventEmitters.get(partyId).emit(SpotifyStateEvents.UPDATE_PLAYING.toString(), spotifyPlayState);
+                            break;
+                        case SpotifyState.PAUSED:
+                            this.spotifyEventEmitters.get(partyId).emit(SpotifyStateEvents.UPDATE_PAUSED.toString(), spotifyPlayState);
+                            break;
+                        case SpotifyState.SCRUBBING:
+                            this.spotifyEventEmitters.get(partyId).emit(SpotifyStateEvents.UPDATE_SCRUBBING.toString(), spotifyPlayState);
+                            break;
+                        case SpotifyState.SONG_CHANGED:
+                            this.spotifyEventEmitters.get(partyId).emit(SpotifyStateEvents.UPDATE_SONG_CHANGE.toString(), spotifyPlayState);
+                            break;
+                    }
                 }
+                // emit an update event on every update with the play state
+                this.spotifyEventEmitters.get(partyId).emit(SpotifyStateEvents.UPDATE.toString(), spotifyPlayState);
+                this.spotifyEventLoopStates.set(partyId, {
+                    state: nextState,
+                    spotifyState: spotifyPlayState
+                });
             }
-            // emit an update event on every update with the play state
-            this.spotifyEventEmitters.get(partyId).emit(SpotifyStateEvents.UPDATE.toString(), spotifyPlayState);
-            this.spotifyEventLoopStates.set(partyId, {
-                state: nextState,
-                spotifyState: spotifyPlayState
-            });
         };
+    }
+
+    private spotifyStateSongChanged(partyId: string, spotifyPlayState: CurrentlyPlayingObject, nextState: SpotifyState) {
+        this.spotifyEventLoopStateEndOfSong.set(partyId, false);
+        if (spotifyPlayState.is_playing) {
+            nextState = SpotifyState.PLAYING;
+        } else {
+            nextState = SpotifyState.PAUSED;
+        }
+        return nextState;
+    }
+
+    private spotifyStateScrubbing(partyId: string, spotifyPlayState: CurrentlyPlayingObject, nextState: SpotifyState) {
+        this.spotifyEventLoopStateEndOfSong.set(partyId, false);
+        if (spotifyPlayState.is_playing) {
+            nextState = SpotifyState.PLAYING;
+        } else {
+            nextState = SpotifyState.PAUSED;
+        }
+        return nextState;
+    }
+
+    private spotifyStatePaused(nextState: SpotifyState, spotifyPlayState: CurrentlyPlayingObject, storedState: StoredSpotifyState) {
+        nextState = SpotifyState.PAUSED;
+        if (spotifyPlayState && spotifyPlayState.item) {
+            if (spotifyPlayState.item.id !== storedState.spotifyState.item.id) {
+                nextState = SpotifyState.SONG_CHANGED;
+            } else if (Math.abs((storedState.spotifyState.progress_ms - spotifyPlayState.progress_ms)) > 3000) {
+                nextState = SpotifyState.SCRUBBING;
+            } else if (spotifyPlayState.is_playing) {
+                nextState = SpotifyState.PLAYING;
+            }
+        } else {
+            nextState = SpotifyState.NOTHING;
+        }
+        return nextState;
+    }
+
+    private spotifyStatePlaying(nextState: SpotifyState, spotifyPlayState: CurrentlyPlayingObject, hasTriggeredEndOfSong: boolean, partyId: string, storedState: StoredSpotifyState) {
+        nextState = SpotifyState.PLAYING;
+        if (spotifyPlayState && spotifyPlayState.item) {
+            if (!hasTriggeredEndOfSong && spotifyPlayState.item.duration_ms - spotifyPlayState.progress_ms <= 5000) {
+                this.spotifyEventEmitters.get(partyId).emit(SpotifyStateEvents.UPDATE_END_OF_SONG.toString());
+                this.spotifyEventLoopStateEndOfSong.set(partyId, true);
+            } else if (spotifyPlayState.item.id !== storedState.spotifyState.item.id) {
+                nextState = SpotifyState.SONG_CHANGED;
+            } else if (Math.abs((storedState.spotifyState.progress_ms - spotifyPlayState.progress_ms)) > 3000) {
+                nextState = SpotifyState.SCRUBBING;
+            } else if (!spotifyPlayState.is_playing) {
+                nextState = SpotifyState.PAUSED;
+            }
+        } else {
+            nextState = SpotifyState.NOTHING;
+        }
+        return nextState;
+    }
+
+    private spotifyStateFirstRun(partyId: string, spotifyPlayState: CurrentlyPlayingObject, nextState: SpotifyState) {
+        this.spotifyEventEmitters.get(partyId).emit(SpotifyStateEvents.UPDATE_FIRST_RUN.toString(), spotifyPlayState);
+        this.spotifyEventLoopStateEndOfSong.set(partyId, false);
+        nextState = SpotifyState.NOTHING;
+        if (spotifyPlayState && spotifyPlayState.item) {
+            if (spotifyPlayState.is_playing) {
+                nextState = SpotifyState.PLAYING;
+            } else {
+                nextState = SpotifyState.PAUSED;
+            }
+        }
+        return nextState;
     }
 
     private checkForValidToken(partyId: string) {
         return () => {
-            logger.info(`[SPOTIFY] Updating token on ${partyId}`);
+            log.spotify(`Updating token on ${partyId}`);
             const party = this.partyDatabaseService.getPartyById(partyId);
             this.spotifyService.getSpotifyAPI().auth
                 .refreshAuthToken(env.app.spotify.clientId, env.app.spotify.clientSecret, party.spotifyRefreshToken)
                 .then(refreshTokenData => {
                     this.partyDatabaseService.refreshPartyToken(partyId, refreshTokenData.access_token, refreshTokenData.expires_in);
-                    setTimeout(this.checkForValidToken(partyId), refreshTokenData.expires_in * 1000);
+                    setTimeout(this.checkForValidToken(partyId), (refreshTokenData.expires_in * 1000) - (60 * 1000));
                 });
         };
     }

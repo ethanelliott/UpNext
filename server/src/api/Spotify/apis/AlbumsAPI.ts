@@ -26,7 +26,7 @@ export default class AlbumsAPI {
             .make(token)
             .withMethod(HttpMethods.GET)
             .withPath(`/v1/albums/${id}/tracks`)
-            .withQueryParameters({country: 'from_token'})
+            .withQueryParameters({country: 'from_token', limit: 50})
             .build().execute();
         return plainToClass(PagingObject, d) as PagingObject<SimplifiedTrackObject>;
     }

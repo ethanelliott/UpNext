@@ -2,8 +2,6 @@ import { Service } from "typedi";
 import { DatabaseService } from "./DatabaseService";
 import QueryFactory from "../../Factory/QueryFactory";
 import { UserDB } from "../../Types/DatabaseMaps/UserDB";
-import moment from "moment";
-import { CronJobService } from "../CronJobService";
 
 @Service()
 export class UserDatabaseService {
@@ -12,23 +10,12 @@ export class UserDatabaseService {
 
     constructor(
         private databaseService: DatabaseService,
-        private cronJobService: CronJobService
     ) {
         try {
             this.databaseService.db.prepare(`SELECT * FROM ${this.tableName}`).get();
         } catch (e) {
             this.buildTable();
         }
-        this.cronJobService.newCronJob({
-            pattern: '*/30 * * * *',
-            method: () => {
-                const time12HrAgo = moment().subtract(12, 'hours').valueOf();
-                this.databaseService.delete({
-                    from: this.tableName,
-                    where: [{key: 'joinedAt', operator: '<', value: time12HrAgo}]
-                });
-            }
-        });
     }
 
     public insertUser(user: UserDB): void {
@@ -53,10 +40,12 @@ export class UserDatabaseService {
         });
     }
 
-    public updateUserScore(userId: string, score: number): void {
+    public updateUserScore(userId: string, modifier: number): void {
         this.databaseService.update({
             update: this.tableName,
-            set: {score},
+            set: {
+                score: this.getUserById(userId).score + modifier
+            },
             where: [{key: 'id', operator: '=', value: userId}]
         });
     }

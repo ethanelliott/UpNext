@@ -54,4 +54,22 @@ export default class ArtistsAPI {
             .execute();
         return plainToClass(ArtistsArray, d);
     }
+
+    public async getAllAlbums(token: string, id: any): Promise<Array<SimplifiedAlbumObject>> {
+        const items = [];
+        let offset = 0;
+        do {
+            let d = await WebAPIRequestBuilder
+                .make(token)
+                .withMethod(HttpMethods.GET)
+                .withPath(`/v1/artists/${id}/albums`)
+                .withQueryParameters({country: 'from_token', limit: 50, offset, include_groups: 'album,single'})
+                .build()
+                .execute();
+            let result = plainToClass(PagingObject, d) as PagingObject<SimplifiedAlbumObject>;
+            result.items.forEach(e => items.push(e));
+            offset = offset < result.total ? result.offset + result.items.length : null;
+        } while (offset !== null);
+        return items;
+    }
 }

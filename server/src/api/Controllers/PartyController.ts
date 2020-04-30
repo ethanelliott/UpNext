@@ -6,7 +6,7 @@ import { WebTokenService } from "../Services/WebTokenService";
 import { PartyJoinToken } from "../Types/general/PartyJoinToken";
 import { AuthenticationService } from "../Services/AuthenticationService";
 import { PartyService } from "../Services/PartyService";
-import logger from "../../util/Log";
+import { log } from "../../util/Log";
 
 @JsonController('/party')
 export class PartyController {
@@ -97,13 +97,7 @@ export class PartyController {
     @Post('/leave')
     public async leaveParty(@BodyParam('token') token: string): Promise<any> {
         const data = await this.authenticationService.authenticate(token);
-        logger.info(`[PARTY] User Leaving ${data.userId}`);
-        return {};
-    }
-
-    @Post('/fix')
-    public async fixChromeError(@BodyParam('partyId') partyId: string): Promise<any> {
-        // await this.upNextService.fixChromecastBug(partyId);
+        log.info(`[PARTY] User Leaving ${data.userId}`);
         return {};
     }
 

@@ -2,7 +2,7 @@ import { Service } from "typedi";
 
 import cron from 'node-cron';
 import { UUIDService } from "./UUIDService";
-import logger from "../../util/Log";
+import { log } from "../../util/Log";
 
 @Service()
 export class CronJobService {
@@ -19,7 +19,7 @@ export class CronJobService {
         const cronJobId = this.uuidService.new();
         this.cronJobs.set(cronJobId, cronJob);
         cron.schedule(cronJob.pattern, () => {
-            logger.debug(`[CRON] Running job: ${cronJobId}`);
+            log.cron(`Running job: ${cronJobId}`);
             cronJob.method();
         });
     }

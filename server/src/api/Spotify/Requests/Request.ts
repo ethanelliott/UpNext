@@ -27,6 +27,7 @@ export default class Request {
             let d = await this.makeAxios();
             return d.data;
         } catch (e) {
+            console.log(`[SPOTIFY]`, e.response.data.error.status, e.response.data.error.message, `\n`, e.stack);
             throw new GenericError(e.response.data.error.status, e.response.data.error.message, e.stack);
         }
     }
@@ -68,7 +69,6 @@ export default class Request {
                         params: this.queryParameters
                     });
                 }
-
             case HttpMethods.PUT:
                 return axios.request({
                     method: 'put',
@@ -79,5 +79,4 @@ export default class Request {
                 });
         }
     }
-
 }
