@@ -349,7 +349,9 @@
                     this.updateMediaMetadata();
                     clearInterval(this.songProgressLoopTrack);
                     if (data.playstate.isPlaying) {
-                        this.media.play();
+                        if (this.media) {
+                            this.media.play();
+                        }
                         const finishTime = moment().add((data.playstate.duration - data.playstate.progress), 'milliseconds').valueOf();
                         this.songProgressLoopTrack = setInterval(() => {
                             const progress = (1 - ((finishTime - moment().valueOf()) / data.playstate.duration)) * 100;
@@ -361,7 +363,9 @@
                             });
                         }, 100);
                     } else {
-                        this.media.pause();
+                        if (this.media) {
+                            this.media.pause();
+                        }
                     }
                 } else {
                     this.hasState = false;
