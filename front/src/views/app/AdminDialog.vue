@@ -19,6 +19,14 @@
                 <v-card-title>Media Controls</v-card-title>
                 <v-container class="ma-0 pa-0">
                     <v-row align="center" class="ma-0 pa-0" justify="center">
+                        <v-col class="ma-0 pa-0">
+                            <v-btn @click="showMediaControls" block tile x-large>
+                                <v-icon left>mdi-music</v-icon>
+                                Show The Media Controls
+                            </v-btn>
+                        </v-col>
+                    </v-row>
+                    <v-row align="center" class="ma-0 pa-0" justify="center">
                         <v-col align="center" class="ma-0 pa-0" justify="center">
                             <v-btn @click="togglePlayback" icon x-large>
                                 <v-icon>mdi-play-pause</v-icon>
@@ -102,6 +110,9 @@
             deleteSafetyDialog: false,
         }),
         methods: {
+            showMediaControls() {
+                this.$emit('media', null)
+            },
             emitEvent(eventName, data) {
                 this.$emit('event', {eventName, data})
             },
