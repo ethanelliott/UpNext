@@ -74,7 +74,7 @@ export class UpNextService {
             });
         });
         eventEmitter.on(SpotifyStateEvents.UPDATE_END_OF_SONG.toString(), async (playStateData: CurrentlyPlayingObject) => {
-            console.log(`END OF SONG`);
+            log.upnext(`End of Song`);
             const party = this.partyDatabaseService.getPartyById(partyId);
             const playlist = this.playlistEntryDatabaseService.getAllPlaylistEntriesForParty(partyId).sort(playlistSort);
             if (playlist.length > 0) {

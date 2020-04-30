@@ -384,6 +384,7 @@
                     this.notificationPermission = permission;
                 });
             }
+            navigator.serviceWorker.register('/sw.js?c=345987');
             window.scrollTo(0, 0);
             this.token = session.getItem('token');
             this.socket = io(this.$socketUrl);
@@ -397,9 +398,29 @@
             this.socket.on('notification', (data) => {
                 console.log(data);
                 if (this.notificationPermission === 'granted') {
-                    new Notification(`${data.title}`, {
-                        body: `${data.body}`,
-                        icon: '/assets/apple-touch-icon.png'
+                    navigator.serviceWorker.getRegistration().then((reg) => {
+                        const options = {
+                            body: `${data.body}`,
+                            icon: '/assets/apple-touch-icon.png',
+                            vibrate: [100, 50, 100],
+                            data: {
+                                dateOfArrival: Date.now(),
+                                primaryKey: 1
+                            },
+                            actions: [
+                                {
+                                    action: 'explore',
+                                    title: 'Go To UpNext',
+                                    // icon: 'images/checkmark.png'
+                                },
+                                {
+                                    action: 'close',
+                                    title: 'Close notification',
+                                    // icon: 'images/xmark.png'
+                                },
+                            ]
+                        };
+                        reg.showNotification(`${data.title}`, options);
                     });
                 }
             });
