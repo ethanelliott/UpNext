@@ -40,10 +40,12 @@ export class UserDatabaseService {
         });
     }
 
-    public updateUserScore(userId: string, score: number): void {
+    public updateUserScore(userId: string, modifier: number): void {
         this.databaseService.update({
             update: this.tableName,
-            set: {score},
+            set: {
+                score: this.getUserById(userId).score + modifier
+            },
             where: [{key: 'id', operator: '=', value: userId}]
         });
     }

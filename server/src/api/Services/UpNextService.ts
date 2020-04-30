@@ -89,6 +89,7 @@ export class UpNextService {
         eventEmitter.on(SpotifyStateEvents.UPDATE_PAUSED.toString(), (playStateData: CurrentlyPlayingObject) => {
             this.updateOnlyPlaying(partyId, playStateData).then(() => {
                 this.emitStateChange(partyId);
+                this.emitNotification(partyId, `UpNext`, `Song paused!`);
             });
         });
         eventEmitter.on(SpotifyStateEvents.UPDATE_SONG_CHANGE.toString(), (playStateData: CurrentlyPlayingObject) => {
@@ -132,7 +133,7 @@ export class UpNextService {
         });
     }
 
-    private emitStateChange(partyId) {
+    private emitStateChange(partyId: string) {
         this.eventEmitterService.emitEventAt(
             partyId,
             PartyEvent.STATE_CHANGE,
@@ -143,11 +144,22 @@ export class UpNextService {
         );
     }
 
+    private emitNotification(partyId: string, title: string, body: string) {
+        this.eventEmitterService.emitEventAt(
+            partyId,
+            PartyEvent.NOTIFICATION,
+            {
+                title,
+                body
+            }
+        );
+    }
+
     public getUserById(userId: string): UserDB {
         return this.userDatabaseService.getUserById(userId);
     }
 
-    private emitPlaylistUpdate(partyId) {
+    private emitPlaylistUpdate(partyId: string) {
         this.eventEmitterService.emitEventAt(
             partyId,
             PartyEvent.PLAYLIST_UPDATE,
@@ -162,7 +174,7 @@ export class UpNextService {
     }
 
     // this big one should only be called every once and a while, since it is VERY heavy
-    private async updatePartyStateData(partyId, sps: CurrentlyPlayingObject) {
+    private async updatePartyStateData(partyId: string, sps: CurrentlyPlayingObject) {
         if (sps instanceof CurrentlyPlayingObject) {
             const party = this.partyDatabaseService.getPartyById(partyId);
             const colours = await this.colourService.getColoursFor(sps.item.album.images.filter(e => e.width === Math.max(...sps.item.album.images.map(e => e.width)))[0].url);
@@ -198,7 +210,7 @@ export class UpNextService {
         return null;
     }
 
-    private async updateOnlyProgress(partyId, sps: CurrentlyPlayingObject) {
+    private async updateOnlyProgress(partyId: string, sps: CurrentlyPlayingObject) {
         if (sps instanceof CurrentlyPlayingObject) {
             const currentState = this.upNextPartyData.get(partyId);
             if (currentState && sps.progress_ms !== currentState.progress) {
@@ -208,7 +220,7 @@ export class UpNextService {
         }
     }
 
-    private async updateOnlyPlaying(partyId, sps: CurrentlyPlayingObject) {
+    private async updateOnlyPlaying(partyId: string, sps: CurrentlyPlayingObject) {
         if (sps instanceof CurrentlyPlayingObject) {
             const currentState = this.upNextPartyData.get(partyId);
             if (currentState && sps.is_playing !== currentState.isPlaying) {

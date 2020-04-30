@@ -228,7 +228,8 @@
             songProgressLoopTrack: null,
             songProgress: 0,
             songDuration: 0,
-            songAnalysis: null
+            songAnalysis: null,
+            notificationPermission: null
         }),
         components: {
             AppAdminDialog,
@@ -376,6 +377,13 @@
             this.socket.disconnect();
         },
         mounted() {
+            if (!('Notification' in window)) {
+                console.log("This browser does not support notifications.");
+            } else {
+                Notification.requestPermission().then((permission) => {
+                    this.notificationPermission = permission;
+                });
+            }
             window.scrollTo(0, 0);
             this.token = session.getItem('token');
             this.socket = io(this.$socketUrl);
@@ -385,6 +393,15 @@
             });
             this.socket.on('party-leave', () => {
                 this.navigateAway();
+            });
+            this.socket.on('notification', (data) => {
+                console.log(data);
+                if (this.notificationPermission === 'granted') {
+                    new Notification(`${data.title}`, {
+                        body: `${data.body}`,
+                        icon: '/assets/apple-touch-icon.png'
+                    });
+                }
             });
             this.socket.on('user-admin', (data) => {
                 this.isAdmin = data.admin;

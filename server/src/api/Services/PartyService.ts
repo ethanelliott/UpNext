@@ -22,6 +22,7 @@ import moment from "moment";
 import { PartyEvent } from "../Factory/PartyEventEmitterBuilder";
 import { EventEmitterService } from "./EventEmitterService";
 import { CronJobService } from "./CronJobService";
+import { userSort } from "./sorts";
 
 @Service()
 export class PartyService {
@@ -109,6 +110,7 @@ export class PartyService {
             .withTrackingId(token.trackingId)
             .build();
         this.userDatabaseService.insertUser(user);
+        this.emitUsersUpdate(token.partyId);
         return user.id;
     }
 
@@ -132,6 +134,7 @@ export class PartyService {
     }
 
     public upvoteSong(partyId: string, userId: string, playlistEntryId: string): void {
+        const entry = this.playlistEntryDatabaseService.getPlaylistEntryById(playlistEntryId);
         const userVotes = this.playlistVoteDatabaseService.getVotesForUserOnEntry(userId, playlistEntryId);
         if (userVotes.length === 0) {
             // perfect the user has yet to upvote
@@ -141,7 +144,9 @@ export class PartyService {
                 type: PlaylistVoteEnum.UPVOTE
             });
             this.playlistEntryDatabaseService.addUpVote(playlistEntryId);
+            this.userDatabaseService.updateUserScore(entry.addedBy, 1);
             this.emitPlaylistUpdate(partyId);
+            this.emitUsersUpdate(partyId);
         } else if (userVotes.length === 1 && userVotes[0].type === PlaylistVoteEnum.DOWNVOTE) {
             this.playlistEntryDatabaseService.removeDownVote(playlistEntryId);
             this.playlistEntryDatabaseService.addUpVote(playlistEntryId);
@@ -151,11 +156,14 @@ export class PartyService {
                 playlistEntryId,
                 userId
             });
+            this.userDatabaseService.updateUserScore(entry.addedBy, 1);
             this.emitPlaylistUpdate(partyId);
+            this.emitUsersUpdate(partyId);
         }
     }
 
     public downvoteSong(partyId: string, userId: string, playlistEntryId: string): void {
+        const entry = this.playlistEntryDatabaseService.getPlaylistEntryById(playlistEntryId);
         const userVotes = this.playlistVoteDatabaseService.getVotesForUserOnEntry(userId, playlistEntryId);
         if (userVotes.length === 0) {
             // perfect the user has yet to upvote
@@ -165,7 +173,9 @@ export class PartyService {
                 type: PlaylistVoteEnum.DOWNVOTE
             });
             this.playlistEntryDatabaseService.addUpVote(playlistEntryId);
+            this.userDatabaseService.updateUserScore(entry.addedBy, -1);
             this.emitPlaylistUpdate(partyId);
+            this.emitUsersUpdate(partyId);
         } else if (userVotes.length === 1 && userVotes[0].type === PlaylistVoteEnum.UPVOTE) {
             this.playlistEntryDatabaseService.removeUpVote(playlistEntryId);
             this.playlistEntryDatabaseService.addDownVote(playlistEntryId);
@@ -175,7 +185,9 @@ export class PartyService {
                 playlistEntryId,
                 userId
             });
+            this.userDatabaseService.updateUserScore(entry.addedBy, -1);
             this.emitPlaylistUpdate(partyId);
+            this.emitUsersUpdate(partyId);
         }
     }
 
@@ -201,7 +213,9 @@ export class PartyService {
                 playlistEntryId: entryId,
                 userId
             });
+            this.userDatabaseService.updateUserScore(userId, 1);
             this.emitPlaylistUpdate(partyId);
+            this.emitUsersUpdate(partyId);
             return true;
         } else {
             //its already in the playlist
@@ -214,8 +228,17 @@ export class PartyService {
             partyId,
             PartyEvent.PLAYLIST_UPDATE,
             {
-                party: this.partyDatabaseService.getPartyById(partyId),
                 playlist: this.getPlaylistForPartyId(partyId)
+            }
+        );
+    }
+
+    private emitUsersUpdate(partyId) {
+        this.eventEmitterService.emitEventAt(
+            partyId,
+            PartyEvent.USERS_UPDATE,
+            {
+                users: this.userDatabaseService.getUsersAtParty(partyId).sort(userSort)
             }
         );
     }

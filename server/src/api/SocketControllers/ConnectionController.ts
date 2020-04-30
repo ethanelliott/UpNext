@@ -39,6 +39,7 @@ export class ConnectionController {
         this.eventQueueService.joinPartyEvents(tokenData.partyId,
             PartyEventEmitterBuilder
                 .make()
+                .withEvent(PartyEvent.NOTIFICATION, data => socket.emit('notification', data))
                 .withEvent(PartyEvent.STATE_CHANGE, data => socket.emit('state-change', data))
                 .withEvent(PartyEvent.PLAYLIST_UPDATE, data => socket.emit('playlist-update', data))
                 .withEvent(PartyEvent.USERS_UPDATE, data => socket.emit('users-update', data))

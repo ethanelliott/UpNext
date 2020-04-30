@@ -39,5 +39,6 @@ export enum PartyEvent {
     PARTY_GONE,
     STATE_CHANGE,
     PLAYLIST_UPDATE,
-    USERS_UPDATE
+    USERS_UPDATE,
+    NOTIFICATION
 }

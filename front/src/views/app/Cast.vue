@@ -69,14 +69,14 @@
                                                     <h1 class="display-2 ma-4 ml-6">Scoreboard</h1>
                                                     <v-divider dark></v-divider>
                                                     <v-list color="transparent">
-                                                        <v-list-item :key="`${i}${e.score}${e.id}`"
+                                                        <v-list-item :key="`${i}${e.id}`"
                                                                      v-for="(e, i) in users.slice(0, 6)">
                                                             <v-list-item-avatar>
                                                                 <h1 class="display-2 font-weight-bold">{{i+1}}</h1>
                                                             </v-list-item-avatar>
                                                             <v-list-item-content>
                                                                 <v-list-item-title>
-                                                                    <h1 class="display-1">{{e.name}}</h1>
+                                                                    <h1 class="display-1">{{e.nickname}}</h1>
                                                                 </v-list-item-title>
                                                             </v-list-item-content>
                                                             <v-list-item-action>
@@ -202,96 +202,68 @@
                 this.requestStateData();
                 this.socket.emit('join', {token: this.token, data: null});
             });
-            this.socket.on('party-leave', () => {
-                this.navigateAway();
+            this.socket.on('party-leave', this.navigateAway);
+            this.socket.on('party-state', this.gotState);
+            this.socket.on('state-change', this.gotState);
+            this.socket.on('playlist-state', ({playlist}) => {
+                this.playlist = playlist;
             });
-            this.socket.on('party-state', (data) => {
-                this.isLoading = false;
-                if (data.playstate) {
-                    this.hasState = true;
-                    this.trackName = data.playstate.trackName;
-                    this.albumArtwork = data.playstate.albumArtwork;
-                    this.artistName = data.playstate.artistName;
-                    this.trackId = data.playstate.trackId;
-                    this.addedBy = data.playstate.addedBy;
-                    let lv = data.playstate.colours.lightVibrant;
-                    let v = data.playstate.colours.vibrant;
-                    let dv = data.playstate.colours.darkVibrant;
-                    let lm = data.playstate.colours.lightVibrant;
-                    this.backgroundString = `background-image: linear-gradient(#${lv}ff 0%, rgba(0,0,0,1) 100%);`;
-                    this.progressColour = `#${v}`;
-                    this.qrBack = encodeURI(`${lm}`);
-                    this.qrFront = encodeURI(`${dv}`);
-                    this.songProgress = data.playstate.progress / data.playstate.duration * 100;
-                    clearInterval(this.songProgressLoopTrack);
-                    if (data.playstate.isPlaying) {
-                        const finishTime = moment().add((data.playstate.duration - data.playstate.progress), 'milliseconds').valueOf();
-                        this.songProgressLoopTrack = setInterval(() => {
-                            const progress = (1 - ((finishTime - moment().valueOf()) / data.playstate.duration)) * 100;
-                            this.songProgress = progress <= 100 && progress >= 0 ? progress : 0;
-                        }, 100);
-                    }
-                } else {
-                    this.hasState = false;
-                    this.songProgress = 0;
-                    clearInterval(this.songProgressLoopTrack);
-                    this.backgroundString = `background-image: linear-gradient(#000000ff 0%, rgba(0,0,0,1) 100%);`;
-                    this.progressColour = `primary`;
-                }
-                if (data.party) {
-                    this.code = data.party.code;
-                    this.partyName = data.party.name;
-                }
+            this.socket.on('playlist-update', ({playlist}) => {
+                this.playlist = playlist;
             });
-            this.socket.on('playlist-state', (data) => {
-                this.playlist = data.playlist;
+
+            this.socket.on('users-state', ({users}) => {
+                console.log(users);
+                this.users = users;
             });
-            this.socket.on('state-change', (data) => {
-                this.isLoading = false;
-                if (data.playstate) {
-                    this.hasState = true;
-                    this.trackName = data.playstate.trackName;
-                    this.albumArtwork = data.playstate.albumArtwork;
-                    this.artistName = data.playstate.artistName;
-                    this.trackId = data.playstate.trackId;
-                    this.addedBy = data.playstate.addedBy;
-                    let lv = data.playstate.colours.lightVibrant;
-                    let v = data.playstate.colours.vibrant;
-                    let dv = data.playstate.colours.darkVibrant;
-                    let lm = data.playstate.colours.lightVibrant;
-                    this.backgroundString = `background-image: linear-gradient(#${lv}ff 0%, rgba(0,0,0,1) 100%);`;
-                    this.progressColour = `#${v}`;
-                    this.qrBack = encodeURI(`${lm}`);
-                    this.qrFront = encodeURI(`${dv}`);
-                    this.songProgress = data.playstate.progress / data.playstate.duration * 100;
-                    clearInterval(this.songProgressLoopTrack);
-                    if (data.playstate.isPlaying) {
-                        const finishTime = moment().add((data.playstate.duration - data.playstate.progress), 'milliseconds').valueOf();
-                        this.songProgressLoopTrack = setInterval(() => {
-                            const progress = (1 - ((finishTime - moment().valueOf()) / data.playstate.duration)) * 100;
-                            this.songProgress = progress <= 100 && progress >= 0 ? progress : 0;
-                        }, 100);
-                    }
-                } else {
-                    this.hasState = false;
-                    this.songProgress = 0;
-                    clearInterval(this.songProgressLoopTrack);
-                    this.backgroundString = `background-image: linear-gradient(#000000ff 0%, rgba(0,0,0,1) 100%);`;
-                    this.progressColour = `primary`;
-                }
-                if (data.party) {
-                    this.code = data.party.code;
-                    this.partyName = data.party.name;
-                }
-            });
-            this.socket.on('playlist-update', (data) => {
-                this.playlist = data.playlist;
+
+            this.socket.on('users-update', ({users}) => {
+                console.log(users);
+                this.users = users;
             });
         },
         beforeDestroy() {
             this.socket.disconnect();
         },
         methods: {
+            gotState(data) {
+                this.isLoading = false;
+                if (data.playstate) {
+                    this.hasState = true;
+                    this.trackName = data.playstate.trackName;
+                    this.albumArtwork = data.playstate.albumArtwork;
+                    this.artistName = data.playstate.artistName;
+                    this.trackId = data.playstate.trackId;
+                    this.addedBy = data.playstate.addedBy;
+                    let lv = data.playstate.colours.lightVibrant;
+                    let v = data.playstate.colours.vibrant;
+                    let dv = data.playstate.colours.darkVibrant;
+                    let lm = data.playstate.colours.lightVibrant;
+                    this.backgroundString = `background-image: linear-gradient(#${lv}ff 0%, rgba(0,0,0,1) 100%);`;
+                    this.progressColour = `#${v}`;
+                    this.qrBack = encodeURI(`${lm}`);
+                    this.qrFront = encodeURI(`${dv}`);
+                    this.songProgress = data.playstate.progress / data.playstate.duration * 100;
+                    clearInterval(this.songProgressLoopTrack);
+                    if (data.playstate.isPlaying) {
+                        const finishTime = moment().add((data.playstate.duration - data.playstate.progress), 'milliseconds').valueOf();
+                        this.songProgressLoopTrack = setInterval(() => {
+                            const progress = (1 - ((finishTime - moment().valueOf()) / data.playstate.duration)) * 100;
+                            this.songProgress = progress <= 100 && progress >= 0 ? progress : 0;
+                        }, 100);
+                    }
+                } else {
+                    this.hasState = false;
+                    this.songProgress = 0;
+                    clearInterval(this.songProgressLoopTrack);
+                    this.backgroundString = `background-image: linear-gradient(#000000ff 0%, rgba(0,0,0,1) 100%);`;
+                    this.progressColour = `primary`;
+                }
+                if (data.party) {
+                    this.code = data.party.code;
+                    this.partyName = data.party.name;
+                }
+            },
             navigateAway() {
                 this.safeToLeave = true;
                 this.$router.push('/leave');
@@ -302,6 +274,10 @@
                     data: null
                 });
                 this.socket.emit('playlist-state', {
+                    token: this.token,
+                    data: null
+                });
+                this.socket.emit('users-state', {
                     token: this.token,
                     data: null
                 });
