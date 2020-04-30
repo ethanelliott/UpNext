@@ -1,33 +1,70 @@
 <template>
-    <v-dialog fullscreen transition="dialog-bottom-transition" v-model="dialog">
+    <v-dialog fullscreen v-model="dialog">
         <template v-slot:activator="{ on }">
-            <v-list-item @click="open">
-                <v-list-item-avatar tile>
-                    <v-img size="60" :src="data.images[0].url"/>
-                </v-list-item-avatar>
-                <v-list-item-content>
-                    <v-list-item-title>{{data.name}}</v-list-item-title>
-                    <v-list-item-subtitle>{{data.artists.map(e => e.name).join(', ')}}</v-list-item-subtitle>
-                </v-list-item-content>
-            </v-list-item>
+            <v-lazy :options="{threshold: .5}"
+                    min-height="73"
+                    transition="fade-transition"
+                    v-model="isActive">
+                <div>
+                    <v-list-item @click="open">
+                        <v-list-item-avatar tile>
+                            <v-img :src="artwork" size="60"/>
+                        </v-list-item-avatar>
+                        <v-list-item-content>
+                            <v-list-item-title style="text-overflow: ellipsis;white-space: nowrap;overflow: hidden;">
+                                {{ name }}
+                            </v-list-item-title>
+                            <v-list-item-subtitle style="text-overflow: ellipsis;white-space: nowrap;overflow: hidden;">
+                                {{ artists }}
+                            </v-list-item-subtitle>
+                        </v-list-item-content>
+                    </v-list-item>
+                    <v-divider dark></v-divider>
+                </div>
+            </v-lazy>
         </template>
         <v-card color="darker">
-            <v-app-bar fixed flat>
-                <v-btn @click="close" color="primary" icon>
+            <v-toolbar color="darker" fixed flat>
+                <v-spacer/>
+                <v-btn @click="close" icon>
                     <v-icon>mdi-close</v-icon>
                 </v-btn>
-                <v-toolbar-title>{{ data.name }}</v-toolbar-title>
-                <v-spacer/>
-            </v-app-bar>
-            <v-divider class="mt-12"/>
-            <v-divider class="mt-2"/>
-            <v-img class="my-5" height="200" contain :src="data.images[0].url"/>
-            <v-list two-line color="transparent">
-                <template v-for="(item, index) in songs">
-                    <song :key="index" v-bind:song="item" v-on:add="addItem"/>
-                    <v-divider :key="'div-' + index" v-if="index + 1 < songs.length"/>
-                </template>
-            </v-list>
+            </v-toolbar>
+            <transition mode="out-in" name="fade">
+                <v-container class="ma-0 pa-0" fluid v-if="albumData">
+                    <v-col class="ma-0 pa-0" cols="12">
+                        <v-row align="center" class="ma-0 pa-0" justify="center">
+                            <album-artwork :src="albumArtwork"></album-artwork>
+                        </v-row>
+                        <v-row align="center" class="ma-0 pa-0 mt-3 mx-5" justify="center">
+                            <h1 class="headline">{{ albumName }}</h1>
+                        </v-row>
+                        <v-row align="center" class="ma-0 pa-0" justify="center">
+                            <h1 class="subtitle-1 font-italic font-weight-thin">{{ albumArtists.map(e => e.name).join(',
+                                ') }}</h1>
+                        </v-row>
+                    </v-col>
+                    <v-list class="ma-0 pa-0" color="transparent" two-line>
+                        <song
+                                :artist="item.artists.map(e => e.name).join(', ')"
+                                :id="item.id"
+                                :key="index"
+                                :name="item.name"
+                                @add="addItem"
+                                v-for="(item, index) in albumTracks">
+                        </song>
+                    </v-list>
+                </v-container>
+                <v-container class="fill-height ma-0 pa-0" fluid v-else>
+                    <v-card color="transparent" elevation="0" height="200" width="100%"></v-card>
+                    <v-col class="ma-0 pa-0" cols="12">
+                        <v-row align="center" class="ma-0 pa-0" justify="center">
+                            <v-progress-circular color="primary" indeterminate size="150"
+                                                 width="5"></v-progress-circular>
+                        </v-row>
+                    </v-col>
+                </v-container>
+            </transition>
         </v-card>
     </v-dialog>
 </template>
@@ -35,37 +72,53 @@
 <script>
     import session from 'localStorage'
     import axios from 'axios'
+    import AlbumArtwork from "./AlbumArtwork";
+    import Song from "./Song";
+    import Artist from "./Artist";
 
     export default {
-        props: ['data'],
-        name: "Album",
+        props: ['socket', 'id', 'name', 'artists', 'artwork'],
+        name: "album",
         data: () => ({
+            isActive: false,
             dialog: false,
             token: '',
-            songs: [],
+            albumData: null
         }),
         components: {
-            'song': () => import('./Song')
+            'song': () => import('./Song.vue'),
+            'album-artwork': () => import('./AlbumArtwork.vue'),
+        },
+        computed: {
+            albumArtwork() {
+                return this.albumData.images.filter(e => e.width === Math.max(...this.albumData.images.map(e => e.width)))[0].url
+            },
+            albumName() {
+                return this.albumData.name;
+            },
+            albumArtists() {
+                return this.albumData.artists;
+            },
+            albumTracks() {
+                return this.albumData.tracks.items;
+            }
         },
         mounted() {
             this.token = session.getItem('token');
+            this.socket.on(`spotify-album-${this.id}`, ({album}) => {
+                this.albumData = album;
+            });
         },
         methods: {
             open() {
-                let t = this;
-                t.dialog = true;
-                axios.post('/spotify/album/tracks', {token: this.token, albumId: this.data.id}).then(res => {
-                    t.songs = res.data.items.map(e => {
-                        e.album = t.data;
-                        return e;
-                    });
-                }).catch(err => {
-                })
-                this.handleDialog({
-                    state: 'open',
-                    id: 'album',
-                    close: this.close
+                this.dialog = true;
+                this.socket.emit('spotify-album', {
+                    token: localStorage.getItem('token'),
+                    data: {
+                        albumId: this.id
+                    }
                 });
+                this.handleDialog({state: 'open', id: 'album', close: this.close});
             },
             close() {
                 this.dialog = false;
@@ -73,6 +126,7 @@
                     state: 'close',
                     id: 'album'
                 });
+                this.albumData = null;
             },
             addItem(songId) {
                 this.$emit('add', songId)

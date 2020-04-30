@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import { MicroframeworkLoader, MicroframeworkSettings } from 'microframework-w3tec';
 
 import { env } from '../env';
-import logger from "../util/Log";
+import { log } from "../util/Log";
 import { createSocketServer } from "socket-controllers";
 import { AuthenticationSocketMiddleware } from "../middleware/AuthenticationSocketMiddleware";
 // Controllers
@@ -15,13 +15,13 @@ import { UserController } from "../api/SocketControllers/UserController";
 
 export const SocketLoader: MicroframeworkLoader = (settings: MicroframeworkSettings | undefined) => {
     if (settings) {
-        logger.info("[START] Loading SocketIO");
+        log.startup("Loading SocketIO");
 
         const socketApp = createSocketServer(env.app.socketPort, {
             controllers: [SearchController, ConnectionController, StateController, PlaylistController, SpotifyController, UserController],
             middlewares: [AuthenticationSocketMiddleware]
         });
-        logger.info(`[START] Socket listening on port ${env.app.socketPort}`);
+        log.startup(`Socket listening on port ${env.app.socketPort}`);
 
         settings.setData('socket_app', socketApp);
     }

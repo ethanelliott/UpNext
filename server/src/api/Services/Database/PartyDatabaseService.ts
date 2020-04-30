@@ -2,7 +2,6 @@ import { Service } from "typedi";
 import { DatabaseService } from "./DatabaseService";
 import QueryFactory from "../../Factory/QueryFactory";
 import { PartyDB } from "../../Types/DatabaseMaps/PartyDB";
-import { CronJobService } from "../CronJobService";
 import moment from "moment";
 
 @Service()
@@ -11,24 +10,13 @@ export class PartyDatabaseService {
     private readonly tableName: string = 'parties';
 
     constructor(
-        private databaseService: DatabaseService,
-        private cronJobService: CronJobService
+        private databaseService: DatabaseService
     ) {
         try {
             this.databaseService.db.prepare(`SELECT * FROM ${this.tableName}`).get();
         } catch (e) {
             this.buildTable();
         }
-        this.cronJobService.newCronJob({
-            pattern: '*/10 * * * *',
-            method: () => {
-                const time24HrAgo = moment().subtract(24, 'hours').valueOf();
-                this.databaseService.delete({
-                    from: this.tableName,
-                    where: [{key: 'startTime', operator: '<', value: time24HrAgo}]
-                });
-            }
-        });
     }
 
     public insertParty(party: PartyDB) {

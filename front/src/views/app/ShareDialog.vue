@@ -1,8 +1,8 @@
 <template>
     <v-dialog transition="dialog-bottom-transition" v-model="dialog" width="400">
         <template v-slot:activator="{ on }">
-            <v-btn text v-on="on" x-large>
-                    <span class="text-uppercase headline"
+            <v-btn class="ma-0 pa-0 px-1 pl-2" text v-on="on" x-large>
+                    <span class="text-uppercase headline ma-0 pa-0"
                           style="font-family: Consolas,monospace !important;letter-spacing: 10px !important;">
                         {{ code }}
                     </span>

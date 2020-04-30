@@ -7,7 +7,6 @@ import { SpotifyOAuthState } from "../Types/general/SpotifyOAuthState";
 import { PartyDB } from "../Types/DatabaseMaps/PartyDB";
 import { PartyBuilder } from "../Factory/PartyBuilder";
 import { PartyDatabaseService } from "./Database/PartyDatabaseService";
-import { PartyHistoryDatabaseService } from "./Database/PartyHistoryDatabaseService";
 import { UserDatabaseService } from "./Database/UserDatabaseService";
 import { UserDB } from "../Types/DatabaseMaps/UserDB";
 import { UserBuilder } from "../Factory/UserBuilder";
@@ -22,6 +21,7 @@ import { PlaylistVoteEnum } from "../Types/Enums/PlaylistVoteEnum";
 import moment from "moment";
 import { PartyEvent } from "../Factory/PartyEventEmitterBuilder";
 import { EventEmitterService } from "./EventEmitterService";
+import { CronJobService } from "./CronJobService";
 
 @Service()
 export class PartyService {
@@ -34,11 +34,20 @@ export class PartyService {
         private spotifyStateService: SpotifyStateService,
         private userDatabaseService: UserDatabaseService,
         private partyDatabaseService: PartyDatabaseService,
-        private partyHistoryDatabaseService: PartyHistoryDatabaseService,
         private playlistEntryDatabaseService: PlaylistEntryDatabaseService,
         private playlistVoteDatabaseService: PlaylistVoteDatabaseService,
         private upNextService: UpNextService,
+        private cronJobService: CronJobService
     ) {
+        this.cronJobService.newCronJob({
+            pattern: '*/10 * * * *',
+            method: () => {
+                const t24Hr = moment().subtract(24, 'hours').valueOf();
+                this.getAllParties()
+                    .filter(e => e.startTime < t24Hr)
+                    .forEach(e => this.removePartyByPartyId(e.id));
+            }
+        });
     }
 
     public async newParty(state: SpotifyOAuthState, code: string): Promise<any> {
@@ -81,10 +90,8 @@ export class PartyService {
     public removePartyByPartyId(partyId: string): void {
         this.upNextService.stopPartyByPartyId(partyId);
         this.spotifyStateService.stopSpotifyStateForParty(partyId);
-        this.partyHistoryDatabaseService.removeHistoryForParty(partyId);
-        this.playlistEntryDatabaseService.removePlaylistEntriesByPartyId(partyId);
-        this.userDatabaseService.removeAllUsersWithPartyId(partyId);
         this.partyDatabaseService.removePartyByPartyId(partyId);
+        this.eventEmitterService.emitEventAt(partyId, PartyEvent.PARTY_GONE);
     }
 
     public removeNewPartyEntry(partyId: string): void {
@@ -135,14 +142,16 @@ export class PartyService {
             });
             this.playlistEntryDatabaseService.addUpVote(playlistEntryId);
             this.emitPlaylistUpdate(partyId);
-        } else if (userVotes.length === 1) {
-            // user has made a vote, if its a downvote, get rid of it
-            if (userVotes[0].type === PlaylistVoteEnum.DOWNVOTE) {
-                this.playlistEntryDatabaseService.removeDownVote(playlistEntryId);
-                this.playlistEntryDatabaseService.addUpVote(playlistEntryId);
-                this.playlistVoteDatabaseService.updateVote(playlistEntryId, userId, PlaylistVoteEnum.UPVOTE);
-                this.emitPlaylistUpdate(partyId);
-            }
+        } else if (userVotes.length === 1 && userVotes[0].type === PlaylistVoteEnum.DOWNVOTE) {
+            this.playlistEntryDatabaseService.removeDownVote(playlistEntryId);
+            this.playlistEntryDatabaseService.addUpVote(playlistEntryId);
+            this.playlistVoteDatabaseService.deleteVote(playlistEntryId, userId);
+            this.playlistVoteDatabaseService.insertVote({
+                type: PlaylistVoteEnum.UPVOTE,
+                playlistEntryId,
+                userId
+            });
+            this.emitPlaylistUpdate(partyId);
         }
     }
 
@@ -157,18 +166,20 @@ export class PartyService {
             });
             this.playlistEntryDatabaseService.addUpVote(playlistEntryId);
             this.emitPlaylistUpdate(partyId);
-        } else if (userVotes.length === 1) {
-            // user has made a vote, if its a downvote, get rid of it
-            if (userVotes[0].type === PlaylistVoteEnum.UPVOTE) {
-                this.playlistEntryDatabaseService.removeUpVote(playlistEntryId);
-                this.playlistEntryDatabaseService.addDownVote(playlistEntryId);
-                this.playlistVoteDatabaseService.updateVote(playlistEntryId, userId, PlaylistVoteEnum.DOWNVOTE);
-                this.emitPlaylistUpdate(partyId);
-            }
+        } else if (userVotes.length === 1 && userVotes[0].type === PlaylistVoteEnum.UPVOTE) {
+            this.playlistEntryDatabaseService.removeUpVote(playlistEntryId);
+            this.playlistEntryDatabaseService.addDownVote(playlistEntryId);
+            this.playlistVoteDatabaseService.deleteVote(playlistEntryId, userId);
+            this.playlistVoteDatabaseService.insertVote({
+                type: PlaylistVoteEnum.DOWNVOTE,
+                playlistEntryId,
+                userId
+            });
+            this.emitPlaylistUpdate(partyId);
         }
     }
 
-    public async addSongToPlaylist(partyId: string, userId: string, songId: string) {
+    public async addSongToPlaylist(partyId: string, userId: string, songId: string): Promise<boolean> {
         if (!this.playlistEntryDatabaseService.doesEntryExist(partyId, songId)) {
             const party = this.partyDatabaseService.getPartyById(partyId);
             const song = await this.spotifyService.getSpotifyAPI().tracks.getTrack(party.spotifyToken, songId);
@@ -191,8 +202,10 @@ export class PartyService {
                 userId
             });
             this.emitPlaylistUpdate(partyId);
+            return true;
         } else {
             //its already in the playlist
+            return false;
         }
     }
 
@@ -208,7 +221,10 @@ export class PartyService {
     }
 
     public removeSongFromPlaylist(partyId: string, userId: string, songId: string) {
-        // this.upNextService.emitEventToProcess(partyId, ProcessorEvents.PLAYLIST_REMOVE_SONG, {userId, songId});
+        if (this.playlistEntryDatabaseService.doesEntryExist(partyId, songId)) {
+            this.playlistEntryDatabaseService.removePlaylistEntry(partyId, userId, songId);
+            this.emitPlaylistUpdate(partyId);
+        }
     }
 
     public async search(partyId: string, searchTerm: string): Promise<any> {
@@ -252,5 +268,33 @@ export class PartyService {
             this.emitPlaylistUpdate(user.partyId);
             this.userDatabaseService.removeUserByTrackingId(trackingId);
         }
+    }
+
+    public async togglePlayback(partyId: string) {
+        const party = this.partyDatabaseService.getPartyById(partyId);
+        const partyState = this.upNextService.getPartyDataForPartyId(partyId);
+        if (partyState.isPlaying) {
+            await this.spotifyService.getSpotifyAPI().player.pause(party.spotifyToken);
+        } else {
+            await this.spotifyService.getSpotifyAPI().player.play(party.spotifyToken);
+        }
+    }
+
+    public async nextSong(partyId: string) {
+        const party = this.partyDatabaseService.getPartyById(partyId);
+        const playlist = this.playlistEntryDatabaseService.getAllPlaylistEntriesForParty(partyId);
+        if (playlist.length > 0) {
+            await this.upNextService.queueNextSong(playlist, party);
+            await this.spotifyService.getSpotifyAPI().player.nextSong(party.spotifyToken);
+        } else {
+            await this.spotifyService.getSpotifyAPI().player.nextSong(party.spotifyToken);
+        }
+    }
+
+    public async fixChromecastError(partyId: string) {
+        const party = this.partyDatabaseService.getPartyById(partyId);
+        const partyState = this.upNextService.getPartyDataForPartyId(partyId);
+        await this.spotifyService.getSpotifyAPI().player.addSongToEndOfQueue(party.spotifyToken, partyState.trackId);
+        await this.spotifyService.getSpotifyAPI().player.nextSong(party.spotifyToken);
     }
 }

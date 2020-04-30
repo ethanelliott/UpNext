@@ -1,5 +1,5 @@
 import { MicroframeworkLoader, MicroframeworkSettings } from 'microframework-w3tec';
-import logger from "../util/Log";
+import { log } from "../util/Log";
 import { Container } from "typedi";
 import { DatabaseService } from "../api/Services/Database/DatabaseService";
 import { NewPartyDatabaseService } from "../api/Services/Database/NewPartyDatabaseService";
@@ -13,7 +13,7 @@ import { UserTrackerDatabaseService } from "../api/Services/Database/UserTracker
 
 export const DatabaseLoader: MicroframeworkLoader = (settings: MicroframeworkSettings | undefined) => {
     if (settings) {
-        logger.info("[START] Loading Databases");
+        log.startup(`Loading Databases`);
         Container.get(DatabaseService);
         Container.get(UserPermissionDatabaseService);
         Container.get(NewPartyDatabaseService);

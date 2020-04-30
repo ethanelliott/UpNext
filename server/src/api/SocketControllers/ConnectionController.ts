@@ -8,7 +8,7 @@ import {
     SocketController,
     SocketIO
 } from "socket-controllers";
-import logger from "../../util/Log";
+import { log } from "../../util/Log";
 import { EventEmitterService } from "../Services/EventEmitterService";
 import SocketMessage from "../Types/general/SocketMessage";
 import { AuthenticationService } from "../Services/AuthenticationService";
@@ -24,17 +24,17 @@ export class ConnectionController {
 
     @OnConnect()
     connect(@ConnectedSocket() socket: SocketIO.Socket) {
-        logger.debug(`[SOCKET] client connected: ${socket.id}`);
+        log.socket(`client connected: ${socket.id}`);
     }
 
     @OnDisconnect()
     disconnect(@ConnectedSocket() socket: SocketIO.Socket) {
-        logger.debug(`[SOCKET] client disconnected: ${socket.id}`);
+        log.socket(`client disconnected: ${socket.id}`);
     }
 
     @OnMessage('join')
     public async join(@ConnectedSocket() socket: SocketIO.Socket, @MessageBody() message: SocketMessage<any>) {
-        logger.debug(`[SOCKET] New Client Joined Party`);
+        log.socket(`New Client Joined Party`);
         const tokenData = await this.authenticationService.authenticate(message.token);
         this.eventQueueService.joinPartyEvents(tokenData.partyId,
             PartyEventEmitterBuilder
@@ -42,6 +42,7 @@ export class ConnectionController {
                 .withEvent(PartyEvent.STATE_CHANGE, data => socket.emit('state-change', data))
                 .withEvent(PartyEvent.PLAYLIST_UPDATE, data => socket.emit('playlist-update', data))
                 .withEvent(PartyEvent.USERS_UPDATE, data => socket.emit('users-update', data))
+                .withEvent(PartyEvent.PARTY_GONE, data => socket.emit('party-leave', data))
                 .build()
         );
     }

@@ -6,11 +6,12 @@
             </v-btn>
         </template>
         <v-card>
-            <v-app-bar fixed color="darker">
+            <v-app-bar color="primary" fixed>
+                <v-toolbar-title>Add Songs</v-toolbar-title>
+                <v-spacer></v-spacer>
                 <v-btn @click="close" dark icon>
                     <v-icon>mdi-close</v-icon>
                 </v-btn>
-                <v-toolbar-title>Add Songs</v-toolbar-title>
             </v-app-bar>
             <v-container class="mt-10">
                 <v-row>

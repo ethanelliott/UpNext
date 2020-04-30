@@ -124,19 +124,20 @@ export class PlaylistEntryDatabaseService {
         this.databaseService.update({
             update: this.tableName,
             set: {
-                UpVotes: entry.DownVotes + 1
+                DownVotes: entry.DownVotes + 1
             },
             where: [{key: 'id', operator: '=', value: playlistEntryId}]
         });
     }
 
     public removeDownVote(playlistEntryId: string) {
-        const entry = this.getPlaylistEntryById(playlistEntryId);
+        let entry = this.getPlaylistEntryById(playlistEntryId);
         this.databaseService.update({
             update: this.tableName,
             set: {
-                UpVotes: entry.DownVotes - 1
-            }
+                DownVotes: entry.DownVotes - 1
+            },
+            where: [{key: 'id', operator: '=', value: playlistEntryId}]
         });
     }
 
@@ -162,6 +163,17 @@ export class PlaylistEntryDatabaseService {
         this.databaseService.delete({
             from: this.tableName,
             where: [{key: 'addedBy', operator: '=', value: userId}]
+        });
+    }
+
+    public removePlaylistEntry(partyId: string, userId: string, songId: string) {
+        this.databaseService.delete({
+            from: this.tableName,
+            where: [
+                {key: 'partyId', operator: '=', value: partyId},
+                {key: 'spotifySongId', operator: '=', value: songId},
+                {key: 'addedBy', operator: '=', value: userId}
+            ]
         });
     }
 }

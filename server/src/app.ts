@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import logger from "./util/Log";
+import { log } from "./util/Log";
 import { bootstrapMicroframework } from 'microframework-w3tec';
 import { IocLoader } from "./loaders/IocLoader";
 import { ExpressLoader } from "./loaders/ExpressLoader";
@@ -25,8 +25,8 @@ bootstrapMicroframework({
     ]
 })
     .then(() => {
-        logger.info("[START] Server is running!");
+        log.startup("Server is running!");
     })
     .catch((err: Error) => {
-        logger.error(`[ERROR] THE SERVER HAS CRASHED: ${err}\n${err.stack}`);
+        log.error(`[ERROR] THE SERVER HAS CRASHED: ${err}\n${err.stack}`);
     });

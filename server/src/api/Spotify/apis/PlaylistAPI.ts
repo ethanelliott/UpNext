@@ -39,6 +39,19 @@ export default class PlaylistAPI {
             .execute();
     }
 
+    public async get(token: string, playlistId: string): Promise<PlaylistObject> {
+        let d = await WebAPIRequestBuilder
+            .make(token)
+            .withMethod(HttpMethods.GET)
+            .withPath(`/v1/playlists/${playlistId}`)
+            .withQueryParameters({
+                fields: 'description,name,uri,id,followers,href,images,owner,public,type,tracks.total'
+            })
+            .build()
+            .execute();
+        return plainToClass(PlaylistObject, d);
+    }
+
     public async create(token: string, userId: string, details: PlaylistDetails): Promise<PlaylistObject> {
         let d = await WebAPIRequestBuilder
             .make(token)
@@ -55,13 +68,15 @@ export default class PlaylistAPI {
         return plainToClass(PlaylistObject, d);
     }
 
-    public async getTracks(token: string, playlistId: string): Promise<PagingObject<PlaylistTrackObject>> {
+    public async getTracks(token: string, playlistId: string, offset: number = 0, limit: number = 100): Promise<PagingObject<PlaylistTrackObject>> {
         let d = await WebAPIRequestBuilder
             .make(token)
             .withMethod(HttpMethods.GET)
             .withPath(`/v1/playlists/${playlistId}/tracks`)
             .withQueryParameters({
-                market: 'from_token'
+                market: 'from_token',
+                offset,
+                limit
             })
             .build()
             .execute();

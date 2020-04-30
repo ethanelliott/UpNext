@@ -29,7 +29,9 @@ export class PlaylistVoteDatabaseService {
     public updateVote(playlistEntryId: string, userId: string, type: PlaylistVoteEnum): void {
         this.databaseService.update({
             update: this.tableName,
-            set: {type},
+            set: {
+                type: type
+            },
             where: [
                 {key: 'userId', operator: '=', value: userId},
                 {key: 'playlistEntryId', operator: '=', value: playlistEntryId}

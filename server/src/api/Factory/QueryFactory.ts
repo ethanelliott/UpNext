@@ -1,12 +1,12 @@
 import { Create, Delete, Insert, Select, Update } from "../Types/DatabaseMaps/Database";
-import logger from "../../util/Log";
+import { log } from "../../util/Log";
 
 export default class QueryFactory {
     constructor() {
     }
 
     static logStatement(query: string): void {
-        logger.silly(`[QUERY] ${query}`);
+        log.silly(`[QUERY] ${query}`);
     }
 
     static buildQueryFrom(params: Select): string {

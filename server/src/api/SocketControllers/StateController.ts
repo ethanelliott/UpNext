@@ -17,7 +17,7 @@ import { UpNextService } from "../Services/UpNextService";
 export class StateController {
     constructor(
         private authenticationService: AuthenticationService,
-        private partyActionWrapperService: PartyService,
+        private partyService: PartyService,
         private upNextService: UpNextService
     ) {
     }
@@ -28,7 +28,7 @@ export class StateController {
     public async getState(@ConnectedSocket() socket: Socket, @MessageBody() message: SocketMessage<any>) {
         const tokenData = await this.authenticationService.authenticate(message.token);
         return {
-            party: this.partyActionWrapperService.getPartyFromId(tokenData.partyId),
+            party: this.partyService.getPartyFromId(tokenData.partyId),
             playstate: this.upNextService.getPartyDataForPartyId(tokenData.partyId)
         };
     }
@@ -36,30 +36,31 @@ export class StateController {
     @OnMessage("party-fix-chrome")
     public async fixChromecastError(@MessageBody() message: SocketMessage<any>) {
         const tokenData = await this.authenticationService.authenticate(message.token);
-        console.log('party-fix-chrome', tokenData);
+        await this.partyService.fixChromecastError(tokenData.partyId);
     }
 
     @OnMessage("party-delete")
     public async deleteTheParty(@MessageBody() message: SocketMessage<any>) {
         const tokenData = await this.authenticationService.authenticate(message.token);
-        console.log('party-delete', tokenData);
+        this.partyService.removePartyByPartyId(tokenData.partyId);
     }
 
     @OnMessage("party-playback-toggle")
     public async togglePartyPlayback(@MessageBody() message: SocketMessage<any>) {
         const tokenData = await this.authenticationService.authenticate(message.token);
-        console.log('party-playback-toggle', tokenData);
+        await this.partyService.togglePlayback(tokenData.partyId);
     }
 
     @OnMessage("party-playback-next")
     public async partyNextSong(@MessageBody() message: SocketMessage<any>) {
         const tokenData = await this.authenticationService.authenticate(message.token);
-        console.log('party-playback-next', tokenData);
+        await this.partyService.nextSong(tokenData.partyId);
     }
 
     @OnMessage("party-playback-transfer")
     public async transferPlayback(@MessageBody() message: SocketMessage<any>) {
         const tokenData = await this.authenticationService.authenticate(message.token);
+        // this one will be coming later...
         console.log('party-playback-transfer', tokenData);
     }
 }

@@ -1,6 +1,6 @@
 import { Service } from "typedi";
 import { WebTokenService } from "./WebTokenService";
-import logger from "../../util/Log";
+import { log } from "../../util/Log";
 import WebTokenData from "../Types/general/WebTokenData";
 import { PartyDatabaseService } from "./Database/PartyDatabaseService";
 
@@ -38,7 +38,7 @@ export class AuthenticationService {
             };
             return this.webTokenService.generateFrom(data);
         } catch (e) {
-            logger.error(e.stack);
+            log.error(e.stack);
             return "";
         }
     }
