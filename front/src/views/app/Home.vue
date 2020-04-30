@@ -106,7 +106,7 @@
                                         {{ songProgressString }}
                                     </v-col>
                                     <v-col class="ma-0 pa-0 text-center" cols="8">
-                                        <v-progress-linear :color="progressColour" :value="songProgress"
+                                        <v-progress-linear :color="progressColour" :value="songProgress * 100"
                                                            class="ma-0 pa-0"
                                                            height="10"></v-progress-linear>
                                     </v-col>
@@ -244,9 +244,9 @@
         },
         computed: {
             songProgressString() {
-                return `${Math.floor((((this.songProgress / 100) * this.songDuration) / 1000) /
-                    60)}:${this.numberPadding(Math.floor((((this.songProgress / 100) * this.songDuration) / 1000) -
-                    (Math.floor((((this.songProgress / 100) * this.songDuration) / 1000) / 60) * 60)))}`
+                return `${Math.floor((((this.songProgress) * this.songDuration) / 1000) /
+                    60)}:${this.numberPadding(Math.floor((((this.songProgress) * this.songDuration) / 1000) -
+                    (Math.floor((((this.songProgress) * this.songDuration) / 1000) / 60) * 60)))}`
             },
             songDurationString() {
                 return `${Math.floor((this.songDuration / 1000) / 60)}:${this.numberPadding(Math.floor((this.songDuration / 1000) -
@@ -346,33 +346,27 @@
                     let v = data.playstate.colours.vibrant;
                     this.backgroundString = `background-image: linear-gradient(#${lv}ff 0%, rgba(0,0,0,1) 100%);`;
                     this.progressColour = `#${v}`;
-                    this.songProgress = data.playstate.progress / data.playstate.duration * 100;
+                    this.songProgress = data.playstate.progress / data.playstate.duration;
                     this.songDuration = data.playstate.duration;
                     this.songAnalysis = data.playstate.analysis;
                     this.updateMediaMetadata();
                     clearInterval(this.songProgressLoopTrack);
-                    clearInterval(this.mediaSessionLoop);
                     if (data.playstate.isPlaying) {
                         navigator.mediaSession.playbackState = "playing";
+                        if (this.audio) {
+                            this.audio.play();
+                        }
                         const finishTime = moment().add((data.playstate.duration - data.playstate.progress), 'milliseconds').valueOf();
                         this.songProgressLoopTrack = setInterval(() => {
-                            const progress = (1 - ((finishTime - moment().valueOf()) / data.playstate.duration)) * 100;
-                            this.songProgress = progress <= 100 && progress >= 0 ? progress : 0;
+                            const progress = (1 - ((finishTime - moment().valueOf()) / data.playstate.duration));
+                            this.songProgress = progress <= 1 && progress >= 0 ? progress : 0;
                         }, 100);
-                        this.mediaSessionLoop = setInterval(() => {
-                            navigator.mediaSession.setPositionState({
-                                duration: Math.floor(this.songDuration / 1000),
-                                playbackRate: 1,
-                                position: Math.floor((this.songDuration * (this.songProgress / 100)) / 1000)
-                            });
-                        }, 1000);
+
                     } else {
                         navigator.mediaSession.playbackState = "paused";
-                        navigator.mediaSession.setPositionState({
-                            duration: Math.floor(this.songDuration / 1000),
-                            playbackRate: 1,
-                            position: Math.floor((this.songDuration * (this.songProgress / 100)) / 1000)
-                        });
+                        if (this.audio) {
+                            this.audio.pause();
+                        }
                     }
                 } else {
                     this.isPlaying = false;
@@ -385,6 +379,23 @@
                 }
             },
             updateMediaMetadata() {
+                if (this.isPlaying) {
+                    navigator.mediaSession.playbackState = "playing";
+                    if (this.audio) {
+                        this.audio.play();
+                    }
+
+                } else {
+                    navigator.mediaSession.playbackState = "paused";
+                    if (this.audio) {
+                        this.audio.pause();
+                    }
+                }
+                navigator.mediaSession.setPositionState({
+                    duration: Math.floor(this.songDuration / 1000),
+                    playbackRate: 1,
+                    position: Math.floor((this.songDuration * this.songProgress) / 1000)
+                });
                 navigator.mediaSession.metadata = new MediaMetadata({
                     title: this.trackName,
                     album: 'UpNext',
@@ -400,16 +411,14 @@
                     this.audio.src = "https://raw.githubusercontent.com/anars/blank-audio/master/10-seconds-of-silence.mp3";
                     this.audio.loop = true;
                     this.audio.play().then(() => {
-                        this.audio.pause();
                         this.updateMediaMetadata();
-                        navigator.mediaSession.playbackState = this.isPlaying ? "playing" : "paused";
-                        navigator.mediaSession.setActionHandler('play', () => {
+                        navigator.mediaSession.setActionHandler('pause', () => {
                             this.socket.emit('party-playback-toggle', {
                                 token: this.token,
                                 data: {}
                             });
                         });
-                        navigator.mediaSession.setActionHandler('pause', () => {
+                        navigator.mediaSession.setActionHandler('play', () => {
                             this.socket.emit('party-playback-toggle', {
                                 token: this.token,
                                 data: {}
@@ -449,7 +458,7 @@
                     this.notificationPermission = permission;
                 });
             }
-            navigator.serviceWorker.register('/sw.js?c=345987');
+            navigator.serviceWorker.register('/sw.js?c=4654654');
             window.scrollTo(0, 0);
             this.token = session.getItem('token');
             this.socket = io(this.$socketUrl);
