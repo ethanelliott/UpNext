@@ -231,7 +231,8 @@
             songProgress: 0,
             songDuration: 0,
             songAnalysis: null,
-            notificationPermission: null
+            notificationPermission: null,
+            media: null
         }),
         components: {
             AppAdminDialog,
@@ -348,6 +349,7 @@
                     this.updateMediaMetadata();
                     clearInterval(this.songProgressLoopTrack);
                     if (data.playstate.isPlaying) {
+                        this.media.play();
                         const finishTime = moment().add((data.playstate.duration - data.playstate.progress), 'milliseconds').valueOf();
                         this.songProgressLoopTrack = setInterval(() => {
                             const progress = (1 - ((finishTime - moment().valueOf()) / data.playstate.duration)) * 100;
@@ -359,11 +361,7 @@
                             });
                         }, 100);
                     } else {
-                        navigator.mediaSession.setPositionState({
-                            duration: this.songDuration / 1000,
-                            playbackRate: 0,
-                            position: (this.songDuration * (this.songProgress / 100)) / 1000
-                        });
+                        this.media.pause();
                     }
                 } else {
                     this.hasState = false;
@@ -385,20 +383,20 @@
             },
             addMediaView() {
                 if ('mediaSession' in navigator) {
-                    let audio = document.createElement('audio');
-                    audio.src = "https://raw.githubusercontent.com/anars/blank-audio/master/10-seconds-of-silence.mp3";
-                    audio.loop = true;
-                    audio.play().then(() => {
+                    this.audio = document.createElement('audio');
+                    this.audio.src = "https://raw.githubusercontent.com/anars/blank-audio/master/10-seconds-of-silence.mp3";
+                    this.audio.loop = true;
+                    this.audio.play().then(() => {
                         this.updateMediaMetadata();
                         navigator.mediaSession.setActionHandler('play', () => {
-                            audio.play();
+                            this.audio.play();
                             this.socket.emit('party-playback-toggle', {
                                 token: this.token,
                                 data: {}
                             });
                         });
                         navigator.mediaSession.setActionHandler('pause', () => {
-                            audio.pause();
+                            this.audio.pause();
                             this.socket.emit('party-playback-toggle', {
                                 token: this.token,
                                 data: {}
