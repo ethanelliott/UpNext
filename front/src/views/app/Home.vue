@@ -233,7 +233,8 @@
             songDuration: 0,
             songAnalysis: null,
             notificationPermission: null,
-            media: null
+            media: null,
+            mediaSessionLoop: null
         }),
         components: {
             AppAdminDialog,
@@ -350,20 +351,29 @@
                     this.songAnalysis = data.playstate.analysis;
                     this.updateMediaMetadata();
                     clearInterval(this.songProgressLoopTrack);
+                    clearInterval(this.mediaSessionLoop);
                     if (data.playstate.isPlaying) {
                         navigator.mediaSession.playbackState = "playing";
                         const finishTime = moment().add((data.playstate.duration - data.playstate.progress), 'milliseconds').valueOf();
                         this.songProgressLoopTrack = setInterval(() => {
                             const progress = (1 - ((finishTime - moment().valueOf()) / data.playstate.duration)) * 100;
                             this.songProgress = progress <= 100 && progress >= 0 ? progress : 0;
+                        }, 100);
+                        this.mediaSessionLoop = setInterval(() => {
+                            console.log(this.songDuration / 1000, (this.songDuration * (this.songProgress / 100)) / 1000);
                             navigator.mediaSession.setPositionState({
                                 duration: this.songDuration / 1000,
                                 playbackRate: 1,
                                 position: (this.songDuration * (this.songProgress / 100)) / 1000
                             });
-                        }, 100);
+                        }, 1000);
                     } else {
                         navigator.mediaSession.playbackState = "paused";
+                        navigator.mediaSession.setPositionState({
+                            duration: this.songDuration / 1000,
+                            playbackRate: 1,
+                            position: (this.songDuration * (this.songProgress / 100)) / 1000
+                        });
                     }
                 } else {
                     this.isPlaying = false;
