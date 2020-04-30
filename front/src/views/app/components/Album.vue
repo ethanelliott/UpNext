@@ -40,8 +40,9 @@
                             <h1 class="headline">{{ albumName }}</h1>
                         </v-row>
                         <v-row align="center" class="ma-0 pa-0" justify="center">
-                            <h1 class="subtitle-1 font-italic font-weight-thin">{{ albumArtists.map(e => e.name).join(',
-                                ') }}</h1>
+                            <h1 class="subtitle-1 font-italic font-weight-thin">
+                                {{ albumArtists.map(e => e.name).join(',') }}
+                            </h1>
                         </v-row>
                     </v-col>
                     <v-list class="ma-0 pa-0" color="transparent" two-line>
