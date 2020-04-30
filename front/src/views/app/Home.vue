@@ -355,14 +355,14 @@
                             navigator.mediaSession.setPositionState({
                                 duration: this.songDuration / 1000,
                                 playbackRate: 1,
-                                position: this.songDuration * this.songProgress / 1000
+                                position: (this.songDuration * (this.songProgress / 100)) / 1000
                             });
                         }, 100);
                     } else {
                         navigator.mediaSession.setPositionState({
                             duration: this.songDuration / 1000,
                             playbackRate: 0,
-                            position: this.songDuration * this.songProgress / 1000
+                            position: (this.songDuration * (this.songProgress / 100)) / 1000
                         });
                     }
                 } else {
