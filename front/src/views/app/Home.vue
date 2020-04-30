@@ -426,6 +426,51 @@
             });
             this.socket.on('user-admin', (data) => {
                 this.isAdmin = data.admin;
+                if (this.isAdmin) {
+                    console.log('is admin');
+                    if ('mediaSession' in navigator) {
+                        console.log('has media session');
+                        let audio = document.createElement('audio');
+                        audio.src = "https://raw.githubusercontent.com/anars/blank-audio/master/10-seconds-of-silence.mp3";
+                        audio.loop = true;
+                        audio.muted = true;
+                        audio.play().then(() => {
+                            navigator.mediaSession.metadata = new MediaMetadata({
+                                title: 'Never Gonna Give You Up',
+                                artist: 'Rick Astley',
+                                album: 'Whenever You Need Somebody',
+                                artwork: [
+                                    {src: 'https://dummyimage.com/96x96', sizes: '96x96', type: 'image/png'},
+                                    {src: 'https://dummyimage.com/128x128', sizes: '128x128', type: 'image/png'},
+                                    {src: 'https://dummyimage.com/192x192', sizes: '192x192', type: 'image/png'},
+                                    {src: 'https://dummyimage.com/256x256', sizes: '256x256', type: 'image/png'},
+                                    {src: 'https://dummyimage.com/384x384', sizes: '384x384', type: 'image/png'},
+                                    {src: 'https://dummyimage.com/512x512', sizes: '512x512', type: 'image/png'},
+                                ]
+                            });
+                            console.log('media session created');
+                            navigator.mediaSession.setActionHandler('play', () => {
+                                console.log('play');
+                                audio.play();
+                                this.socket.emit('party-playback-toggle', {
+                                    token: this.token,
+                                    data: {}
+                                });
+                            });
+                            navigator.mediaSession.setActionHandler('pause', () => {
+                                console.log('pause');
+                                audio.pause();
+                                this.socket.emit('party-playback-toggle', {
+                                    token: this.token,
+                                    data: {}
+                                });
+                            });
+                            navigator.mediaSession.setActionHandler('nexttrack', () => {
+                                console.log('nexttrack');
+                            });
+                        });
+                    }
+                }
             });
             this.socket.on('party-state', this.gotStateData);
             this.socket.on('state-change', this.gotStateData);
