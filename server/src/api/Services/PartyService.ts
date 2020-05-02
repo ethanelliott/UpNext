@@ -92,7 +92,7 @@ export class PartyService {
         this.upNextService.stopPartyByPartyId(partyId);
         this.spotifyStateService.stopSpotifyStateForParty(partyId);
         this.partyDatabaseService.removePartyByPartyId(partyId);
-        this.eventEmitterService.emitEventAt(partyId, PartyEvent.PARTY_GONE);
+        this.eventEmitterService.emitEventToParty(partyId, PartyEvent.PARTY_GONE);
     }
 
     public removeNewPartyEntry(partyId: string): void {
@@ -113,6 +113,18 @@ export class PartyService {
         this.emitUsersUpdate(token.partyId);
         return user.id;
     }
+
+    // private emitNotificationToParty(partyId: string, title: string, body: string, actions: Array<{ action: string, title: string }>) {
+    //     this.eventEmitterService.emitEventToParty(
+    //         partyId,
+    //         PartyEvent.NOTIFICATION,
+    //         {
+    //             title,
+    //             body,
+    //             actions
+    //         }
+    //     );
+    // }
 
     public getPartyIdFromCode(code: string): string | undefined {
         const party = this.partyDatabaseService.getPartyIdByCode(code);
@@ -224,7 +236,7 @@ export class PartyService {
     }
 
     private emitPlaylistUpdate(partyId) {
-        this.eventEmitterService.emitEventAt(
+        this.eventEmitterService.emitEventToParty(
             partyId,
             PartyEvent.PLAYLIST_UPDATE,
             {
@@ -234,7 +246,7 @@ export class PartyService {
     }
 
     private emitUsersUpdate(partyId) {
-        this.eventEmitterService.emitEventAt(
+        this.eventEmitterService.emitEventToParty(
             partyId,
             PartyEvent.USERS_UPDATE,
             {

@@ -24,8 +24,7 @@ export default class Request {
 
     public async execute(): Promise<string> {
         try {
-            let d = await this.makeAxios();
-            return d.data;
+            return (await this.makeAxios()).data;
         } catch (e) {
             console.log(`[SPOTIFY]`, e.response.data.error.status, e.response.data.error.message, `\n`, e.stack);
             throw new GenericError(e.response.data.error.status, e.response.data.error.message, e.stack);

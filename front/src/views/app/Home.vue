@@ -388,7 +388,6 @@
                 });
                 navigator.mediaSession.metadata = new MediaMetadata({
                     title: this.trackName,
-                    album: 'UpNext',
                     artist: this.artistName,
                     artwork: [
                         {src: this.albumArtwork, sizes: '512x512', type: 'image/png'},
@@ -448,7 +447,11 @@
                     this.notificationPermission = permission;
                 });
             }
-            navigator.serviceWorker.register('/sw.js?c=4654654');
+            if (!('serviceWorker' in navigator)) {
+                console.log("This browser does not support service workers.");
+            } else {
+                navigator.serviceWorker.register('/sw.js?c=4654654');
+            }
             window.scrollTo(0, 0);
             this.token = session.getItem('token');
             this.socket = io(this.$socketUrl);
@@ -460,29 +463,15 @@
                 this.navigateAway();
             });
             this.socket.on('notification', (data) => {
-                console.log(data);
                 if (this.notificationPermission === 'granted') {
                     navigator.serviceWorker.getRegistration().then((reg) => {
                         const options = {
                             body: `${data.body}`,
                             icon: '/assets/apple-touch-icon.png',
-                            vibrate: [500, 100, 500],
-                            data: {
-                                dateOfArrival: Date.now(),
-                                primaryKey: 1
-                            },
-                            actions: [
-                                {
-                                    action: 'explore',
-                                    title: 'Go To UpNext',
-                                    // icon: 'images/checkmark.png'
-                                },
-                                {
-                                    action: 'close',
-                                    title: 'Close notification',
-                                    // icon: 'images/xmark.png'
-                                },
-                            ]
+                            badge: '/assets/mstile-144x144.png',
+                            vibrate: [200, 100],
+                            data: {dateOfArrival: moment().valueOf()},
+                            actions: data.actions
                         };
                         reg.showNotification(`${data.title}`, options);
                     });

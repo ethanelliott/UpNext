@@ -5,15 +5,19 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('notificationclick', (e) => {
     const notification = e.notification;
-    const primaryKey = notification.data.primaryKey;
     const action = e.action;
 
     console.log('CLICK', action);
 
-    if (action === 'close') {
-        notification.close();
-    } else {
-        clients.openWindow('/app/home');
-        notification.close();
+    switch (action) {
+        case 'close':
+            break;
+        case 'explore':
+            clients.openWindow('/app/home');
+            break;
+        default:
+            console.log('JUST CLOSE');
+            break;
     }
+    notification.close();
 });
