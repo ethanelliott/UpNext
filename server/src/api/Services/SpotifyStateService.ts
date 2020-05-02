@@ -57,6 +57,7 @@ export class SpotifyStateService {
                 const storedState = this.spotifyEventLoopStates.get(partyId);
                 const hasTriggeredEndOfSong = this.spotifyEventLoopStateEndOfSong.get(partyId);
                 let nextState: SpotifyState = null;
+                // log.spotify(`state: ${storedState.state}`);
                 if (storedState) {
                     switch (storedState.state) {
                         case SpotifyState.FIRST_RUN:

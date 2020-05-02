@@ -3,7 +3,7 @@ import { UserDB } from "../Types/DatabaseMaps/UserDB";
 import { SpotifyStateEvents, SpotifyStateService } from "./SpotifyStateService";
 import { log } from "../../util/Log";
 import { EventEmitterService } from "./EventEmitterService";
-import { PartyEvent } from "../Factory/PartyEventEmitterBuilder";
+import { PartyEvent, UserEvent } from "../Factory/PartyEventEmitterBuilder";
 import CurrentlyPlayingObject from "../Spotify/Types/CurrentlyPlayingObject";
 import { ColourService } from "./ColourService";
 import { PartyDatabaseService } from "./Database/PartyDatabaseService";
@@ -64,6 +64,11 @@ export class UpNextService {
         this.playlistEntryDatabaseService.removePlaylistEntryById(playlistEntry.id);
         await this.spotifyAPI.player.addSongToEndOfQueue(party.spotifyToken, playlistEntry.spotifySongId);
         this.emitPlaylistUpdate(party.id);
+        this.emitNotificationToUser(
+            playlistEntry.addedBy,
+            `Your Song is UpNext!`,
+            `The song you added, ${playlistEntry.name} by ${playlistEntry.artist} got ${playlistEntry.UpVotes - playlistEntry.DownVotes} votes and is going to be played next!`,
+            []);
     }
 
     private async addSpotifyListeners(partyId) {
@@ -89,7 +94,6 @@ export class UpNextService {
         eventEmitter.on(SpotifyStateEvents.UPDATE_PAUSED.toString(), (playStateData: CurrentlyPlayingObject) => {
             this.updateOnlyPlaying(partyId, playStateData).then(() => {
                 this.emitStateChange(partyId);
-                this.emitNotification(partyId, `UpNext`, `Song paused!`);
             });
         });
         eventEmitter.on(SpotifyStateEvents.UPDATE_SONG_CHANGE.toString(), (playStateData: CurrentlyPlayingObject) => {
@@ -134,7 +138,7 @@ export class UpNextService {
     }
 
     private emitStateChange(partyId: string) {
-        this.eventEmitterService.emitEventAt(
+        this.eventEmitterService.emitEventToParty(
             partyId,
             PartyEvent.STATE_CHANGE,
             {
@@ -144,13 +148,26 @@ export class UpNextService {
         );
     }
 
-    private emitNotification(partyId: string, title: string, body: string) {
-        this.eventEmitterService.emitEventAt(
-            partyId,
-            PartyEvent.NOTIFICATION,
+    // private emitNotificationToParty(partyId: string, title: string, body: string, actions: Array<{ action: string, title: string }>) {
+    //     this.eventEmitterService.emitEventToParty(
+    //         partyId,
+    //         PartyEvent.NOTIFICATION,
+    //         {
+    //             title,
+    //             body,
+    //             actions
+    //         }
+    //     );
+    // }
+
+    private emitNotificationToUser(userId: string, title: string, body: string, actions: Array<{ action: string, title: string }>) {
+        this.eventEmitterService.emitEventToUser(
+            userId,
+            UserEvent.NOTIFICATION,
             {
                 title,
-                body
+                body,
+                actions
             }
         );
     }
@@ -160,7 +177,7 @@ export class UpNextService {
     }
 
     private emitPlaylistUpdate(partyId: string) {
-        this.eventEmitterService.emitEventAt(
+        this.eventEmitterService.emitEventToParty(
             partyId,
             PartyEvent.PLAYLIST_UPDATE,
             {
