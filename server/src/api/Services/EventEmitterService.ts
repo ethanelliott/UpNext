@@ -58,13 +58,16 @@ export class EventEmitterService {
 
     public joinUserEvents(userId: string, eventHandlers: Array<UserEventHandler>) {
         log.event(`Client joined user events ${userId}`);
-        const eventEmitter = this.partyEventEmitters.get(userId);
+        if (!this.userEventEmitters.has(userId)) {
+            this.newUser(userId);
+        }
+        const eventEmitter = this.userEventEmitters.get(userId);
         eventHandlers.forEach(e => eventEmitter.on(e.event.toString(10), e.action));
     }
 
     public leaveUserEvents(userId: string, eventHandlers: Array<UserEventHandler>) {
         log.event(`Client left user events ${userId}`);
-        const eventEmitter = this.partyEventEmitters.get(userId);
+        const eventEmitter = this.userEventEmitters.get(userId);
         eventHandlers.forEach(e => eventEmitter.removeListener(e.event.toString(10), e.action));
     }
 }
