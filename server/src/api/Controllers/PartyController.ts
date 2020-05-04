@@ -18,6 +18,11 @@ export class PartyController {
     ) {
     }
 
+    @Get('/all')
+    public async getAllParties(): Promise<any> {
+        return this.partyService.getAllParties();
+    }
+
     @Post('/delete')
     public async deleteParty(@QueryParam("id") partyId: string): Promise<any> {
         this.partyService.removePartyByPartyId(partyId);

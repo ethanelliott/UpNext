@@ -30,6 +30,7 @@
             >
                 <template v-slot:prepend>
                     <v-toolbar class="elevation-0" color="transparent" fixed>
+                        <app-update-box></app-update-box>
                         <v-spacer></v-spacer>
                         <app-info-box></app-info-box>
                     </v-toolbar>
@@ -68,10 +69,11 @@
 <script>
     import localStorage from 'localStorage'
     import AppInfoBox from "./InfoBox";
+    import AppUpdateBox from "./UpdateBox";
 
     export default {
         name: 'LandingPage',
-        components: {AppInfoBox},
+        components: {AppUpdateBox, AppInfoBox},
         data: () => ({
             installDialog: false,
             deferredPrompt: null

@@ -3,7 +3,7 @@
         <v-content>
             <v-app-bar color="darker">
                 <v-toolbar-title>
-                    <v-icon color="primary">mdi-music-note-plus</v-icon>
+                    <v-icon color="primary" left>mdi-music-note-plus</v-icon>
                     UPNEXT Admin
                 </v-toolbar-title>
                 <v-spacer/>
@@ -93,16 +93,14 @@
         methods: {
             updateData() {
                 let t = this;
-                axios.post('/party/get/all').then(res => {
+                axios.get('/party/all').then(res => {
                     t.parties = res.data;
-                }).catch(err => {
-                })
+                }).catch(console.error)
             },
             deleteParty(partyId) {
                 axios.post(`/party/delete?id=${partyId}`).then(res => {
                     // console.log(res.data);
-                }).catch(err => {
-                })
+                }).catch(console.error)
             },
             joinAsAdmin(partyId) {
                 let context = this;
@@ -110,8 +108,7 @@
                     if (res.data.valid) {
                         context.$router.push(`/make/${res.data.token}`)
                     }
-                }).catch(err => {
-                })
+                }).catch(console.error)
             },
             // changePartyCode(partyId) {
             //     let context = this;
@@ -120,10 +117,9 @@
             //     })
             // },
             fixChrome(partyId) {
-                let context = this;
-                axios.post('/party/fix', {partyId}).then(res => {
-                }).catch(err => {
-                })
+                axios.post('/party/fix', {partyId}).then(({data}) => {
+                    console.log(data);
+                }).catch(console.error)
             }
         },
         mounted() {

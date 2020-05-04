@@ -81,6 +81,15 @@ const routes = [
                 }
             }
         ]
+    },
+    {
+        path: '/admin',
+        name: 'admin',
+        component: () => import('../views/AdminPage.vue')
+    },
+    {
+        path: '*',
+        redirect: '/'
     }
 ];
 
