@@ -159,18 +159,26 @@ export class PartyService {
             this.userDatabaseService.updateUserScore(entry.addedBy, 1);
             this.emitPlaylistUpdate(partyId);
             this.emitUsersUpdate(partyId);
-        } else if (userVotes.length === 1 && userVotes[0].type === PlaylistVoteEnum.DOWNVOTE) {
-            this.playlistEntryDatabaseService.removeDownVote(playlistEntryId);
-            this.playlistEntryDatabaseService.addUpVote(playlistEntryId);
-            this.playlistVoteDatabaseService.deleteVote(playlistEntryId, userId);
-            this.playlistVoteDatabaseService.insertVote({
-                type: PlaylistVoteEnum.UPVOTE,
-                playlistEntryId,
-                userId
-            });
-            this.userDatabaseService.updateUserScore(entry.addedBy, 1);
-            this.emitPlaylistUpdate(partyId);
-            this.emitUsersUpdate(partyId);
+        } else if (userVotes.length === 1) {
+            if (userVotes[0].type === PlaylistVoteEnum.DOWNVOTE) {
+                this.playlistEntryDatabaseService.removeDownVote(playlistEntryId);
+                this.playlistEntryDatabaseService.addUpVote(playlistEntryId);
+                this.playlistVoteDatabaseService.deleteVote(playlistEntryId, userId);
+                this.playlistVoteDatabaseService.insertVote({
+                    type: PlaylistVoteEnum.UPVOTE,
+                    playlistEntryId,
+                    userId
+                });
+                this.userDatabaseService.updateUserScore(entry.addedBy, 1);
+                this.emitPlaylistUpdate(partyId);
+                this.emitUsersUpdate(partyId);
+            } else if (userVotes[0].type === PlaylistVoteEnum.UPVOTE) {
+                this.playlistEntryDatabaseService.removeUpVote(playlistEntryId);
+                this.playlistVoteDatabaseService.deleteVote(playlistEntryId, userId);
+                this.userDatabaseService.updateUserScore(entry.addedBy, -1);
+                this.emitPlaylistUpdate(partyId);
+                this.emitUsersUpdate(partyId);
+            }
         }
     }
 
@@ -188,18 +196,26 @@ export class PartyService {
             this.userDatabaseService.updateUserScore(entry.addedBy, -1);
             this.emitPlaylistUpdate(partyId);
             this.emitUsersUpdate(partyId);
-        } else if (userVotes.length === 1 && userVotes[0].type === PlaylistVoteEnum.UPVOTE) {
-            this.playlistEntryDatabaseService.removeUpVote(playlistEntryId);
-            this.playlistEntryDatabaseService.addDownVote(playlistEntryId);
-            this.playlistVoteDatabaseService.deleteVote(playlistEntryId, userId);
-            this.playlistVoteDatabaseService.insertVote({
-                type: PlaylistVoteEnum.DOWNVOTE,
-                playlistEntryId,
-                userId
-            });
-            this.userDatabaseService.updateUserScore(entry.addedBy, -1);
-            this.emitPlaylistUpdate(partyId);
-            this.emitUsersUpdate(partyId);
+        } else if (userVotes.length === 1) {
+            if (userVotes[0].type === PlaylistVoteEnum.UPVOTE) {
+                this.playlistEntryDatabaseService.removeUpVote(playlistEntryId);
+                this.playlistEntryDatabaseService.addDownVote(playlistEntryId);
+                this.playlistVoteDatabaseService.deleteVote(playlistEntryId, userId);
+                this.playlistVoteDatabaseService.insertVote({
+                    type: PlaylistVoteEnum.DOWNVOTE,
+                    playlistEntryId,
+                    userId
+                });
+                this.userDatabaseService.updateUserScore(entry.addedBy, -1);
+                this.emitPlaylistUpdate(partyId);
+                this.emitUsersUpdate(partyId);
+            } else if (userVotes[0].type === PlaylistVoteEnum.DOWNVOTE) {
+                this.playlistEntryDatabaseService.removeDownVote(playlistEntryId);
+                this.playlistVoteDatabaseService.deleteVote(playlistEntryId, userId);
+                this.userDatabaseService.updateUserScore(entry.addedBy, 1);
+                this.emitPlaylistUpdate(partyId);
+                this.emitUsersUpdate(partyId);
+            }
         }
     }
 
