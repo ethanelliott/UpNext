@@ -118,4 +118,25 @@ export class UserDatabaseService {
             ]
         })).run();
     }
+
+    public setUserScore(userId: any, score: number) {
+        this.databaseService.update({
+            update: this.tableName,
+            set: {
+                score: score
+            },
+            where: [{key: 'id', operator: '=', value: userId}]
+        });
+    }
+
+    public setUserScoreByParty(partyId: any, score: number) {
+        this.databaseService.update({
+            update: this.tableName,
+            set: {
+                score: score
+            },
+            where: [{key: 'partyId', operator: '=', value: partyId}]
+        });
+    }
+
 }

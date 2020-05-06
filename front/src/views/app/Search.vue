@@ -230,6 +230,12 @@
                     });
                 }
             });
+            this.socket.on('reload', () => {
+                location.reload();
+            });
+            this.socket.on('party-leave', () => {
+                this.navigateAway();
+            });
         },
         methods: {
             handleEvent(event) {

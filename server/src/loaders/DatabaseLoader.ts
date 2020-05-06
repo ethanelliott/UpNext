@@ -11,6 +11,7 @@ import { PartyHistoryDatabaseService } from "../api/Services/Database/PartyHisto
 import { UserPermissionDatabaseService } from "../api/Services/Database/UserPermissionDatabaseService";
 import { UserTrackerDatabaseService } from "../api/Services/Database/UserTrackerDatabaseService";
 import { AppUpdatesDatabaseService } from "../api/Services/Database/AppUpdatesDatabaseService";
+import { AdminUserDatabaseService } from "../api/Services/Database/AdminUserDatabaseService";
 
 export const DatabaseLoader: MicroframeworkLoader = (settings: MicroframeworkSettings | undefined) => {
     if (settings) {
@@ -25,5 +26,6 @@ export const DatabaseLoader: MicroframeworkLoader = (settings: MicroframeworkSet
         Container.get(UserDatabaseService);
         Container.get(UserTrackerDatabaseService);
         Container.get(AppUpdatesDatabaseService);
+        Container.get(AdminUserDatabaseService);
     }
 };

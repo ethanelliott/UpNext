@@ -83,5 +83,7 @@ export enum PartyEvent {
 }
 
 export enum UserEvent {
-    NOTIFICATION
+    NOTIFICATION,
+    RELOAD,
+    LEAVE,
 }

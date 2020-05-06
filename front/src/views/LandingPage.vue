@@ -38,7 +38,8 @@
                 <template v-slot:default>
                     <v-container class="fill-height ma-0 pa-0" fluid>
                         <v-row align="center" class="ma-0 pa-0" justify="center">
-                            <v-col align="center" class="ma-0 pa-0" cols="12" justify="center" lg="6" md="8" sm="8">
+                            <v-col @click="adminOpen" align="center" class="ma-0 pa-0" cols="12" justify="center" lg="6"
+                                   md="8" sm="8">
                                 <v-icon color="primary" size="120">mdi-music-note-plus</v-icon>
                                 <p class="display-2 text-uppercase mb-10">
                                     <span class="font-weight-bold">Up</span>
@@ -76,7 +77,8 @@
         components: {AppUpdateBox, AppInfoBox},
         data: () => ({
             installDialog: false,
-            deferredPrompt: null
+            deferredPrompt: null,
+            adminClickCount: 0
         }),
         methods: {
             install() {
@@ -90,6 +92,14 @@
                     }
                     this.deferredPrompt = null;
                 });
+            },
+            adminOpen() {
+                if (this.adminClickCount === 9) {
+                    this.adminClickCount = 0;
+                    this.$router.push('/admin');
+                } else {
+                    this.adminClickCount++;
+                }
             }
         },
         mounted() {

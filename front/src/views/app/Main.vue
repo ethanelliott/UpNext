@@ -15,7 +15,6 @@
     export default {
         name: "Main",
         data: () => ({
-            code: 'CODE',
             transitionName: DEFAULT_TRANSITION,
         }),
         created() {

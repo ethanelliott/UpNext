@@ -202,6 +202,9 @@
                 this.requestStateData();
                 this.socket.emit('join', {token: this.token, data: null});
             });
+            this.socket.on('reload', () => {
+                location.reload();
+            });
             this.socket.on('party-leave', this.navigateAway);
             this.socket.on('party-state', this.gotState);
             this.socket.on('state-change', this.gotState);

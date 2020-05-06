@@ -148,19 +148,19 @@ export class UpNextService {
         );
     }
 
-    // private emitNotificationToParty(partyId: string, title: string, body: string, actions: Array<{ action: string, title: string }>) {
-    //     this.eventEmitterService.emitEventToParty(
-    //         partyId,
-    //         PartyEvent.NOTIFICATION,
-    //         {
-    //             title,
-    //             body,
-    //             actions
-    //         }
-    //     );
-    // }
+    public emitNotificationToParty(partyId: string, title: string, body: string, actions: Array<{ action: string, title: string }>) {
+        this.eventEmitterService.emitEventToParty(
+            partyId,
+            PartyEvent.NOTIFICATION,
+            {
+                title,
+                body,
+                actions
+            }
+        );
+    }
 
-    private emitNotificationToUser(userId: string, title: string, body: string, actions: Array<{ action: string, title: string }>) {
+    public emitNotificationToUser(userId: string, title: string, body: string, actions: Array<{ action: string, title: string }>) {
         this.eventEmitterService.emitEventToUser(
             userId,
             UserEvent.NOTIFICATION,
@@ -170,6 +170,10 @@ export class UpNextService {
                 actions
             }
         );
+    }
+
+    public emitEventToUser(userId: string, event: UserEvent) {
+        this.eventEmitterService.emitEventToUser(userId, event);
     }
 
     public getUserById(userId: string): UserDB {

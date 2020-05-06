@@ -51,6 +51,7 @@
     "request": "^2.88.0",
     "routing-controllers": "^0.8.0",
     "routing-controllers-openapi": "^1.8.0",
+    "sha512": "0.0.1",
     "socket-controllers": "^0.0.5",
     "swagger-ui-express": "^4.1.2",
     "typedi": "latest",
