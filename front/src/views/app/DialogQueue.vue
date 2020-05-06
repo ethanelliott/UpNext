@@ -65,7 +65,6 @@
 </template>
 
 <script>
-    import session from 'localStorage'
     import io from 'socket.io-client'
 
     export default {

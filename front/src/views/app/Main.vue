@@ -9,7 +9,6 @@
 </template>
 
 <script>
-    import session from 'localStorage'
 
     const DEFAULT_TRANSITION = 'fade';
     export default {

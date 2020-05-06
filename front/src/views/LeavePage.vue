@@ -21,7 +21,6 @@
 </template>
 
 <script>
-    import session from 'localStorage'
     import axios from 'axios'
 
     export default {
@@ -29,9 +28,9 @@
         data: () => ({}),
         mounted() {
             let context = this;
-            let token = session.getItem('token');
+            let token = localStorage.getItem('token');
             axios.post(`/party/leave`, {token});
-            session.removeItem('token');
+            localStorage.removeItem('token');
             setTimeout(() => {
                 context.$router.push('/')
             }, 1500)

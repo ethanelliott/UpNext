@@ -16,7 +16,6 @@
 
 <script>
     import axios from 'axios';
-    import localStorage from 'localStorage';
 
     export default {
         name: "app-admin-user-menu",

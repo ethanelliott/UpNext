@@ -68,7 +68,6 @@
 </template>
 
 <script>
-    import localStorage from 'localStorage'
     import AppInfoBox from "./InfoBox";
     import AppUpdateBox from "./UpdateBox";
 

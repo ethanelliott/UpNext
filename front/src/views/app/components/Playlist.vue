@@ -81,7 +81,6 @@
 </template>
 
 <script>
-    import session from 'localStorage'
     import axios from 'axios'
     import Song from "./Song";
     import AlbumArtwork from "./AlbumArtwork";
@@ -104,7 +103,7 @@
             Song
         },
         mounted() {
-            this.token = session.getItem('token');
+            this.token = localStorage.getItem('token');
             this.socket.on(`spotify-playlist-${this.id}`, ({playlist, tracks}) => {
                 this.playlistData = playlist;
                 this.playlistTracks.push(...tracks.items);

@@ -4,7 +4,6 @@
 </template>
 
 <script>
-    import localStorage from 'localStorage';
 
     export default {
         name: "app-admin-logout",

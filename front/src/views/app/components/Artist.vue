@@ -147,7 +147,6 @@
 </template>
 
 <script>
-    import session from 'localStorage';
     import axios from 'axios';
 
     export default {
@@ -191,7 +190,7 @@
             }
         },
         mounted() {
-            this.token = session.getItem('token');
+            this.token = localStorage.getItem('token');
             this.socket.on(`spotify-artist-${this.id}`, ({artist, albums, topTracks}) => {
                 this.artistData = artist;
                 this.topTracks = topTracks;
