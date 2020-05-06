@@ -47,7 +47,7 @@
                                                     </v-row>
                                                 </v-col>
                                             </v-row>
-                                            <v-row :key="i" align="center" class="ma-0 pa-0 ml-5 mr-10"
+                                            <v-row :key="`${i}${e.name}`" align="center" class="ma-0 pa-0 ml-5 mr-10"
                                                    justify="center" v-for="(e, i) in partySongAnalysis">
                                                 <v-col class="ma-0 pa-0" cols="6">
                                                     <v-row class="ma-0 pa-0 text-left"
@@ -64,7 +64,7 @@
                                                     </v-row>
                                                 </v-col>
                                             </v-row>
-                                            <v-row :key="i" align="center" class="ma-0 pa-0 ml-5 mr-10"
+                                            <v-row :key="`${i}${e.name}`" align="center" class="ma-0 pa-0 ml-5 mr-10"
                                                    justify="center" v-for="(e, i) in partyColours">
                                                 <v-col class="ma-0 pa-0" cols="6">
                                                     <v-row class="ma-0 pa-0 text-left"
@@ -136,7 +136,7 @@
                                             </tr>
                                             </thead>
                                             <tbody>
-                                            <tr :key="index" v-for="(user, index) in partyUsers">
+                                            <tr :key="`${index}${user.id}`" v-for="(user, index) in partyUsers">
                                                 <td>{{ user.nickname }}</td>
                                                 <td>{{ user.score }}</td>
                                                 <td>{{ user.userPermission === 1 ? 'Admin' : 'User' }}</td>
@@ -178,7 +178,7 @@
                                             </tr>
                                             </thead>
                                             <tbody>
-                                            <tr :key="index" v-for="(entry, index) in partyPlaylist">
+                                            <tr :key="`${index}${entry.name}`" v-for="(entry, index) in partyPlaylist">
                                                 <td>
                                                     <v-img :src="entry.albumArtwork" max-height="50"
                                                            max-width="50"></v-img>
