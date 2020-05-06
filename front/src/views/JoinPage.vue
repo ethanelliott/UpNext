@@ -127,7 +127,6 @@
         mounted() {
             this.partyCode = (this.code ? this.code : '')
             axios.post('/auth/exists', {trackingId: localStorage.getItem('trackingId')}).then(res => {
-                console.log(res.data);
                 if (res.data.exists) {
                     this.dialog = true;
                     this.alreadyJoined = res.data;

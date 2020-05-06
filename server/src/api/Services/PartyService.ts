@@ -251,7 +251,7 @@ export class PartyService {
         }
     }
 
-    private emitPlaylistUpdate(partyId) {
+    public emitPlaylistUpdate(partyId) {
         this.eventEmitterService.emitEventToParty(
             partyId,
             PartyEvent.PLAYLIST_UPDATE,
@@ -261,7 +261,7 @@ export class PartyService {
         );
     }
 
-    private emitUsersUpdate(partyId) {
+    public emitUsersUpdate(partyId) {
         this.eventEmitterService.emitEventToParty(
             partyId,
             PartyEvent.USERS_UPDATE,

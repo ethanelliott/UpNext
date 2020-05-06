@@ -57,6 +57,8 @@ export class ConnectionController {
         const uee = UserEventEmitterBuilder
             .make()
             .withEvent(UserEvent.NOTIFICATION, data => socket.emit('notification', data), socket.id)
+            .withEvent(UserEvent.RELOAD, data => socket.emit('reload', data), socket.id)
+            .withEvent(UserEvent.LEAVE, data => socket.emit('party-leave', data), socket.id)
             .build();
         this.socketEventRemover.set(socket.id, () => {
             this.eventQueueService.leavePartyEvents(tokenData.partyId, pee);

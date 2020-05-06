@@ -30,6 +30,7 @@
             >
                 <template v-slot:prepend>
                     <v-toolbar class="elevation-0" color="transparent" fixed>
+                        <app-update-box></app-update-box>
                         <v-spacer></v-spacer>
                         <app-info-box></app-info-box>
                     </v-toolbar>
@@ -37,7 +38,8 @@
                 <template v-slot:default>
                     <v-container class="fill-height ma-0 pa-0" fluid>
                         <v-row align="center" class="ma-0 pa-0" justify="center">
-                            <v-col align="center" class="ma-0 pa-0" cols="12" justify="center" lg="6" md="8" sm="8">
+                            <v-col @click="adminOpen" align="center" class="ma-0 pa-0" cols="12" justify="center" lg="6"
+                                   md="8" sm="8">
                                 <v-icon color="primary" size="120">mdi-music-note-plus</v-icon>
                                 <p class="display-2 text-uppercase mb-10">
                                     <span class="font-weight-bold">Up</span>
@@ -68,13 +70,15 @@
 <script>
     import localStorage from 'localStorage'
     import AppInfoBox from "./InfoBox";
+    import AppUpdateBox from "./UpdateBox";
 
     export default {
         name: 'LandingPage',
-        components: {AppInfoBox},
+        components: {AppUpdateBox, AppInfoBox},
         data: () => ({
             installDialog: false,
-            deferredPrompt: null
+            deferredPrompt: null,
+            adminClickCount: 0
         }),
         methods: {
             install() {
@@ -88,6 +92,14 @@
                     }
                     this.deferredPrompt = null;
                 });
+            },
+            adminOpen() {
+                if (this.adminClickCount === 9) {
+                    this.adminClickCount = 0;
+                    this.$router.push('/admin');
+                } else {
+                    this.adminClickCount++;
+                }
             }
         },
         mounted() {
