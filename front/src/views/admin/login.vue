@@ -41,7 +41,6 @@
 <script>
     import sha512 from 'sha512';
     import axios from 'axios';
-    import localStorage from 'localStorage';
 
     export default {
         name: "app-admin-login",

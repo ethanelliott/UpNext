@@ -21,7 +21,6 @@
 </template>
 
 <script>
-    import session from 'localStorage'
     import axios from 'axios'
 
     export default {
@@ -32,8 +31,8 @@
             let context = this;
             let joinToken = context.$route.params.token;
             axios.post(`/party/join?token=${joinToken}`).then(res => {
-                session.setItem('token', res.data.token); // set token for reqs to the party
-                session.setItem('userId', res.data.userId); // set userId for log rocket
+                localStorage.setItem('token', res.data.token); // set token for reqs to the party
+                localStorage.setItem('userId', res.data.userId); // set userId for log rocket
                 // then make the user wait so they can look at the pretty screen
                 setTimeout(() => {
                     context.$router.push('/app/home')

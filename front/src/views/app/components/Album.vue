@@ -71,7 +71,6 @@
 </template>
 
 <script>
-    import session from 'localStorage'
     import axios from 'axios'
     import AlbumArtwork from "./AlbumArtwork";
     import Song from "./Song";
@@ -105,7 +104,7 @@
             }
         },
         mounted() {
-            this.token = session.getItem('token');
+            this.token = localStorage.getItem('token');
             this.socket.on(`spotify-album-${this.id}`, ({album}) => {
                 this.albumData = album;
             });

@@ -168,8 +168,7 @@
 <script>
 
     import io from 'socket.io-client';
-    import session from 'localStorage';
-    import moment from 'moment';
+    import * as dayjs from 'dayjs'
 
     export default {
         name: "Cast",
@@ -196,7 +195,7 @@
         }),
         mounted() {
             window.scrollTo(0, 0);
-            this.token = session.getItem('token');
+            this.token = localStorage.getItem('token');
             this.socket = io(this.$socketUrl);
             this.socket.on('connect', () => {
                 this.requestStateData();
@@ -249,9 +248,9 @@
                     this.songProgress = data.playstate.progress / data.playstate.duration * 100;
                     clearInterval(this.songProgressLoopTrack);
                     if (data.playstate.isPlaying) {
-                        const finishTime = moment().add((data.playstate.duration - data.playstate.progress), 'milliseconds').valueOf();
+                        const finishTime = dayjs().add((data.playstate.duration - data.playstate.progress), 'milliseconds').valueOf();
                         this.songProgressLoopTrack = setInterval(() => {
-                            const progress = (1 - ((finishTime - moment().valueOf()) / data.playstate.duration)) * 100;
+                            const progress = (1 - ((finishTime - dayjs().valueOf()) / data.playstate.duration)) * 100;
                             this.songProgress = progress <= 100 && progress >= 0 ? progress : 0;
                         }, 100);
                     }

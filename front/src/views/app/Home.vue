@@ -191,11 +191,10 @@
 
 <script>
     import io from 'socket.io-client'
-    import session from 'localStorage'
     import Queue from './DialogQueue'
     import Add from './DialogAdd'
     import AppShareDialog from "./ShareDialog";
-    import moment from "moment";
+    import * as dayjs from 'dayjs'
     import AppAdminDialog from "./AdminDialog";
 
     export default {
@@ -352,9 +351,9 @@
                     this.updateMediaMetadata();
                     clearInterval(this.songProgressLoopTrack);
                     if (this.isPlaying) {
-                        const finishTime = moment().add((data.playstate.duration - data.playstate.progress), 'milliseconds').valueOf();
+                        const finishTime = dayjs().add((data.playstate.duration - data.playstate.progress), 'milliseconds').valueOf();
                         this.songProgressLoopTrack = setInterval(() => {
-                            const progress = (1 - ((finishTime - moment().valueOf()) / data.playstate.duration));
+                            const progress = (1 - ((finishTime - dayjs().valueOf()) / data.playstate.duration));
                             this.songProgress = progress <= 1 && progress >= 0 ? progress : 0;
                         }, 100);
 
@@ -453,7 +452,7 @@
                 navigator.serviceWorker.register('/sw.js?c=4654654');
             }
             window.scrollTo(0, 0);
-            this.token = session.getItem('token');
+            this.token = localStorage.getItem('token');
             this.socket = io(this.$socketUrl);
             this.socket.on('connect', () => {
                 this.requestStateData();
@@ -473,7 +472,7 @@
                             icon: '/assets/apple-touch-icon.png',
                             badge: '/assets/mstile-144x144.png',
                             vibrate: [200, 100],
-                            data: {dateOfArrival: moment().valueOf()},
+                            data: {dateOfArrival: dayjs().valueOf()},
                             actions: data.actions
                         };
                         reg.showNotification(`${data.title}`, options);

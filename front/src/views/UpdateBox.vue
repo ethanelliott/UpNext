@@ -37,8 +37,8 @@
 
 <script>
 
-    import moment from "moment";
-    import Markdown from 'markdown-it';
+    import * as dayjs from 'dayjs';
+    import snarkdown from 'snarkdown';
     import axios from 'axios';
 
     export default {
@@ -58,10 +58,10 @@
         },
         methods: {
             dateFormat(date) {
-                return moment(date).format("LL")
+                return dayjs(date).format("LL")
             },
             markdown(data) {
-                return (new Markdown()).render(data);
+                return snarkdown(data);
             }
         }
     }

@@ -68,7 +68,6 @@
 </template>
 
 <script>
-    import session from 'localStorage'
     import axios from 'axios'
     import Playlist from './components/Playlist'
     import Song from './components/Song'
@@ -91,7 +90,7 @@
         },
         mounted() {
             window.scrollTo(0, 0);
-            this.token = session.getItem('token');
+            this.token = localStorage.getItem('token');
             this.updateContent();
         },
         methods: {
