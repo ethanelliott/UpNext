@@ -17,11 +17,16 @@
                         </v-toolbar>
                         <v-list two-line>
                             <template v-for="(item, index) in updates">
-                                <v-list-item :key="index + item.id" link>
+                                <v-list-item :key="index + item.id">
                                     <v-list-item-content>
                                         <v-list-item-title>{{ item.title }}</v-list-item-title>
                                         <v-list-item-subtitle>{{ item.date }}</v-list-item-subtitle>
                                     </v-list-item-content>
+                                    <v-list-item-action>
+                                        <v-btn @click="deleteUpdate(item.id)" color="red" icon>
+                                            <v-icon>mdi-trash-can</v-icon>
+                                        </v-btn>
+                                    </v-list-item-action>
                                 </v-list-item>
                             </template>
                         </v-list>
@@ -43,14 +48,22 @@
             updates: []
         }),
         mounted() {
-            axios.get('/app/updates').then(({data}) => {
-                this.updates = data;
-            }).catch(console.error);
+            this.getUpdates();
         },
         methods: {
+            getUpdates() {
+                axios.get('/app/updates').then(({data}) => {
+                    this.updates = data;
+                }).catch(console.error);
+            },
             newUpdate(update) {
                 axios.post('/admin/updates/new', update).then(({data}) => {
-                    console.log(data);
+                    this.getUpdates();
+                }).catch(console.error);
+            },
+            deleteUpdate(updateId) {
+                axios.post('/admin/updates/delete', {updateId}).then(({data}) => {
+                    this.getUpdates();
                 }).catch(console.error);
             }
         }

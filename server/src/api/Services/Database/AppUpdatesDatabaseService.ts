@@ -43,4 +43,11 @@ export class AppUpdatesDatabaseService {
             ]
         })).run();
     }
+
+    public deleteUpdateById(updateId: string) {
+        this.databaseService.delete({
+            from: this.tableName,
+            where: [{key: 'id', operator: '=', value: updateId}]
+        });
+    }
 }

@@ -152,4 +152,10 @@ export class AdminController {
         });
         return {};
     }
+
+    @Post('/updates/delete')
+    public async deleteUpdate(@BodyParam('updateId') updateId: string): Promise<any> {
+        this.appUpdatesDatabaseService.deleteUpdateById(updateId);
+        return {};
+    }
 }
