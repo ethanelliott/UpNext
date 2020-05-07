@@ -12,13 +12,16 @@ import { Socket } from "socket.io";
 import { AuthenticationService } from "../Services/AuthenticationService";
 import { PartyService } from "../Services/PartyService";
 import { UpNextService } from "../Services/UpNextService";
+import { UserEvent } from "../Factory/PartyEventEmitterBuilder";
+import { UserDatabaseService } from "../Services/Database/UserDatabaseService";
 
 @SocketController()
 export class StateController {
     constructor(
         private authenticationService: AuthenticationService,
         private partyService: PartyService,
-        private upNextService: UpNextService
+        private upNextService: UpNextService,
+        private userDatabaseService: UserDatabaseService
     ) {
     }
 
@@ -33,15 +36,12 @@ export class StateController {
         };
     }
 
-    @OnMessage("party-fix-chrome")
-    public async fixChromecastError(@MessageBody() message: SocketMessage<any>) {
-        const tokenData = await this.authenticationService.authenticate(message.token);
-        await this.partyService.fixChromecastError(tokenData.partyId);
-    }
-
     @OnMessage("party-delete")
     public async deleteTheParty(@MessageBody() message: SocketMessage<any>) {
         const tokenData = await this.authenticationService.authenticate(message.token);
+        this.userDatabaseService.getUsersAtParty(tokenData.partyId).forEach(user => {
+            this.upNextService.emitEventToUser(user.id, UserEvent.LEAVE);
+        });
         this.partyService.removePartyByPartyId(tokenData.partyId);
     }
 
