@@ -33,8 +33,6 @@
 </template>
 
 <script>
-    import axios from 'axios';
-
     export default {
         props: ['userId'],
         name: "app-admin-dashboard-parties-user-notify-dialog",
