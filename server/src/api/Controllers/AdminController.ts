@@ -11,6 +11,7 @@ import { UserDB } from "../Types/DatabaseMaps/UserDB";
 import { UserEvent } from "../Factory/PartyEventEmitterBuilder";
 import { PlaylistEntryDB } from "../Types/DatabaseMaps/PlaylistEntryDB";
 import { PlaylistEntryDatabaseService } from "../Services/Database/PlaylistEntryDatabaseService";
+import { AppUpdatesDatabaseService } from "../Services/Database/AppUpdatesDatabaseService";
 
 @JsonController('/admin')
 export class AdminController {
@@ -22,7 +23,8 @@ export class AdminController {
         private partyService: PartyService,
         private upNextService: UpNextService,
         private userDatabaseService: UserDatabaseService,
-        private playlistEntryDatabaseService: PlaylistEntryDatabaseService
+        private playlistEntryDatabaseService: PlaylistEntryDatabaseService,
+        private appUpdatesDatabaseService: AppUpdatesDatabaseService
     ) {
     }
 
@@ -137,6 +139,17 @@ export class AdminController {
             this.upNextService.emitEventToUser(user.id, UserEvent.LEAVE);
         });
         this.partyService.removePartyByPartyId(partyId);
+        return {};
+    }
+
+    @Post('/updates/new')
+    public async newUpdate(@BodyParam('title') title: string, @BodyParam('message') message: string, @BodyParam('date') date: number): Promise<any> {
+        this.appUpdatesDatabaseService.insertNewUpdate({
+            id: this.uuidService.new(),
+            date,
+            title,
+            message
+        });
         return {};
     }
 }

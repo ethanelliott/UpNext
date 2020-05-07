@@ -8,6 +8,7 @@
         <v-card>
             <v-card-actions>
                 <v-spacer></v-spacer>
+                <v-btn text to="/">Go Home</v-btn>
                 <v-btn text to="/admin/logout">Logout</v-btn>
             </v-card-actions>
         </v-card>

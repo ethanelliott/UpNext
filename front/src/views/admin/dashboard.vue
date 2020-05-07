@@ -52,6 +52,11 @@
                     href: '/admin/dashboard/home'
                 },
                 {
+                    icon: 'mdi-bell',
+                    title: 'Updates',
+                    href: '/admin/dashboard/updates'
+                },
+                {
                     icon: 'mdi-account',
                     title: 'Users',
                     href: '/admin/dashboard/users'

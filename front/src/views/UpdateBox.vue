@@ -17,7 +17,7 @@
                 </v-btn>
             </v-toolbar>
             <v-card-text class="mt-5">
-                <v-container class="ma-0 pa-0">
+                <v-container class="ma-0 pa-0" fluid>
                     <v-col class="ma-0 pa-0">
                         <v-row class="ma-0 pa-0">
                             <v-card :key="e.id" elevation="5" v-for="(e) in updates" width="100%">
@@ -58,7 +58,7 @@
         },
         methods: {
             dateFormat(date) {
-                return dayjs(date).format("LL")
+                return dayjs(date).format("MMMM D, YYYY")
             },
             markdown(data) {
                 return snarkdown(data);

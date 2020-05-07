@@ -136,6 +136,19 @@ const routes = [
                         }
                     },
                     {
+                        path: 'updates',
+                        name: 'adminUpdates',
+                        props: {
+                            default: false,
+                            content: true
+                        },
+                        components: {
+                            default: () => import('../views/AdminPage.vue'),
+                            content: () => import('../views/admin/dashboard.vue'),
+                            dashboard: () => import('../views/admin/dashboard/updates.vue')
+                        }
+                    },
+                    {
                         path: 'users',
                         name: 'adminUsers',
                         props: {
