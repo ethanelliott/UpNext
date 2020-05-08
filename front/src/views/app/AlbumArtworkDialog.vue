@@ -1,13 +1,16 @@
 <template>
     <v-dialog overlay-opacity="0.95" v-model="dialog" width="400">
         <template v-slot:activator="{}">
-            <v-img :src="albumArtwork"
-                   @click="open"
-                   class="mx-5 elevation-20"
-                   max-width="600"
-                   min-height="300"
-            >
-            </v-img>
+            <transition mode="out-in" name="change">
+                <v-img :key="albumArtwork"
+                       :src="albumArtwork"
+                       @click="open"
+                       class="mx-5 elevation-20"
+                       max-width="600"
+                       min-height="300"
+                >
+                </v-img>
+            </transition>
         </template>
         <v-card>
             <v-toolbar color="darker">
@@ -83,3 +86,17 @@
         }
     }
 </script>
+
+<style>
+    .change-enter-active,
+    .change-leave-active {
+        transition-duration: 0.5s;
+        transition-property: opacity;
+        transition-timing-function: ease;
+    }
+
+    .change-enter,
+    .change-leave-active {
+        opacity: 0
+    }
+</style>

@@ -10,9 +10,12 @@ import { FileLoader } from "./loaders/FileLoader";
 import { SocketLoader } from "./loaders/SocketLoader";
 import { UpNextLoader } from "./loaders/UpNextLoader";
 import { DatabaseLoader } from "./loaders/DatabaseLoader";
+import { HTTPLoader } from "./loaders/HTTPLoader";
+import { ServerLoader } from "./loaders/ServerLoader";
 
 bootstrapMicroframework({
     loaders: [
+        HTTPLoader,
         DatabaseLoader,
         IocLoader,
         ExpressLoader,
@@ -21,12 +24,13 @@ bootstrapMicroframework({
         MonitorLoader,
         HomeLoader,
         FileLoader,
-        UpNextLoader
+        UpNextLoader,
+        ServerLoader
     ]
 })
     .then(() => {
         log.startup("Server is running!");
     })
     .catch((err: Error) => {
-        log.error(`[ERROR] THE SERVER HAS CRASHED: ${err}\n${err.stack}`);
+        log.error(`THE SERVER HAS CRASHED: ${err}\n${err.stack}`);
     });
