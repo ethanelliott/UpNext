@@ -19,7 +19,7 @@ export class SpotifyController {
     public async getPlaylistTracks(@ConnectedSocket() socket: SocketIO.Socket, @MessageBody() message: SocketMessage<any>) {
         log.spotify(`get playlist`);
         const tokenData = await this.authenticationService.authenticate(message.token);
-        const party = this.partyDatabaseService.getPartyById(tokenData.partyId);
+        const party = await this.partyDatabaseService.getPartyById(tokenData.partyId);
         const playlist = await this.spotifyAPI.playlist.get(party.spotifyToken, message.data.playlistId);
         const tracks = await this.spotifyAPI.playlist.getTracks(party.spotifyToken, message.data.playlistId, message.data.offset, message.data.limit);
         socket.emit(`spotify-playlist-${message.data.playlistId}`, {playlist, tracks});
@@ -29,7 +29,7 @@ export class SpotifyController {
     public async getAlbumTracks(@ConnectedSocket() socket: SocketIO.Socket, @MessageBody() message: SocketMessage<any>) {
         log.spotify(`get album`);
         const tokenData = await this.authenticationService.authenticate(message.token);
-        const party = this.partyDatabaseService.getPartyById(tokenData.partyId);
+        const party = await this.partyDatabaseService.getPartyById(tokenData.partyId);
         const album = await this.spotifyAPI.albums.getAlbum(party.spotifyToken, message.data.albumId);
         socket.emit(`spotify-album-${message.data.albumId}`, {album});
     }
@@ -38,7 +38,7 @@ export class SpotifyController {
     public async getArtistDetails(@ConnectedSocket() socket: SocketIO.Socket, @MessageBody() message: SocketMessage<any>) {
         log.spotify(`get artist`);
         const tokenData = await this.authenticationService.authenticate(message.token);
-        const party = this.partyDatabaseService.getPartyById(tokenData.partyId);
+        const party = await this.partyDatabaseService.getPartyById(tokenData.partyId);
         const artist = await this.spotifyAPI.artists.get(party.spotifyToken, message.data.artistId);
         const albums = await this.spotifyAPI.artists.getAllAlbums(party.spotifyToken, message.data.artistId);
         const topTracks = await this.spotifyAPI.artists.getTopTracks(party.spotifyToken, message.data.artistId);

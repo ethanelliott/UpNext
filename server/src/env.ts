@@ -17,7 +17,9 @@ export const env = {
         schema: getOsEnv('APP_SCHEMA'),
         routePrefix: getOsEnv('APP_ROUTE_PREFIX'),
         port: normalizePort(process.env.PORT || getOsEnv('APP_PORT')),
-        databaseURI: getOsEnv('DATABASE_URL'),
+        database: {
+            url: getOsEnv('DATABASE_URL')
+        },
         jwt: {
             key: readFileSync(getOsEnv('APP_JWT_KEY')).toString()
         },
@@ -38,4 +40,8 @@ export const env = {
         route: getOsEnv('MONITOR_ROUTE'),
         enabled: getOsEnv('MONITOR_ENABLED')
     },
+    timber: {
+        apiKey: getOsEnv('TIMBER_API_KEY'),
+        sourceId: getOsEnv('TIMBER_SOURCE_ID')
+    }
 };

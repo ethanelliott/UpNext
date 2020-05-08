@@ -27,7 +27,7 @@ export class UserController {
     @EmitOnFail('party-leave')
     public async isAdmin(@ConnectedSocket() socket: Socket, @MessageBody() message: SocketMessage<any>) {
         const tokenData = await this.authenticationService.authenticate(message.token);
-        const user = this.userDatabaseService.getUserById(tokenData.userId);
+        const user = await this.userDatabaseService.getUserById(tokenData.userId);
         return {
             userId: tokenData.userId,
             partyId: tokenData.partyId,
@@ -39,8 +39,8 @@ export class UserController {
     @EmitOnSuccess("users-state")
     public async getState(@ConnectedSocket() socket: Socket, @MessageBody() message: SocketMessage<any>) {
         const tokenData = await this.authenticationService.authenticate(message.token);
-        const users = this.userDatabaseService.getUsersAtParty(tokenData.partyId).sort(userSort);
-        return {users};
+        const users = await this.userDatabaseService.getUsersAtParty(tokenData.partyId);
+        return {users: users.sort(userSort)};
     }
 
 }

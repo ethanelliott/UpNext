@@ -49,16 +49,19 @@
                 <v-col class="ma-0 pa-0">
                     <v-row align="center" class="ma-0 pa-0" justify="center">
                         <v-card color="transparent" flat>
-                            <v-skeleton-loader boilerplate height="300" type="image" width="300">
-                                <app-current-artwork-dialog
-                                        :album-artwork="albumArtwork"
-                                        :song-stats="songStats"
-                                        :track-id="trackId"
-                                        @dialog="handleDialog"
-                                ></app-current-artwork-dialog>
-                            </v-skeleton-loader>
-                            <v-container class="ma-0 pa-0 px-5">
+                            <v-container class="ma-0 pa-0">
                                 <v-row class="ma-0 pa-0">
+                                    <v-col class="ma-0 pa-0">
+                                        <v-card color="transparent" elevation="0" height="0" width="600"></v-card>
+                                        <app-current-artwork-dialog
+                                                :album-artwork="albumArtwork"
+                                                :song-stats="songStats"
+                                                :track-id="trackId"
+                                                @dialog="handleDialog"
+                                        ></app-current-artwork-dialog>
+                                    </v-col>
+                                </v-row>
+                                <v-row class="ma-0 pa-0 mx-5">
                                     <v-col class="text-left"
                                            style="text-overflow: ellipsis;white-space: nowrap;overflow: hidden;">
                                         <v-card class="ma-0 pa-0" color="transparent" elevation="0" max-width="600">

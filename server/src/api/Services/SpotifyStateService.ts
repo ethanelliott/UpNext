@@ -14,6 +14,7 @@ export class SpotifyStateService {
     private readonly spotifyEventLoops: Map<string, NodeJS.Timeout>;
     public readonly spotifyEventLoopStates: Map<string, StoredSpotifyState>;
     private readonly spotifyEventLoopStateEndOfSong: Map<string, boolean>;
+    private readonly spotifyTokens: Map<string, string>;
 
     constructor(
         private spotifyService: SpotifyService,
@@ -23,12 +24,14 @@ export class SpotifyStateService {
         this.spotifyEventLoops = new Map<string, NodeJS.Timeout>();
         this.spotifyEventLoopStates = new Map<string, StoredSpotifyState>();
         this.spotifyEventLoopStateEndOfSong = new Map<string, boolean>();
+        this.spotifyTokens = new Map<string, string>();
         this.startSpotifyEventLoops();
     }
 
-    public startSpotifyEventLoops() {
+    public async startSpotifyEventLoops() {
         log.spotify(`Starting Spotify Event Loops`);
-        this.partyDatabaseService.getAllParties().forEach(party => {
+        const parties = await this.partyDatabaseService.getAllParties();
+        parties.forEach(party => {
             if (!this.spotifyEventEmitters.has(party.id)) {
                 this.spotifyEventEmitters.set(party.id, new SpotifyEventEmitter());
             }
@@ -51,13 +54,13 @@ export class SpotifyStateService {
     private spotifyEventLoop(partyId: string): () => Promise<void> {
         this.checkForValidToken(partyId)();
         return async () => {
-            const party = this.partyDatabaseService.getPartyById(partyId);
-            if (party) {
-                let spotifyPlayState = await this.spotifyService.getSpotifyAPI().player.getPlayingContext(party.spotifyToken);
+            const spotifyToken = this.spotifyTokens.get(partyId);
+            if (spotifyToken) {
+                let spotifyPlayState = await this.spotifyService.getSpotifyAPI().player.getPlayingContext(spotifyToken);
                 const storedState = this.spotifyEventLoopStates.get(partyId);
                 const hasTriggeredEndOfSong = this.spotifyEventLoopStateEndOfSong.get(partyId);
                 let nextState: SpotifyState = null;
-                // log.spotify(`state: ${storedState.state}`);
+                // console.log(spotifyPlayState);
                 if (storedState) {
                     switch (storedState.state) {
                         case SpotifyState.FIRST_RUN:
@@ -190,13 +193,14 @@ export class SpotifyStateService {
     }
 
     private checkForValidToken(partyId: string) {
-        return () => {
+        return async () => {
             log.spotify(`Updating token on ${partyId}`);
-            const party = this.partyDatabaseService.getPartyById(partyId);
+            const party = await this.partyDatabaseService.getPartyById(partyId);
             this.spotifyService.getSpotifyAPI().auth
                 .refreshAuthToken(env.app.spotify.clientId, env.app.spotify.clientSecret, party.spotifyRefreshToken)
                 .then(refreshTokenData => {
                     this.partyDatabaseService.refreshPartyToken(partyId, refreshTokenData.access_token, refreshTokenData.expires_in);
+                    this.spotifyTokens.set(partyId, refreshTokenData.access_token);
                     setTimeout(this.checkForValidToken(partyId), (refreshTokenData.expires_in * 1000) - (60 * 1000));
                 });
         };

@@ -4,21 +4,20 @@ import { DatabaseService } from "./DatabaseService";
 @Service()
 export class UserPermissionDatabaseService {
 
-    private readonly tableName: string = 'userPermissions';
+    private readonly tableName: string = 'user_permissions';
 
     constructor(
         private databaseService: DatabaseService
     ) {
-        try {
-            this.databaseService.db.prepare(`SELECT * FROM ${this.tableName}`).get();
-        } catch (e) {
-            this.buildTable();
-            this.insetDefaultValues();
-        }
     }
 
-    private buildTable() {
-        this.databaseService.createTable({
+    public async connect() {
+        await this.buildTable();
+        await this.insetDefaultValues();
+    }
+
+    private async buildTable() {
+        await this.databaseService.createTable({
             name: this.tableName,
             columns: [
                 {name: 'id', type: 'INTEGER', unique: true, notNull: true, primaryKey: true},
@@ -27,20 +26,26 @@ export class UserPermissionDatabaseService {
         });
     }
 
-    private insetDefaultValues() {
-        this.databaseService.insert({
-            into: this.tableName,
-            insert: {
-                id: 0,
-                name: 'default'
-            }
+    private async insetDefaultValues() {
+        const data = await this.databaseService.queryAll({
+            from: this.tableName,
+            select: ['*']
         });
-        this.databaseService.insert({
-            into: this.tableName,
-            insert: {
-                id: 1,
-                name: 'admin'
-            }
-        });
+        if (data.length === 0) {
+            await this.databaseService.insert({
+                into: this.tableName,
+                insert: {
+                    id: 0,
+                    name: 'default'
+                }
+            });
+            await this.databaseService.insert({
+                into: this.tableName,
+                insert: {
+                    id: 1,
+                    name: 'admin'
+                }
+            });
+        }
     }
 }

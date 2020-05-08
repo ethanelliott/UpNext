@@ -1,5 +1,6 @@
 import { Service } from "typedi";
-import Database, { Statement } from 'better-sqlite3';
+import { Pool, QueryResult } from 'pg';
+import { env } from "../../../env";
 import { Create, Delete, Insert, Select, Update } from "../../Types/DatabaseMaps/Database";
 import QueryFactory from "../../Factory/QueryFactory";
 import { log } from "../../../util/Log";
@@ -7,41 +8,76 @@ import { log } from "../../../util/Log";
 
 @Service()
 export class DatabaseService {
-    public db: any;
+    private pgPool: Pool;
+    private tables: Array<string>;
 
     constructor() {
-        this.db = new Database('./store.db', {verbose: log.db});
+        // create connection pool
+        this.pgPool = new Pool({
+            connectionString: `${env.app.database.url}`,
+            ssl: {rejectUnauthorized: false}
+        });
+        this.tables = [];
     }
 
-    public queryOne<T>(params: Select): T {
-        return params.where
-            ? this.query(params).get(params.where.map(e => e.value))
-            : this.query(params).get();
+    public async connect() {
+        const queryString = `SELECT * FROM pg_catalog.pg_tables WHERE schemaname != 'pg_catalog' AND schemaname != 'information_schema'`;
+        const tableTest = await this._query(queryString);
+        this.tables = tableTest.rows.map(e => e.tablename);
     }
 
-    public queryAll<T>(params: Select): Array<T> {
-        return params.where
-            ? this.query(params).all(params.where.map(e => e.value))
-            : this.query(params).all();
+    public getTables(): Array<string> {
+        return this.tables;
     }
 
-    public insert(params: Insert): void {
-        this.db.prepare(QueryFactory.buildInsertFrom(params)).run(Object.values(params.insert) as any);
+    public async queryOne<T>(params: Select): Promise<T> {
+        const res = await this.query<T>(params);
+        return res.length > 0 ? res[0] : null;
     }
 
-    public update(params: Update): void {
-        this.db.prepare(QueryFactory.buildUpdateFrom(params)).run([...Object.values(params.set), ...params.where.map(e => e.value)] as any);
+    public async queryAll<T>(params: Select): Promise<Array<T>> {
+        return await this.query<T>(params);
     }
 
-    public delete(params: Delete): void {
-        this.db.prepare(QueryFactory.buildDeleteFrom(params)).run(params.where.map(e => e.value) as any);
+    public async insert(params: Insert): Promise<void> {
+        await this._query(QueryFactory.buildInsertFrom(params), Object.values(params.insert));
     }
 
-    public createTable(params: Create): void {
-        this.db.prepare(QueryFactory.buildCreateFrom(params)).run();
+    public async update(params: Update): Promise<void> {
+        await this._query(QueryFactory.buildUpdateFrom(params), [...Object.values(params.set), ...params.where.map(e => e.value)]);
     }
 
-    private query(params: Select): Statement {
-        return this.db.prepare(QueryFactory.buildQueryFrom(params));
+    public async delete(params: Delete): Promise<void> {
+        await this._query(QueryFactory.buildDeleteFrom(params), params.where.map(e => e.value));
+    }
+
+    public tableExists(tableName: string): boolean {
+        return this.getTables().includes(tableName);
+    }
+
+    public async createTable(params: Create): Promise<void> {
+        // make sure that the table doesn't exist
+        if (!this.tableExists(params.name)) {
+            await this._query(QueryFactory.buildCreateFrom(params));
+            this.tables.push(params.name);
+        }
+    }
+
+    private async _query(queryString: string, values: Array<any> = []): Promise<QueryResult> {
+        log.db(queryString);
+        try {
+            return await this.pgPool.query(queryString, values);
+        } catch (e) {
+            log.error(`Database Error: ${e}`);
+        }
+        return null;
+    }
+
+    private async query<T>(params: Select): Promise<Array<T>> {
+        const res = await this._query(
+            QueryFactory.buildQueryFrom(params),
+            params.where ? params.where.map(e => e.value) : []
+        );
+        return res.rows;
     }
 }

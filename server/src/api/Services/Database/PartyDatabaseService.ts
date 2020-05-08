@@ -11,50 +11,49 @@ export class PartyDatabaseService {
     constructor(
         private databaseService: DatabaseService
     ) {
-        try {
-            this.databaseService.db.prepare(`SELECT * FROM ${this.tableName}`).get();
-        } catch (e) {
-            this.buildTable();
-        }
     }
 
-    public insertParty(party: PartyDB) {
-        this.databaseService.insert({
+    public async connect() {
+        await this.buildTable();
+    }
+
+    public async insertParty(party: PartyDB) {
+        await this.databaseService.insert({
             into: this.tableName,
             insert: party
         });
     }
 
-    public updateParty(party: PartyDB): void {
-        this.databaseService.update({
+    public async updateParty(party: PartyDB): Promise<void> {
+        await this.databaseService.update({
             update: this.tableName,
             set: party,
             where: [{key: 'id', operator: '=', value: party.id}]
         });
     }
 
-    public removePartyByPartyId(partyId: string) {
-        this.databaseService.delete({
+    public async removePartyByPartyId(partyId: string) {
+        await this.databaseService.delete({
             from: this.tableName,
             where: [{key: 'id', operator: '=', value: partyId}]
         });
     }
 
-    public removePartyBySpotifyUserId(spotifyUserId: string) {
-        this.databaseService.delete({
+    public async removePartyBySpotifyUserId(spotifyUserId: string) {
+        await this.databaseService.delete({
             from: this.tableName,
             where: [{key: 'spotifyUserId', operator: '=', value: spotifyUserId}]
         });
     }
 
-    public getAllParties(): Array<PartyDB> {
-        return this.databaseService.queryAll<PartyDB>({
+    public async getAllParties(): Promise<Array<PartyDB>> {
+        return await this.databaseService.queryAll<PartyDB>({
             from: this.tableName,
             select: ['*']
         });
     }
 
-    public getPartyById(partyId: string): PartyDB {
+    public async getPartyById(partyId: string): Promise<PartyDB> {
         return this.databaseService.queryOne<PartyDB>({
             from: this.tableName,
             select: ['*'],
@@ -62,7 +61,7 @@ export class PartyDatabaseService {
         });
     }
 
-    public getPartyByCode(partyCode: string): PartyDB {
+    public async getPartyByCode(partyCode: string): Promise<PartyDB> {
         return this.databaseService.queryOne<PartyDB>({
             from: this.tableName,
             select: ['*'],
@@ -70,15 +69,16 @@ export class PartyDatabaseService {
         });
     }
 
-    public doesPartyExistById(partyId: string): boolean {
-        return this.databaseService.queryAll<PartyDB>({
+    public async doesPartyExistById(partyId: string): Promise<boolean> {
+        const res = await this.databaseService.queryAll<PartyDB>({
             from: this.tableName,
             select: ['id'],
             where: [{key: 'id', operator: '=', value: partyId}]
-        }).length === 1;
+        });
+        return res.length === 1;
     }
 
-    public getPartyBySpotifyUserId(spotifyUserId: string): PartyDB {
+    public async getPartyBySpotifyUserId(spotifyUserId: string): Promise<PartyDB> {
         return this.databaseService.queryOne<PartyDB>({
             from: this.tableName,
             select: ['*'],
@@ -86,7 +86,7 @@ export class PartyDatabaseService {
         });
     }
 
-    public getPartyIdByCode(code: string): PartyDB {
+    public async getPartyIdByCode(code: string): Promise<PartyDB> {
         return this.databaseService.queryOne<PartyDB>({
             from: this.tableName,
             select: ['id'],
@@ -94,9 +94,9 @@ export class PartyDatabaseService {
         });
     }
 
-    public refreshPartyToken(partyId: string, access_token: string, expires_in: number) {
+    public async refreshPartyToken(partyId: string, access_token: string, expires_in: number) {
         const spotifyTokenExpire = moment().valueOf() + (1000 * expires_in);
-        this.databaseService.update({
+        await this.databaseService.update({
             update: this.tableName,
             set: {
                 spotifyToken: access_token,
@@ -106,17 +106,17 @@ export class PartyDatabaseService {
         });
     }
 
-    private buildTable() {
-        this.databaseService.createTable({
+    private async buildTable() {
+        await this.databaseService.createTable({
             name: this.tableName,
             columns: [
                 {name: 'id', type: 'TEXT', unique: true, notNull: true, primaryKey: true},
                 {name: 'name', type: 'TEXT', notNull: true},
                 {name: 'code', type: 'TEXT', notNull: true},
-                {name: 'startTime', type: 'INTEGER', notNull: true},
+                {name: 'startTime', type: 'BIGINT', notNull: true},
                 {name: 'spotifyToken', type: 'TEXT', notNull: true},
                 {name: 'spotifyRefreshToken', type: 'TEXT', notNull: true},
-                {name: 'spotifyTokenExpire', type: 'INTEGER', notNull: true},
+                {name: 'spotifyTokenExpire', type: 'BIGINT', notNull: true},
                 {name: 'spotifyUserId', type: 'TEXT', notNull: true},
                 {name: 'spotifyPlaylistId', type: 'TEXT', notNull: true}
             ]

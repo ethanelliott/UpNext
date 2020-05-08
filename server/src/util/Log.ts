@@ -2,9 +2,12 @@
 import winston from "winston";
 import { env } from "../env";
 import chalk from "chalk";
+import { Timber } from "@timberio/node";
+import { TimberTransport } from "@timberio/winston";
 
 const {createLogger, format, transports} = winston;
 const {combine, timestamp, printf, colorize} = format;
+const timber = new Timber(env.timber.apiKey, env.timber.sourceId);
 
 function devFormat() {
     const formatMessage = (info: { timestamp: any; level: any; message: any; durationMs: any; }) => `[${info.timestamp}] [${info.level}] ${info.message} ${(info.durationMs ? `Timer: ${info.durationMs}ms` : ``)}`;
@@ -46,7 +49,8 @@ const logger = createLogger({
         new transports.File({
             filename: 'combined.log',
             format: fileLogFormat()
-        })
+        }),
+        new TimberTransport(timber)
     ],
     exceptionHandlers: [
         new transports.File({

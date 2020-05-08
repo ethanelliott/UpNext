@@ -10,39 +10,43 @@ export default class QueryFactory {
     }
 
     static buildQueryFrom(params: Select): string {
+        let i = 0;
         let query = `SELECT ${params.select.join(', ')}`;
         query += ` FROM ${params.from} `;
         if (params.where) {
-            query += `WHERE ${params.where.map((k) => `${k.key} ${k.operator} ?`).join(' AND ')} `;
+            query += `WHERE ${params.where.map((k) => `"${k.key}" ${k.operator} \$${++i}`).join(' AND ')} `;
         }
         QueryFactory.logStatement(query);
         return query;
     }
 
     static buildInsertFrom(params: Insert): string {
-        let query = `INSERT INTO ${params.into} (${Object.keys(params.insert).join(', ')}) `;
-        query += `VALUES (${Object.values(params.insert).map((k, index) => `?`).join(', ')}) `;
+        let i = 0;
+        let query = `INSERT INTO "${params.into}" (${Object.keys(params.insert).map(e => `"${e}"`).join(', ')}) `;
+        query += `VALUES (${Object.values(params.insert).map((k) => `\$${++i}`).join(', ')}) `;
         QueryFactory.logStatement(query);
         return query;
     }
 
     static buildUpdateFrom(params: Update): string {
+        let i = 0;
         let query = `UPDATE ${params.update} `;
         let setParams = Object.keys(params.set);
         if (setParams.length > 0) {
-            query += `SET ${setParams.map((k, index) => `${k} = ?`).join(', ')} `;
+            query += `SET ${setParams.map((k) => `"${k}" = \$${++i}`).join(', ')} `;
         }
         if (params.where) {
-            query += `WHERE ${params.where.map((k) => `${k.key} ${k.operator} ?`).join(' AND ')} `;
+            query += `WHERE ${params.where.map((k) => `"${k.key}" ${k.operator} \$${++i}`).join(' AND ')} `;
         }
         QueryFactory.logStatement(query);
         return query;
     }
 
     static buildDeleteFrom(params: Delete): string {
+        let i = 0;
         let query = `DELETE FROM ${params.from} `;
         if (params.where) {
-            query += `WHERE ${params.where.map((k) => `${k.key} ${k.operator} ?`).join(' AND ')} `;
+            query += `WHERE ${params.where.map((k) => `"${k.key}" ${k.operator} \$${++i}`).join(' AND ')} `;
         }
         QueryFactory.logStatement(query);
         return query;

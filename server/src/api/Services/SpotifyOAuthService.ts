@@ -25,10 +25,10 @@ export class SpotifyOAuthService {
     ) {
     }
 
-    public start(partyName: string, nickName: string, trackingId: string): string {
+    public async start(partyName: string, nickName: string, trackingId: string): Promise<string> {
         const partyId = this.uuidService.new();
         const state = this.webTokenService.generateFrom({partyName, nickName, partyId, trackingId}, '10m');
-        this.newPartyService.create(partyId, state);
+        await this.newPartyService.create(partyId, state);
         return this.spotifyService.getSpotifyAPI().auth
             .getAuthStartURL(env.app.spotify.clientId, env.app.spotify.redirectURI, [
                 AuthAPI.SCOPES.UGC_IMAGE_UPLOAD,
@@ -68,26 +68,26 @@ export class SpotifyOAuthService {
         }
     }
 
-    public newUserJoined(userAgent: string) {
+    public async newUserJoined(userAgent: string) {
         const trackingId = this.uuidService.new();
-        this.userTrackerDatabaseService.insertNewUser(trackingId, moment().valueOf(), userAgent);
+        await this.userTrackerDatabaseService.insertNewUser(trackingId, moment().valueOf(), userAgent);
         return trackingId;
     }
 
-    public userSeen(trackingId: string, userAgent: string) {
-        if (this.userTrackerDatabaseService.doesTrackingIdExist(trackingId)) {
-            this.userTrackerDatabaseService.updateLastSeen(trackingId, moment().valueOf());
+    public async userSeen(trackingId: string, userAgent: string) {
+        if (await this.userTrackerDatabaseService.doesTrackingIdExist(trackingId)) {
+            await this.userTrackerDatabaseService.updateLastSeen(trackingId, moment().valueOf());
         } else {
-            this.userTrackerDatabaseService.insertNewUser(trackingId, moment().valueOf(), userAgent);
+            await this.userTrackerDatabaseService.insertNewUser(trackingId, moment().valueOf(), userAgent);
         }
         return trackingId;
     }
 
-    public userExists(trackingId: string) {
-        const userParties = this.userDatabaseService.getUserByTrackingId(trackingId);
+    public async userExists(trackingId: string) {
+        const userParties = await this.userDatabaseService.getUserByTrackingId(trackingId);
         if (userParties.length === 1) {
             const user = userParties[0];
-            const party = this.partyService.getPartyById(user.partyId);
+            const party = await this.partyService.getPartyById(user.partyId);
             return {
                 exists: true,
                 partyId: party.id,

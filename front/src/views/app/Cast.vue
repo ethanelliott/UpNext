@@ -1,5 +1,5 @@
 <template>
-    <v-content :style="backgroundString" class="fill-height ma-0 pt-0">
+    <v-content :style="backgroundString" class="fill-height ma-0 pt-0 background-transition">
         <v-app-bar class="elevation-0" color="black" fixed height="100">
             <v-container class="ma-0 pa-0" fluid>
                 <v-row align="center" class="ma-0 pa-0" justify="center">
@@ -31,32 +31,36 @@
                 <v-progress-circular color="primary" indeterminate size="200" width="15"></v-progress-circular>
             </v-overlay>
             <v-row align="center" class="ma-0 pa-0" justify="center">
-                <v-col class="ma-0 pa-0 pl-5" cols="4">
-                    <v-row align="center" class="ma-0 pa-0" justify="start">
-                        <v-img :src="albumArtwork" class="mt-10 mb-5 elevation-20" max-width="600"
-                               min-height="300"></v-img>
-                    </v-row>
-                    <v-row align="center" class="ma-0 pa-0" justify="start">
-                        <v-col class="ma-0 pa-0 ml-4" cols="12">
-                            <v-row class="ma-0 pa-0">
-                                <h1 class="display-3 font-weight-bold text-left"
-                                    style="height: 1.2em; text-overflow: ellipsis;white-space: nowrap;overflow: hidden;">
-                                    {{ trackName }}</h1>
-                            </v-row>
-                            <v-row class="ma-0 pa-0">
-                                <h1 class="display-2 font-weight-thin text-left "
-                                    style="height: 1.2em; text-overflow: ellipsis;white-space: nowrap;overflow: hidden;">
-                                    {{ artistName }}</h1>
-                            </v-row>
-                            <v-row class="ma-0 pa-0">
-                                <h1 class="heading font-weight-regular text-left" v-if="addedBy"
-                                    style="height: 1.2em; text-overflow: ellipsis;white-space: nowrap;overflow: hidden;">
-                                    Added By: {{ addedBy }}
-                                </h1>
-                            </v-row>
-                        </v-col>
-                    </v-row>
-                </v-col>
+                <transition appear mode="out-in" name="change">
+                    <v-col :key="albumArtwork" class="ma-0 pa-0 pl-5" cols="4">
+                        <v-row align="center" class="ma-0 pa-0" justify="start">
+                            <v-img :src="albumArtwork" class="mt-10 mb-5 elevation-20"
+                                   max-width="600"
+                                   min-height="300"></v-img>
+                        </v-row>
+                        <v-row align="center" class="ma-0 pa-0" justify="start">
+                            <v-col class="ma-0 pa-0 ml-4" cols="12">
+                                <v-row class="ma-0 pa-0">
+                                    <h1 class="display-2 font-weight-bold text-left"
+                                        style="height: 1.2em; text-overflow: ellipsis;white-space: nowrap;overflow: hidden;">
+                                        {{ trackName }}</h1>
+                                </v-row>
+                                <v-row class="ma-0 pa-0">
+                                    <h1 class="display-1 font-weight-thin text-left "
+                                        style="height: 1.2em; text-overflow: ellipsis;white-space: nowrap;overflow: hidden;">
+                                        {{ artistName }}</h1>
+                                </v-row>
+                                <v-row class="ma-0 pa-0">
+                                    <h1 class="heading font-weight-regular text-left"
+                                        style="height: 1.2em; text-overflow: ellipsis;white-space: nowrap;overflow: hidden;"
+                                        v-if="addedBy">
+                                        Added By: {{ addedBy }}
+                                    </h1>
+                                </v-row>
+                            </v-col>
+                        </v-row>
+                    </v-col>
+                </transition>
                 <v-col class="ma-0 pa-0 mt-10 pr-5" cols="8">
                     <v-container class="ma-0 pa-0 mt-10" fluid>
                         <v-row align="center" class="ma-0 pa-0 mt-10" justify="center">
@@ -80,7 +84,8 @@
                                                                 </v-list-item-title>
                                                             </v-list-item-content>
                                                             <v-list-item-action>
-                                                                <h1 class="display-1 font-weight-bold">{{e.score}}</h1>
+                                                                <h1 class="display-1 font-weight-bold">
+                                                                    {{e.score}}</h1>
                                                             </v-list-item-action>
                                                         </v-list-item>
                                                     </v-list>
@@ -287,3 +292,23 @@
         }
     }
 </script>
+
+<style>
+    .change-leave-active, .change-enter-active {
+        transition: all 0.5s ease;
+    }
+
+    .change-enter {
+        transform: translateX(-50%);
+        opacity: 0;
+    }
+
+    .change-leave-active {
+        transform: translateX(50%);
+        opacity: 0;
+    }
+
+    .background-transition {
+        transition: all 0.5s;
+    }
+</style>

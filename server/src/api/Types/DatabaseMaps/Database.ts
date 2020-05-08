@@ -33,7 +33,7 @@ export class Create {
 
 export class Column {
     name: string;
-    type: 'TEXT' | 'INTEGER' | 'BLOB' | 'REAL' | 'NUMERIC' | 'INT';
+    type: 'TEXT' | 'INTEGER' | 'BLOB' | 'REAL' | 'NUMERIC' | 'BIGINT';
     notNull?: boolean = false;
     primaryKey?: boolean = false;
     autoIncrement?: boolean = false;

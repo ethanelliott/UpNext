@@ -30,8 +30,8 @@ export class AdminController {
 
     @Post('/register')
     public async register(@BodyParam('username') username: string, @BodyParam('password') password: string): Promise<any> {
-        if (this.adminUserDatabaseService.getUserCount() === 0) {
-            this.adminUserDatabaseService.insertNewUser({
+        if (await this.adminUserDatabaseService.getUserCount() === 0) {
+            await this.adminUserDatabaseService.insertNewUser({
                 id: this.uuidService.new(),
                 username,
                 password
@@ -42,7 +42,7 @@ export class AdminController {
 
     @Post('/login')
     public async login(@BodyParam('username') username: string, @BodyParam('password') password: string): Promise<any> {
-        const user = this.adminUserDatabaseService.getUserByUsername(username);
+        const user = await this.adminUserDatabaseService.getUserByUsername(username);
         if (user && user.password === password) {
             return {token: this.webTokenService.generateFrom({userId: user.id})};
         } else {
@@ -52,16 +52,16 @@ export class AdminController {
 
     @Get('/parties')
     public async getAllParties(): Promise<any> {
-        return this.partyDatabaseService.getAllParties();
+        return await this.partyDatabaseService.getAllParties();
     }
 
     @Get('/party/:id')
     public async getPartyData(@Param('id') id: string): Promise<any> {
         return {
-            party: this.partyDatabaseService.getPartyById(id),
-            playlist: this.partyService.getPlaylistForPartyId(id),
-            state: this.upNextService.getPartyDataForPartyId(id),
-            users: this.userDatabaseService.getUsersAtParty(id)
+            party: await this.partyDatabaseService.getPartyById(id),
+            playlist: await this.partyService.getPlaylistForPartyId(id),
+            state: await this.upNextService.getPartyDataForPartyId(id),
+            users: await this.userDatabaseService.getUsersAtParty(id)
         };
     }
 
@@ -79,47 +79,49 @@ export class AdminController {
 
     @Post('/users/update')
     public async updateUser(@BodyParam('user') user: UserDB): Promise<any> {
-        this.userDatabaseService.updateUser(user);
-        this.partyService.emitUsersUpdate(user.partyId);
+        await this.userDatabaseService.updateUser(user);
+        await this.partyService.emitUsersUpdate(user.partyId);
         this.upNextService.emitEventToUser(user.id, UserEvent.RELOAD);
         return {};
     }
 
     @Post('/users/delete')
     public async deleteUser(@BodyParam('user') user: UserDB): Promise<any> {
-        this.userDatabaseService.removeUserByUserId(user.id);
-        this.partyService.emitUsersUpdate(user.partyId);
+        await this.userDatabaseService.removeUserByUserId(user.id);
+        await this.partyService.emitUsersUpdate(user.partyId);
         this.upNextService.emitEventToUser(user.id, UserEvent.LEAVE);
         return {};
     }
 
     @Post('/users/delete/all')
     public async deleteAllUsers(@BodyParam('partyId') partyId: string): Promise<any> {
-        this.userDatabaseService.getUsersAtParty(partyId).forEach(user => {
+        const users = await this.userDatabaseService.getUsersAtParty(partyId);
+        users.forEach(user => {
             this.upNextService.emitEventToUser(user.id, UserEvent.LEAVE);
         });
-        this.userDatabaseService.removeAllUsersWithPartyId(partyId);
-        this.partyService.emitUsersUpdate(partyId);
+        await this.userDatabaseService.removeAllUsersWithPartyId(partyId);
+        await this.partyService.emitUsersUpdate(partyId);
         return {};
     }
 
     @Post('/users/reset')
     public async resetUserScores(@BodyParam('partyId') partyId: string): Promise<any> {
-        this.userDatabaseService.setUserScoreByParty(partyId, 0);
-        this.partyService.emitUsersUpdate(partyId);
+        await this.userDatabaseService.setUserScoreByParty(partyId, 0);
+        await this.partyService.emitUsersUpdate(partyId);
         return {};
     }
 
     @Post('/playlist/entry/delete')
     public async deletePlaylistEntry(@BodyParam('entry') playlistEntry: PlaylistEntryDB): Promise<any> {
-        this.playlistEntryDatabaseService.removePlaylistEntryById(playlistEntry.id);
+        await this.playlistEntryDatabaseService.removePlaylistEntryById(playlistEntry.id);
         this.partyService.emitPlaylistUpdate(playlistEntry.partyId);
         return {};
     }
 
     @Post('/party/users/refresh')
     public async forceEveryoneToRefresh(@BodyParam('partyId') partyId: string): Promise<any> {
-        this.userDatabaseService.getUsersAtParty(partyId).forEach(user => {
+        const users = await this.userDatabaseService.getUsersAtParty(partyId);
+        users.forEach(user => {
             this.upNextService.emitEventToUser(user.id, UserEvent.RELOAD);
         });
         return {};
@@ -127,7 +129,8 @@ export class AdminController {
 
     @Post('/party/users/leave')
     public async forceEveryoneToLeave(@BodyParam('partyId') partyId: string): Promise<any> {
-        this.userDatabaseService.getUsersAtParty(partyId).forEach(user => {
+        const users = await this.userDatabaseService.getUsersAtParty(partyId);
+        users.forEach(user => {
             this.upNextService.emitEventToUser(user.id, UserEvent.LEAVE);
         });
         return {};
@@ -135,16 +138,17 @@ export class AdminController {
 
     @Post('/party/delete')
     public async forceDeleteParty(@BodyParam('partyId') partyId: string): Promise<any> {
-        this.userDatabaseService.getUsersAtParty(partyId).forEach(user => {
+        const users = await this.userDatabaseService.getUsersAtParty(partyId);
+        users.forEach(user => {
             this.upNextService.emitEventToUser(user.id, UserEvent.LEAVE);
         });
-        this.partyService.removePartyByPartyId(partyId);
+        await this.partyService.removePartyByPartyId(partyId);
         return {};
     }
 
     @Post('/updates/new')
     public async newUpdate(@BodyParam('title') title: string, @BodyParam('message') message: string, @BodyParam('date') date: number): Promise<any> {
-        this.appUpdatesDatabaseService.insertNewUpdate({
+        await this.appUpdatesDatabaseService.insertNewUpdate({
             id: this.uuidService.new(),
             date,
             title,
@@ -155,7 +159,7 @@ export class AdminController {
 
     @Post('/updates/delete')
     public async deleteUpdate(@BodyParam('updateId') updateId: string): Promise<any> {
-        this.appUpdatesDatabaseService.deleteUpdateById(updateId);
+        await this.appUpdatesDatabaseService.deleteUpdateById(updateId);
         return {};
     }
 }

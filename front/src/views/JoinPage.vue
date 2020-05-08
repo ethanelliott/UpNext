@@ -115,7 +115,7 @@
             rules: {
                 required: value => !!value || 'Required.',
                 counter: value => value.length === 4 || 'code is 4 characters',
-                nick: value => value.length <= 14 || 'nickname must be less than 14 chars'
+                nick: value => value.length <= 16 || 'nickname must be less than 16 chars'
             },
             isFormValid: false,
             disableTextInput: false,

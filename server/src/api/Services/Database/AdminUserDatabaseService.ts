@@ -5,34 +5,34 @@ import { AdminUserDb } from "../../Types/DatabaseMaps/AdminUserDb";
 @Service()
 export class AdminUserDatabaseService {
 
-    private readonly tableName: string = 'adminUsers';
+    private readonly tableName: string = 'admin_users';
 
     constructor(
         private databaseService: DatabaseService
     ) {
-        try {
-            this.databaseService.db.prepare(`SELECT * FROM ${this.tableName}`).get();
-        } catch (e) {
-            this.buildTable();
-        }
     }
 
-    public insertNewUser(username: AdminUserDb): void {
-        this.databaseService.insert({
+    public async connect() {
+        await this.buildTable();
+    }
+
+    public async insertNewUser(username: AdminUserDb): Promise<void> {
+        await this.databaseService.insert({
             into: this.tableName,
             insert: username
         });
     }
 
-    public getUserCount(): number {
-        return this.databaseService.queryAll<AdminUserDb>({
+    public async getUserCount(): Promise<number> {
+        const users = await this.databaseService.queryAll<AdminUserDb>({
             from: this.tableName,
             select: ['*'],
-        }).length;
+        });
+        return users.length;
     }
 
-    public getUserByUsername(username: string): AdminUserDb {
-        return this.databaseService.queryOne<AdminUserDb>({
+    public async getUserByUsername(username: string): Promise<AdminUserDb> {
+        return await this.databaseService.queryOne<AdminUserDb>({
             from: this.tableName,
             select: ['*'],
             where: [
@@ -41,8 +41,8 @@ export class AdminUserDatabaseService {
         });
     }
 
-    private buildTable() {
-        this.databaseService.createTable({
+    private async buildTable() {
+        await this.databaseService.createTable({
             name: this.tableName,
             columns: [
                 {name: 'id', type: 'TEXT', unique: true, notNull: true, primaryKey: true},

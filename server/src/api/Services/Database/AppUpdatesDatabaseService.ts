@@ -10,43 +10,42 @@ export class AppUpdatesDatabaseService {
     constructor(
         private databaseService: DatabaseService
     ) {
-        try {
-            this.databaseService.db.prepare(`SELECT * FROM ${this.tableName}`).get();
-        } catch (e) {
-            this.buildTable();
-        }
     }
 
-    public insertNewUpdate(update: UpdateDB): void {
-        this.databaseService.insert({
+    public async connect() {
+        await this.buildTable();
+    }
+
+    public async insertNewUpdate(update: UpdateDB): Promise<void> {
+        await this.databaseService.insert({
             into: this.tableName,
             insert: update
         });
     }
 
-    public getAllUpdates(): Array<UpdateDB> {
-        return this.databaseService.queryAll<UpdateDB>({
+    public async getAllUpdates(): Promise<Array<UpdateDB>> {
+        return await this.databaseService.queryAll<UpdateDB>({
             from: this.tableName,
             select: ['*']
         });
     }
 
-    private buildTable() {
-        this.databaseService.createTable({
+    public async deleteUpdateById(updateId: string) {
+        await this.databaseService.delete({
+            from: this.tableName,
+            where: [{key: 'id', operator: '=', value: updateId}]
+        });
+    }
+
+    private async buildTable() {
+        await this.databaseService.createTable({
             name: this.tableName,
             columns: [
                 {name: 'id', type: 'TEXT', unique: true, notNull: true, primaryKey: true},
                 {name: 'title', type: 'TEXT',},
-                {name: 'date', type: 'INTEGER',},
+                {name: 'date', type: 'BIGINT',},
                 {name: 'message', type: 'TEXT',}
             ]
-        });
-    }
-
-    public deleteUpdateById(updateId: string) {
-        this.databaseService.delete({
-            from: this.tableName,
-            where: [{key: 'id', operator: '=', value: updateId}]
         });
     }
 }

@@ -78,7 +78,7 @@
             nickname: '',
             rules: {
                 required: value => !!value || 'Required',
-                limit: value => (value ? value.length : 0) <= 12 || 'Party name less than 12 chars'
+                limit: value => (value ? value.length : 0) <= 30 || 'Party name less than 30 chars'
             },
             isFormValid: false,
             disableTextInput: false,
