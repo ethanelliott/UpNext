@@ -4,7 +4,6 @@ import { bootstrapMicroframework } from 'microframework-w3tec';
 import { IocLoader } from "./loaders/IocLoader";
 import { ExpressLoader } from "./loaders/ExpressLoader";
 import { SwaggerLoader } from "./loaders/SwaggerLoader";
-import { MonitorLoader } from "./loaders/MonitorLoader";
 import { HomeLoader } from "./loaders/HomeLoader";
 import { FileLoader } from "./loaders/FileLoader";
 import { SocketLoader } from "./loaders/SocketLoader";
@@ -21,7 +20,6 @@ bootstrapMicroframework({
         ExpressLoader,
         SocketLoader,
         SwaggerLoader,
-        MonitorLoader,
         HomeLoader,
         FileLoader,
         UpNextLoader,
