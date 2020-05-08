@@ -8,15 +8,15 @@ export class NewPartyService {
     ) {
     }
 
-    public create(partyId: string, state: string) {
-        this.newPartyDatabaseService.insert(partyId, state);
+    public async create(partyId: string, state: string) {
+        await this.newPartyDatabaseService.insert(partyId, state);
     }
 
-    public exists(partyId: string): boolean {
-        return this.newPartyDatabaseService.get(partyId) !== null;
+    public async exists(partyId: string): Promise<boolean> {
+        return await this.newPartyDatabaseService.get(partyId) !== null;
     }
 
-    public remove(partyId: string) {
-        this.newPartyDatabaseService.delete(partyId);
+    public async remove(partyId: string) {
+        await this.newPartyDatabaseService.delete(partyId);
     }
 }

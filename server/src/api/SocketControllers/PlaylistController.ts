@@ -22,29 +22,29 @@ export class PlaylistController {
     public async getPlaylistState(@MessageBody() message: SocketMessage<any>) {
         this.log('playlist-state');
         const tokenData = await this.authenticationService.authenticate(message.token);
-        const playlist = this.partyService.getPlaylistForPartyId(tokenData.partyId).sort(playlistSort);
-        return {playlist};
+        const playlist = await this.partyService.getPlaylistForPartyId(tokenData.partyId);
+        return {playlist: playlist.sort(playlistSort)};
     }
 
     @OnMessage("playlist-upvote-song")
     public async upvoteSong(@MessageBody() message: SocketMessage<any>) {
         this.log('playlist-upvote-song');
         const tokenData = await this.authenticationService.authenticate(message.token);
-        this.partyService.upvoteSong(tokenData.partyId, tokenData.userId, message.data.playlistEntryId);
+        await this.partyService.upvoteSong(tokenData.partyId, tokenData.userId, message.data.playlistEntryId);
     }
 
     @OnMessage("playlist-downvote-song")
     public async downvoteSong(@MessageBody() message: SocketMessage<any>) {
         this.log('playlist-downvote-song');
         const tokenData = await this.authenticationService.authenticate(message.token);
-        this.partyService.downvoteSong(tokenData.partyId, tokenData.userId, message.data.playlistEntryId);
+        await this.partyService.downvoteSong(tokenData.partyId, tokenData.userId, message.data.playlistEntryId);
     }
 
     @OnMessage("playlist-clear")
     public async clearPlaylist(@MessageBody() message: SocketMessage<any>) {
         this.log('playlist-clear');
         const tokenData = await this.authenticationService.authenticate(message.token);
-        this.playlistEntryDatabaseService.removePlaylistEntriesByPartyId(tokenData.partyId);
+        await this.playlistEntryDatabaseService.removePlaylistEntriesByPartyId(tokenData.partyId);
         this.partyService.emitPlaylistUpdate(tokenData.partyId);
     }
 
@@ -52,7 +52,7 @@ export class PlaylistController {
     public async cleanPlaylist(@MessageBody() message: SocketMessage<any>) {
         this.log('playlist-clean');
         const tokenData = await this.authenticationService.authenticate(message.token);
-        this.partyService.cleanPlaylistForPartyId(tokenData.partyId);
+        await this.partyService.cleanPlaylistForPartyId(tokenData.partyId);
         this.partyService.emitPlaylistUpdate(tokenData.partyId);
     }
 
@@ -60,7 +60,7 @@ export class PlaylistController {
     public async removeSong(@MessageBody() message: SocketMessage<any>) {
         this.log('playlist-remove-song');
         const tokenData = await this.authenticationService.authenticate(message.token);
-        this.partyService.removeSongFromPlaylist(tokenData.partyId, tokenData.userId, message.data.songId);
+        await this.partyService.removeSongFromPlaylist(tokenData.partyId, tokenData.userId, message.data.songId);
     }
 
     @OnMessage("playlist-add-song")

@@ -42,9 +42,10 @@ export class PartyService {
     ) {
         this.cronJobService.newCronJob({
             pattern: '*/10 * * * *',
-            method: () => {
+            method: async () => {
                 const t24Hr = moment().subtract(24, 'hours').valueOf();
-                this.getAllParties()
+                const parties = await this.getAllParties();
+                parties
                     .filter(e => e.startTime < t24Hr)
                     .forEach(e => this.removePartyByPartyId(e.id));
             }
@@ -52,7 +53,7 @@ export class PartyService {
     }
 
     public async newParty(state: SpotifyOAuthState, code: string): Promise<any> {
-        this.removeNewPartyEntry(state.partyId);
+        await this.removeNewPartyEntry(state.partyId);
         const callbackData = await this.spotifyService.getSpotifyAPI().auth.authorizationCode(env.app.spotify.clientId, env.app.spotify.clientSecret, code, env.app.spotify.redirectURI);
         const userData = await this.spotifyService.getSpotifyAPI().users.getCurrent(callbackData.access_token);
         if (userData.product !== 'premium') {
@@ -74,29 +75,29 @@ export class PartyService {
             .withUserId(userData.id)
             .withPlaylistId(playlistData.id)
             .build();
-        this.removePartyBySpotifyUserId(userData.id);
-        this.partyDatabaseService.insertParty(party);
-        this.spotifyStateService.startSpotifyEventLoops();
+        await this.removePartyBySpotifyUserId(userData.id);
+        await this.partyDatabaseService.insertParty(party);
+        await this.spotifyStateService.startSpotifyEventLoops();
         await this.upNextService.startParties();
     }
 
-    public removePartyBySpotifyUserId(userId: string): void {
-        const p = this.partyDatabaseService.getPartyBySpotifyUserId(userId);
+    public async removePartyBySpotifyUserId(userId: string): Promise<void> {
+        const p = await this.partyDatabaseService.getPartyBySpotifyUserId(userId);
         if (p) {
             const partyId = p.id;
-            this.removePartyByPartyId(partyId);
+            await this.removePartyByPartyId(partyId);
         }
     }
 
-    public removePartyByPartyId(partyId: string): void {
+    public async removePartyByPartyId(partyId: string): Promise<void> {
         this.upNextService.stopPartyByPartyId(partyId);
         this.spotifyStateService.stopSpotifyStateForParty(partyId);
-        this.partyDatabaseService.removePartyByPartyId(partyId);
+        await this.partyDatabaseService.removePartyByPartyId(partyId);
         this.eventEmitterService.emitEventToParty(partyId, PartyEvent.PARTY_GONE);
     }
 
-    public removeNewPartyEntry(partyId: string): void {
-        this.newPartyService.remove(partyId);
+    public async removeNewPartyEntry(partyId: string): Promise<void> {
+        await this.newPartyService.remove(partyId);
     }
 
     public async joinParty(token: PartyJoinToken): Promise<string> {
@@ -109,8 +110,8 @@ export class PartyService {
             .withScore(0)
             .withTrackingId(token.trackingId)
             .build();
-        this.userDatabaseService.insertUser(user);
-        this.emitUsersUpdate(token.partyId);
+        await this.userDatabaseService.insertUser(user);
+        await this.emitUsersUpdate(token.partyId);
         return user.id;
     }
 
@@ -126,113 +127,116 @@ export class PartyService {
     //     );
     // }
 
-    public getPartyIdFromCode(code: string): string | undefined {
-        const party = this.partyDatabaseService.getPartyIdByCode(code);
+    public async getPartyIdFromCode(code: string): Promise<string | undefined> {
+        const party = await this.partyDatabaseService.getPartyIdByCode(code);
         if (party) {
             return party.id;
         }
         return undefined;
     }
 
-    public getPartyFromId(partyId: string): PartyDB {
-        return this.partyDatabaseService.getPartyById(partyId);
+    public async getPartyFromId(partyId: string): Promise<PartyDB> {
+        return await this.partyDatabaseService.getPartyById(partyId);
     }
 
-    public getPlaylistForPartyId(partyId: string): Array<PlaylistEntryDB> {
-        return this.playlistEntryDatabaseService.getAllPlaylistEntriesForParty(partyId).map(e => {
-            e.addedBy = this.getUserById(e.addedBy).nickname;
+    public async getPlaylistForPartyId(partyId: string): Promise<Array<PlaylistEntryDB>> {
+        const playlistEntries = await this.playlistEntryDatabaseService.getAllPlaylistEntriesForParty(partyId);
+        return Promise.all(playlistEntries.map(async e => {
+            const user = await this.getUserById(e.addedBy);
+            e.addedBy = user.nickname;
             return e;
-        });
+        }));
     }
 
-    public cleanPlaylistForPartyId(partyId: string): void {
-        this.playlistEntryDatabaseService.getAllPlaylistEntriesForParty(partyId).forEach(e => {
+    public async cleanPlaylistForPartyId(partyId: string): Promise<void> {
+        const entries = await this.playlistEntryDatabaseService.getAllPlaylistEntriesForParty(partyId);
+        entries.forEach(e => {
             if (e.UpVotes - e.DownVotes < 0) {
                 this.playlistEntryDatabaseService.removePlaylistEntryById(e.id);
             }
         });
     }
 
-    public upvoteSong(partyId: string, userId: string, playlistEntryId: string): void {
-        const entry = this.playlistEntryDatabaseService.getPlaylistEntryById(playlistEntryId);
-        const userVotes = this.playlistVoteDatabaseService.getVotesForUserOnEntry(userId, playlistEntryId);
+    public async upvoteSong(partyId: string, userId: string, playlistEntryId: string): Promise<void> {
+        const entry = await this.playlistEntryDatabaseService.getPlaylistEntryById(playlistEntryId);
+        const userVotes = await this.playlistVoteDatabaseService.getVotesForUserOnEntry(userId, playlistEntryId);
         if (userVotes.length === 0) {
             // perfect the user has yet to upvote
-            this.playlistVoteDatabaseService.insertVote({
+            await this.playlistVoteDatabaseService.insertVote({
                 userId: userId,
                 playlistEntryId: playlistEntryId,
                 type: PlaylistVoteEnum.UPVOTE
             });
-            this.playlistEntryDatabaseService.addUpVote(playlistEntryId);
-            this.userDatabaseService.updateUserScore(entry.addedBy, 1);
-            this.emitPlaylistUpdate(partyId);
-            this.emitUsersUpdate(partyId);
+            await this.playlistEntryDatabaseService.addUpVote(playlistEntryId);
+            await this.userDatabaseService.updateUserScore(entry.addedBy, 1);
+            await this.emitPlaylistUpdate(partyId);
+            await this.emitUsersUpdate(partyId);
         } else if (userVotes.length === 1) {
             if (userVotes[0].type === PlaylistVoteEnum.DOWNVOTE) {
-                this.playlistEntryDatabaseService.removeDownVote(playlistEntryId);
-                this.playlistEntryDatabaseService.addUpVote(playlistEntryId);
-                this.playlistVoteDatabaseService.deleteVote(playlistEntryId, userId);
-                this.playlistVoteDatabaseService.insertVote({
+                await this.playlistEntryDatabaseService.removeDownVote(playlistEntryId);
+                await this.playlistEntryDatabaseService.addUpVote(playlistEntryId);
+                await this.playlistVoteDatabaseService.deleteVote(playlistEntryId, userId);
+                await this.playlistVoteDatabaseService.insertVote({
                     type: PlaylistVoteEnum.UPVOTE,
                     playlistEntryId,
                     userId
                 });
-                this.userDatabaseService.updateUserScore(entry.addedBy, 1);
-                this.emitPlaylistUpdate(partyId);
-                this.emitUsersUpdate(partyId);
+                await this.userDatabaseService.updateUserScore(entry.addedBy, 1);
+                await this.emitPlaylistUpdate(partyId);
+                await this.emitUsersUpdate(partyId);
             } else if (userVotes[0].type === PlaylistVoteEnum.UPVOTE) {
-                this.playlistEntryDatabaseService.removeUpVote(playlistEntryId);
-                this.playlistVoteDatabaseService.deleteVote(playlistEntryId, userId);
-                this.userDatabaseService.updateUserScore(entry.addedBy, -1);
-                this.emitPlaylistUpdate(partyId);
-                this.emitUsersUpdate(partyId);
+                await this.playlistEntryDatabaseService.removeUpVote(playlistEntryId);
+                await this.playlistVoteDatabaseService.deleteVote(playlistEntryId, userId);
+                await this.userDatabaseService.updateUserScore(entry.addedBy, -1);
+                await this.emitPlaylistUpdate(partyId);
+                await this.emitUsersUpdate(partyId);
             }
         }
     }
 
-    public downvoteSong(partyId: string, userId: string, playlistEntryId: string): void {
-        const entry = this.playlistEntryDatabaseService.getPlaylistEntryById(playlistEntryId);
-        const userVotes = this.playlistVoteDatabaseService.getVotesForUserOnEntry(userId, playlistEntryId);
+    public async downvoteSong(partyId: string, userId: string, playlistEntryId: string): Promise<void> {
+        const entry = await this.playlistEntryDatabaseService.getPlaylistEntryById(playlistEntryId);
+        const userVotes = await this.playlistVoteDatabaseService.getVotesForUserOnEntry(userId, playlistEntryId);
         if (userVotes.length === 0) {
             // perfect the user has yet to upvote
-            this.playlistVoteDatabaseService.insertVote({
+            await this.playlistVoteDatabaseService.insertVote({
                 userId: userId,
                 playlistEntryId: playlistEntryId,
                 type: PlaylistVoteEnum.DOWNVOTE
             });
-            this.playlistEntryDatabaseService.addDownVote(playlistEntryId);
-            this.userDatabaseService.updateUserScore(entry.addedBy, -1);
-            this.emitPlaylistUpdate(partyId);
-            this.emitUsersUpdate(partyId);
+            await this.playlistEntryDatabaseService.addDownVote(playlistEntryId);
+            await this.userDatabaseService.updateUserScore(entry.addedBy, -1);
+            await this.emitPlaylistUpdate(partyId);
+            await this.emitUsersUpdate(partyId);
         } else if (userVotes.length === 1) {
             if (userVotes[0].type === PlaylistVoteEnum.UPVOTE) {
-                this.playlistEntryDatabaseService.removeUpVote(playlistEntryId);
-                this.playlistEntryDatabaseService.addDownVote(playlistEntryId);
-                this.playlistVoteDatabaseService.deleteVote(playlistEntryId, userId);
-                this.playlistVoteDatabaseService.insertVote({
+                await this.playlistEntryDatabaseService.removeUpVote(playlistEntryId);
+                await this.playlistEntryDatabaseService.addDownVote(playlistEntryId);
+                await this.playlistVoteDatabaseService.deleteVote(playlistEntryId, userId);
+                await this.playlistVoteDatabaseService.insertVote({
                     type: PlaylistVoteEnum.DOWNVOTE,
                     playlistEntryId,
                     userId
                 });
-                this.userDatabaseService.updateUserScore(entry.addedBy, -1);
-                this.emitPlaylistUpdate(partyId);
-                this.emitUsersUpdate(partyId);
+                await this.userDatabaseService.updateUserScore(entry.addedBy, -1);
+                await this.emitPlaylistUpdate(partyId);
+                await this.emitUsersUpdate(partyId);
             } else if (userVotes[0].type === PlaylistVoteEnum.DOWNVOTE) {
-                this.playlistEntryDatabaseService.removeDownVote(playlistEntryId);
-                this.playlistVoteDatabaseService.deleteVote(playlistEntryId, userId);
-                this.userDatabaseService.updateUserScore(entry.addedBy, 1);
-                this.emitPlaylistUpdate(partyId);
-                this.emitUsersUpdate(partyId);
+                await this.playlistEntryDatabaseService.removeDownVote(playlistEntryId);
+                await this.playlistVoteDatabaseService.deleteVote(playlistEntryId, userId);
+                await this.userDatabaseService.updateUserScore(entry.addedBy, 1);
+                await this.emitPlaylistUpdate(partyId);
+                await this.emitUsersUpdate(partyId);
             }
         }
     }
 
     public async addSongToPlaylist(partyId: string, userId: string, songId: string): Promise<boolean> {
-        if (!this.playlistEntryDatabaseService.doesEntryExist(partyId, songId)) {
-            const party = this.partyDatabaseService.getPartyById(partyId);
+        if (!await this.playlistEntryDatabaseService.doesEntryExist(partyId, songId)) {
+            const party = await this.partyDatabaseService.getPartyById(partyId);
             const song = await this.spotifyService.getSpotifyAPI().tracks.getTrack(party.spotifyToken, songId);
             const entryId = this.uuidService.new();
-            this.playlistEntryDatabaseService.insertPlaylistEntry({
+            await this.playlistEntryDatabaseService.insertPlaylistEntry({
                 id: entryId,
                 name: song.name,
                 spotifySongId: songId,
@@ -244,14 +248,14 @@ export class PartyService {
                 addedAt: moment().valueOf(),
                 partyId: partyId
             });
-            this.playlistVoteDatabaseService.insertVote({
+            await this.playlistVoteDatabaseService.insertVote({
                 type: PlaylistVoteEnum.UPVOTE,
                 playlistEntryId: entryId,
                 userId
             });
-            this.userDatabaseService.updateUserScore(userId, 1);
-            this.emitPlaylistUpdate(partyId);
-            this.emitUsersUpdate(partyId);
+            await this.userDatabaseService.updateUserScore(userId, 1);
+            await this.emitPlaylistUpdate(partyId);
+            await this.emitUsersUpdate(partyId);
             return true;
         } else {
             //its already in the playlist
@@ -259,78 +263,81 @@ export class PartyService {
         }
     }
 
-    public emitPlaylistUpdate(partyId) {
+    public async emitPlaylistUpdate(partyId) {
         this.eventEmitterService.emitEventToParty(
             partyId,
             PartyEvent.PLAYLIST_UPDATE,
             {
-                playlist: this.getPlaylistForPartyId(partyId)
+                playlist: await this.getPlaylistForPartyId(partyId)
             }
         );
     }
 
-    public emitUsersUpdate(partyId) {
+    public async emitUsersUpdate(partyId) {
+        const users = await this.userDatabaseService.getUsersAtParty(partyId);
         this.eventEmitterService.emitEventToParty(
             partyId,
             PartyEvent.USERS_UPDATE,
             {
-                users: this.userDatabaseService.getUsersAtParty(partyId).sort(userSort)
+                users: users.sort(userSort)
             }
         );
     }
 
-    public removeSongFromPlaylist(partyId: string, userId: string, songId: string) {
-        if (this.playlistEntryDatabaseService.doesEntryExist(partyId, songId)) {
-            this.playlistEntryDatabaseService.removePlaylistEntry(partyId, userId, songId);
-            this.emitPlaylistUpdate(partyId);
+    public async removeSongFromPlaylist(partyId: string, userId: string, songId: string) {
+        if (await this.playlistEntryDatabaseService.doesEntryExist(partyId, songId)) {
+            await this.playlistEntryDatabaseService.removePlaylistEntry(partyId, userId, songId);
+            await this.emitPlaylistUpdate(partyId);
         }
     }
 
     public async search(partyId: string, searchTerm: string): Promise<any> {
-        const token = this.partyDatabaseService.getPartyById(partyId).spotifyToken;
+        const party = await this.partyDatabaseService.getPartyById(partyId);
+        const token = party.spotifyToken;
         return await this.spotifyService.getSpotifyAPI().search.searchEverything(token, searchTerm, 20);
     }
 
     // this seems like a code smell
-    public getUserById(userId: string): UserDB {
-        return this.userDatabaseService.getUserById(userId);
+    public async getUserById(userId: string): Promise<UserDB> {
+        return await this.userDatabaseService.getUserById(userId);
     }
 
-    public getAllParties(): Array<PartyDB> {
-        return this.partyDatabaseService.getAllParties();
+    public async getAllParties(): Promise<Array<PartyDB>> {
+        return await this.partyDatabaseService.getAllParties();
     }
 
-    public getPartyById(partyId: string): PartyDB {
-        return this.partyDatabaseService.getPartyById(partyId);
+    public async getPartyById(partyId: string): Promise<PartyDB> {
+        return await this.partyDatabaseService.getPartyById(partyId);
     }
 
-    public getUserByTrackingId(trackingId: string): Array<UserDB> {
-        return this.userDatabaseService.getUserByTrackingId(trackingId);
+    public async getUserByTrackingId(trackingId: string): Promise<Array<UserDB>> {
+        return await this.userDatabaseService.getUserByTrackingId(trackingId);
     }
 
-    public removeUserByTrackingId(trackingId: string) {
-        const userArray = this.userDatabaseService.getUserByTrackingId(trackingId);
+    public async removeUserByTrackingId(trackingId: string) {
+        const userArray = await this.userDatabaseService.getUserByTrackingId(trackingId);
         if (userArray.length === 1) {
             const user = userArray[0];
-            this.playlistVoteDatabaseService.getVotesForUser(user.id).forEach(e => {
+            const votes = await this.playlistVoteDatabaseService.getVotesForUser(user.id);
+            for (const e of votes) {
                 switch (e.type) {
                     case PlaylistVoteEnum.UPVOTE:
-                        this.playlistEntryDatabaseService.removeUpVote(e.playlistEntryId);
+                        await this.playlistEntryDatabaseService.removeUpVote(e.playlistEntryId);
                         break;
                     case PlaylistVoteEnum.DOWNVOTE:
-                        this.playlistEntryDatabaseService.removeDownVote(e.playlistEntryId);
+                        await this.playlistEntryDatabaseService.removeDownVote(e.playlistEntryId);
                         break;
                 }
-            });
-            this.playlistVoteDatabaseService.deleteVotesForUser(user.id);
-            this.playlistEntryDatabaseService.removePlaylistEntryByUserId(user.id);
-            this.emitPlaylistUpdate(user.partyId);
-            this.userDatabaseService.removeUserByTrackingId(trackingId);
+            }
+            await this.playlistVoteDatabaseService.deleteVotesForUser(user.id);
+            await this.playlistEntryDatabaseService.removePlaylistEntryByUserId(user.id);
+            await this.emitPlaylistUpdate(user.partyId);
+            await this.userDatabaseService.removeUserByTrackingId(trackingId);
         }
     }
 
     public async togglePlayback(partyId: string) {
-        const party = this.partyDatabaseService.getPartyById(partyId);
+        const party = await this.partyDatabaseService.getPartyById(partyId);
         const partyState = this.upNextService.getPartyDataForPartyId(partyId);
         if (partyState.isPlaying) {
             await this.spotifyService.getSpotifyAPI().player.pause(party.spotifyToken);
@@ -340,8 +347,8 @@ export class PartyService {
     }
 
     public async nextSong(partyId: string) {
-        const party = this.partyDatabaseService.getPartyById(partyId);
-        const playlist = this.playlistEntryDatabaseService.getAllPlaylistEntriesForParty(partyId);
+        const party = await this.partyDatabaseService.getPartyById(partyId);
+        const playlist = await this.playlistEntryDatabaseService.getAllPlaylistEntriesForParty(partyId);
         if (playlist.length > 0) {
             await this.upNextService.queueNextSong(playlist, party);
             await this.spotifyService.getSpotifyAPI().player.nextSong(party.spotifyToken);
@@ -351,7 +358,7 @@ export class PartyService {
     }
 
     public async fixChromecastError(partyId: string) {
-        const party = this.partyDatabaseService.getPartyById(partyId);
+        const party = await this.partyDatabaseService.getPartyById(partyId);
         const partyState = this.upNextService.getPartyDataForPartyId(partyId);
         await this.spotifyService.getSpotifyAPI().player.addSongToEndOfQueue(party.spotifyToken, partyState.trackId);
         await this.spotifyService.getSpotifyAPI().player.nextSong(party.spotifyToken);

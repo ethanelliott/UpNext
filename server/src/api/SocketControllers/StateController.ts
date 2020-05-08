@@ -30,8 +30,9 @@ export class StateController {
     @EmitOnFail('party-leave')
     public async getState(@ConnectedSocket() socket: Socket, @MessageBody() message: SocketMessage<any>) {
         const tokenData = await this.authenticationService.authenticate(message.token);
+        const party = await this.partyService.getPartyFromId(tokenData.partyId);
         return {
-            party: this.partyService.getPartyFromId(tokenData.partyId),
+            party,
             playstate: this.upNextService.getPartyDataForPartyId(tokenData.partyId)
         };
     }
@@ -39,10 +40,11 @@ export class StateController {
     @OnMessage("party-delete")
     public async deleteTheParty(@MessageBody() message: SocketMessage<any>) {
         const tokenData = await this.authenticationService.authenticate(message.token);
-        this.userDatabaseService.getUsersAtParty(tokenData.partyId).forEach(user => {
+        const users = await this.userDatabaseService.getUsersAtParty(tokenData.partyId);
+        users.forEach(user => {
             this.upNextService.emitEventToUser(user.id, UserEvent.LEAVE);
         });
-        this.partyService.removePartyByPartyId(tokenData.partyId);
+        await this.partyService.removePartyByPartyId(tokenData.partyId);
     }
 
     @OnMessage("party-playback-toggle")

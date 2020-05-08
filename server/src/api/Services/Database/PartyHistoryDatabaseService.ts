@@ -5,49 +5,48 @@ import { PartyHistoryDB } from "../../Types/DatabaseMaps/PartyHistoryDB";
 @Service()
 export class PartyHistoryDatabaseService {
 
-    private readonly tableName: string = 'partyHistory';
+    private readonly tableName: string = 'party_history';
 
     constructor(
         private databaseService: DatabaseService
     ) {
-        try {
-            this.databaseService.db.prepare(`SELECT * FROM ${this.tableName}`).get();
-        } catch (e) {
-            this.buildTable();
-        }
     }
 
-    public insertHistory(historyObject: PartyHistoryDB): void {
-        this.databaseService.insert({
+    public async connect() {
+        await this.buildTable();
+    }
+
+    public async insertHistory(historyObject: PartyHistoryDB): Promise<void> {
+        await this.databaseService.insert({
             into: this.tableName,
             insert: historyObject
         });
     }
 
-    public removeHistoryForParty(partyId: string): void {
-        this.databaseService.delete({
+    public async removeHistoryForParty(partyId: string): Promise<void> {
+        await this.databaseService.delete({
             from: this.tableName,
             where: [{key: 'partyId', operator: '=', value: partyId}]
         });
     }
 
-    public getAllHistory(): Array<PartyHistoryDB> {
-        return this.databaseService.queryAll<PartyHistoryDB>({
+    public async getAllHistory(): Promise<Array<PartyHistoryDB>> {
+        return await this.databaseService.queryAll<PartyHistoryDB>({
             from: this.tableName,
             select: ['*']
         });
     }
 
-    public getHistoryForParty(partyId: string): Array<PartyHistoryDB> {
-        return this.databaseService.queryAll<PartyHistoryDB>({
+    public async getHistoryForParty(partyId: string): Promise<Array<PartyHistoryDB>> {
+        return await this.databaseService.queryAll<PartyHistoryDB>({
             from: this.tableName,
             select: ['*'],
             where: [{key: 'partyId', operator: '=', value: partyId}]
         });
     }
 
-    private buildTable(): void {
-        this.databaseService.createTable({
+    private async buildTable(): Promise<void> {
+        await this.databaseService.createTable({
             name: this.tableName,
             columns: [
                 {name: 'partyId', type: 'TEXT', notNull: true, foreignKey: {table: 'parties', name: 'id'}},
@@ -57,20 +56,20 @@ export class PartyHistoryDatabaseService {
                 {name: 'spotifyId', type: 'TEXT', notNull: true},
                 {name: 'votes', type: 'INTEGER'},
                 {name: 'addedBy', type: 'TEXT'},
-                {name: 'addedAt', type: 'INTEGER'},
-                {name: 'playedAt', type: 'INTEGER', notNull: true},
-                {name: 'acousticness', type: 'INTEGER'},
-                {name: 'danceability', type: 'INTEGER'},
-                {name: 'energy', type: 'INTEGER'},
-                {name: 'instrumentalness', type: 'INTEGER'},
-                {name: 'key', type: 'INTEGER'},
-                {name: 'liveness', type: 'INTEGER'},
-                {name: 'loudness', type: 'INTEGER'},
-                {name: 'mode', type: 'INTEGER'},
-                {name: 'speechiness', type: 'INTEGER'},
-                {name: 'tempo', type: 'INTEGER'},
-                {name: 'time_signature', type: 'INTEGER'},
-                {name: 'valance', type: 'INTEGER'},
+                {name: 'addedAt', type: 'BIGINT'},
+                {name: 'playedAt', type: 'BIGINT', notNull: true},
+                {name: 'acousticness', type: 'REAL'},
+                {name: 'danceability', type: 'REAL'},
+                {name: 'energy', type: 'REAL'},
+                {name: 'instrumentalness', type: 'REAL'},
+                {name: 'key', type: 'REAL'},
+                {name: 'liveness', type: 'REAL'},
+                {name: 'loudness', type: 'REAL'},
+                {name: 'mode', type: 'REAL'},
+                {name: 'speechiness', type: 'REAL'},
+                {name: 'tempo', type: 'REAL'},
+                {name: 'time_signature', type: 'REAL'},
+                {name: 'valance', type: 'REAL'},
             ]
         });
     }

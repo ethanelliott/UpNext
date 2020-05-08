@@ -6,27 +6,26 @@ import { PlaylistVoteEnum } from "../../Types/Enums/PlaylistVoteEnum";
 @Service()
 export class PlaylistVoteDatabaseService {
 
-    private readonly tableName: string = 'playlistVotes';
+    private readonly tableName: string = 'playlist_votes';
 
     constructor(
         private databaseService: DatabaseService
     ) {
-        try {
-            this.databaseService.db.prepare(`SELECT * FROM ${this.tableName}`).get();
-        } catch (e) {
-            this.buildTable();
-        }
     }
 
-    public insertVote(vote: PlaylistVotesDB): void {
-        this.databaseService.insert({
+    public async connect() {
+        await this.buildTable();
+    }
+
+    public async insertVote(vote: PlaylistVotesDB): Promise<void> {
+        await this.databaseService.insert({
             into: this.tableName,
             insert: vote
         });
     }
 
-    public updateVote(playlistEntryId: string, userId: string, type: PlaylistVoteEnum): void {
-        this.databaseService.update({
+    public async updateVote(playlistEntryId: string, userId: string, type: PlaylistVoteEnum): Promise<void> {
+        await this.databaseService.update({
             update: this.tableName,
             set: {
                 type: type
@@ -38,31 +37,31 @@ export class PlaylistVoteDatabaseService {
         });
     }
 
-    public deleteVotesForEntry(playlistEntryId: string): void {
-        this.databaseService.delete({
+    public async deleteVotesForEntry(playlistEntryId: string): Promise<void> {
+        await this.databaseService.delete({
             from: this.tableName,
             where: [{key: 'playlistEntryId', operator: '=', value: playlistEntryId}]
         });
     }
 
-    public getVotesForEntry(playlistEntryId: string): Array<PlaylistVotesDB> {
-        return this.databaseService.queryAll<PlaylistVotesDB>({
+    public async getVotesForEntry(playlistEntryId: string): Promise<Array<PlaylistVotesDB>> {
+        return await this.databaseService.queryAll<PlaylistVotesDB>({
             from: this.tableName,
             select: ['*'],
             where: [{key: 'playlistEntryId', operator: '=', value: playlistEntryId}]
         });
     }
 
-    public getVotesForUser(userId: string): Array<PlaylistVotesDB> {
-        return this.databaseService.queryAll<PlaylistVotesDB>({
+    public async getVotesForUser(userId: string): Promise<Array<PlaylistVotesDB>> {
+        return await this.databaseService.queryAll<PlaylistVotesDB>({
             from: this.tableName,
             select: ['*'],
             where: [{key: 'userId', operator: '=', value: userId}]
         });
     }
 
-    public getVotesForUserOnEntry(userId: string, playlistEntryId: string): Array<PlaylistVotesDB> {
-        return this.databaseService.queryAll<PlaylistVotesDB>({
+    public async getVotesForUserOnEntry(userId: string, playlistEntryId: string): Promise<Array<PlaylistVotesDB>> {
+        return await this.databaseService.queryAll<PlaylistVotesDB>({
             from: this.tableName,
             select: ['*'],
             where: [
@@ -72,8 +71,8 @@ export class PlaylistVoteDatabaseService {
         });
     }
 
-    public deleteVote(playlistEntryId: string, userId: string) {
-        this.databaseService.delete({
+    public async deleteVote(playlistEntryId: string, userId: string) {
+        await this.databaseService.delete({
             from: this.tableName,
             where: [
                 {key: 'playlistEntryId', operator: '=', value: playlistEntryId},
@@ -82,8 +81,17 @@ export class PlaylistVoteDatabaseService {
         });
     }
 
-    private buildTable() {
-        this.databaseService.createTable({
+    public async deleteVotesForUser(userId: string) {
+        await this.databaseService.delete({
+            from: this.tableName,
+            where: [
+                {key: 'userId', operator: '=', value: userId}
+            ]
+        });
+    }
+
+    private async buildTable() {
+        await this.databaseService.createTable({
             name: this.tableName,
             columns: [
                 {name: 'userId', type: 'TEXT', notNull: true, foreignKey: {table: 'users', name: 'id'}},
@@ -91,18 +99,9 @@ export class PlaylistVoteDatabaseService {
                     name: 'playlistEntryId',
                     type: 'TEXT',
                     notNull: true,
-                    foreignKey: {table: 'playlistEntry', name: 'id'}
+                    foreignKey: {table: 'playlist_entry', name: 'id'}
                 },
                 {name: 'type', type: 'INTEGER'}
-            ]
-        });
-    }
-
-    public deleteVotesForUser(userId: string) {
-        this.databaseService.delete({
-            from: this.tableName,
-            where: [
-                {key: 'userId', operator: '=', value: userId}
             ]
         });
     }

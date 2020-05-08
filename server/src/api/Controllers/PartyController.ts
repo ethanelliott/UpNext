@@ -20,12 +20,12 @@ export class PartyController {
 
     @Get('/all')
     public async getAllParties(): Promise<any> {
-        return this.partyService.getAllParties();
+        return await this.partyService.getAllParties();
     }
 
     @Post('/delete')
     public async deleteParty(@QueryParam("id") partyId: string): Promise<any> {
-        this.partyService.removePartyByPartyId(partyId);
+        await this.partyService.removePartyByPartyId(partyId);
         return {};
     }
 
@@ -35,10 +35,10 @@ export class PartyController {
         if (decodedToken.error == null) {
             let userId;
             if (decodedToken.data.insert) {
-                this.partyService.removeUserByTrackingId(decodedToken.data.trackingId);
+                await this.partyService.removeUserByTrackingId(decodedToken.data.trackingId);
                 userId = await this.partyService.joinParty(decodedToken.data);
             } else {
-                const userParties = this.partyService.getUserByTrackingId(decodedToken.data.trackingId);
+                const userParties = await this.partyService.getUserByTrackingId(decodedToken.data.trackingId);
                 if (userParties.length === 1) {
                     const user = userParties[0];
                     userId = user.id;
@@ -52,11 +52,11 @@ export class PartyController {
     }
 
     @Post('/rejoin')
-    public rejoinParty(@BodyParam('trackingId') trackingId: string): any {
-        const userParties = this.partyService.getUserByTrackingId(trackingId);
+    public async rejoinParty(@BodyParam('trackingId') trackingId: string): Promise<any> {
+        const userParties = await this.partyService.getUserByTrackingId(trackingId);
         if (userParties.length === 1) {
             const user = userParties[0];
-            const party = this.partyService.getPartyById(user.partyId);
+            const party = await this.partyService.getPartyById(user.partyId);
             const userJoinToken = this.webTokenService.generateFrom({
                 partyId: party.id,
                 name: user.nickname,
@@ -71,8 +71,8 @@ export class PartyController {
     }
 
     @Post('/validate')
-    public authenticatePartyCode(@BodyParam('code') code: string, @BodyParam('name') nickName: string, @BodyParam('trackingId') trackingId: string,): any {
-        const partyId = this.partyService.getPartyIdFromCode(code);
+    public async authenticatePartyCode(@BodyParam('code') code: string, @BodyParam('name') nickName: string, @BodyParam('trackingId') trackingId: string,): Promise<any> {
+        const partyId = await this.partyService.getPartyIdFromCode(code);
         if (partyId) {
             const userJoinToken = this.webTokenService.generateFrom({
                 partyId,

@@ -15,12 +15,12 @@ export class AuthenticationService {
     }
 
     public authenticate(token: string): Promise<WebTokenData> {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             const verification = this.webTokenService.verify<WebTokenData>(token);
             if (verification.error) {
                 reject("Invalid token");
             } else {
-                if (this.partyDatabaseService.doesPartyExistById(verification.data.partyId)) {
+                if (await this.partyDatabaseService.doesPartyExistById(verification.data.partyId)) {
                     resolve(verification.data);
                 } else {
                     reject("Party doesn't exist!");

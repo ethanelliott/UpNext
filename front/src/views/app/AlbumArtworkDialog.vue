@@ -1,13 +1,14 @@
 <template>
     <v-dialog overlay-opacity="0.95" v-model="dialog" width="400">
         <template v-slot:activator="{}">
-            <transition mode="out-in" name="change">
-                <v-img :key="albumArtwork"
-                       :src="albumArtwork"
-                       @click="open"
-                       class="mx-5 elevation-20"
-                       max-width="600"
-                       min-height="300"
+            <transition appear mode="out-in" name="wipe">
+                <v-img
+                        :src="albumArtwork"
+                        :key="albumArtwork"
+                        @click="open"
+                        class="mx-5 elevation-20"
+                        max-width="600"
+                        min-height="300"
                 >
                 </v-img>
             </transition>
@@ -88,15 +89,17 @@
 </script>
 
 <style>
-    .change-enter-active,
-    .change-leave-active {
-        transition-duration: 0.5s;
-        transition-property: opacity;
-        transition-timing-function: ease;
+    .wipe-leave-active, .wipe-enter-active {
+        transition: all 0.3s ease-in;
     }
 
-    .change-enter,
-    .change-leave-active {
-        opacity: 0
+    .wipe-enter {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+
+    .wipe-leave-active {
+        transform: translateX(100%);
+        opacity: 0;
     }
 </style>

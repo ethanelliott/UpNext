@@ -5,42 +5,41 @@ import { NewPartyDB } from "../../Types/DatabaseMaps/NewPartyDB";
 @Service()
 export class NewPartyDatabaseService {
 
-    private readonly tableName: string = 'newParties';
+    private readonly tableName: string = 'new_parties';
 
     constructor(
         private databaseService: DatabaseService
     ) {
-        try {
-            this.databaseService.db.prepare(`SELECT * FROM ${this.tableName}`).get();
-        } catch (e) {
-            this.buildTable();
-        }
     }
 
-    public insert(partyId: string, token: string) {
-        this.databaseService.insert({
+    public async connect() {
+        await this.buildTable();
+    }
+
+    public async insert(partyId: string, token: string) {
+        await this.databaseService.insert({
             into: this.tableName,
             insert: {partyId, token}
         });
     }
 
-    public delete(partyId: string) {
-        this.databaseService.delete({
+    public async delete(partyId: string) {
+        await this.databaseService.delete({
             from: this.tableName,
             where: [{key: 'partyId', operator: '=', value: partyId}]
         });
     }
 
-    public get(partyId: string): NewPartyDB {
-        return this.databaseService.queryOne<NewPartyDB>({
+    public async get(partyId: string): Promise<NewPartyDB> {
+        return await this.databaseService.queryOne<NewPartyDB>({
             from: this.tableName,
             select: ['*'],
             where: [{key: 'partyId', operator: '=', value: partyId}]
         });
     }
 
-    private buildTable() {
-        this.databaseService.createTable({
+    private async buildTable() {
+        await this.databaseService.createTable({
             name: this.tableName,
             columns: [
                 {name: 'partyId', type: 'TEXT', notNull: true},

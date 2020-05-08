@@ -11,23 +11,23 @@ export class SpotifyOAuthController {
     }
 
     @Post('/new')
-    public newUser(@HeaderParams() params: any): any {
+    public async newUser(@HeaderParams() params: any): Promise<any> {
         // get a new tracking id
-        return this.spotifyOAuthService.newUserJoined(params['user-agent']);
+        return await this.spotifyOAuthService.newUserJoined(params['user-agent']);
     }
 
     @Post('/seen')
-    public userSeen(@HeaderParams() params: any, @BodyParam("trackingId") trackingId: string): any {
-        return this.spotifyOAuthService.userSeen(trackingId, params['user-agent']);
+    public async userSeen(@HeaderParams() params: any, @BodyParam("trackingId") trackingId: string): Promise<any> {
+        return await this.spotifyOAuthService.userSeen(trackingId, params['user-agent']);
     }
 
     @Post('/exists')
-    public userExists(@BodyParam("trackingId") trackingId: string): any {
-        return this.spotifyOAuthService.userExists(trackingId);
+    public async userExists(@BodyParam("trackingId") trackingId: string): Promise<any> {
+        return await this.spotifyOAuthService.userExists(trackingId);
     }
 
     @Post('/start')
-    public startSpotifyAuth(@QueryParam("partyName") partyName: string, @QueryParam("nickName") nickName: string, @QueryParam("trackingId") trackingId: string): any {
+    public async startSpotifyAuth(@QueryParam("partyName") partyName: string, @QueryParam("nickName") nickName: string, @QueryParam("trackingId") trackingId: string): Promise<any> {
         return this.spotifyOAuthService.start(partyName, nickName, trackingId);
     }
 

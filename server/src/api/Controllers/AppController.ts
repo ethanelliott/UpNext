@@ -12,6 +12,6 @@ export class AppController {
 
     @Get('/updates')
     public async updates(): Promise<Array<UpdateDB>> {
-        return this.appUpdatesDatabaseService.getAllUpdates();
+        return await this.appUpdatesDatabaseService.getAllUpdates();
     }
 }
