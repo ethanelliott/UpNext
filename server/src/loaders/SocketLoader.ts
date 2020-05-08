@@ -16,7 +16,7 @@ export const SocketLoader: MicroframeworkLoader = (settings: MicroframeworkSetti
     if (settings) {
         log.startup("Loading SocketIO");
         const server = settings.getData('server');
-        const socketOnExpress = socketIO(server);
+        const socketOnExpress = socketIO(server, {origins: '*:*'});
         const socketApp = useSocketServer(socketOnExpress, {
             controllers: [SearchController, ConnectionController, StateController, PlaylistController, SpotifyController, UserController],
             middlewares: [AuthenticationSocketMiddleware],
