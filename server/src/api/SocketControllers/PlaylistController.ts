@@ -5,6 +5,7 @@ import { AuthenticationService } from "../Services/AuthenticationService";
 import { PartyService } from "../Services/PartyService";
 import { playlistSort } from "../Services/sorts";
 import { log } from "../../util/Log";
+import { PlaylistEntryDatabaseService } from "../Services/Database/PlaylistEntryDatabaseService";
 
 
 @SocketController()
@@ -12,6 +13,7 @@ export class PlaylistController {
     constructor(
         private authenticationService: AuthenticationService,
         private partyService: PartyService,
+        private playlistEntryDatabaseService: PlaylistEntryDatabaseService
     ) {
     }
 
@@ -41,13 +43,17 @@ export class PlaylistController {
     @OnMessage("playlist-clear")
     public async clearPlaylist(@MessageBody() message: SocketMessage<any>) {
         this.log('playlist-clear');
-        // const tokenData = await this.authenticationService.authenticate(message.token);
+        const tokenData = await this.authenticationService.authenticate(message.token);
+        this.playlistEntryDatabaseService.removePlaylistEntriesByPartyId(tokenData.partyId);
+        this.partyService.emitPlaylistUpdate(tokenData.partyId);
     }
 
     @OnMessage("playlist-clean")
     public async cleanPlaylist(@MessageBody() message: SocketMessage<any>) {
         this.log('playlist-clean');
-        // const tokenData = await this.authenticationService.authenticate(message.token);
+        const tokenData = await this.authenticationService.authenticate(message.token);
+        this.partyService.cleanPlaylistForPartyId(tokenData.partyId);
+        this.partyService.emitPlaylistUpdate(tokenData.partyId);
     }
 
     @OnMessage("playlist-remove-song")

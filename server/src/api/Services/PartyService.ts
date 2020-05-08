@@ -145,6 +145,14 @@ export class PartyService {
         });
     }
 
+    public cleanPlaylistForPartyId(partyId: string): void {
+        this.playlistEntryDatabaseService.getAllPlaylistEntriesForParty(partyId).forEach(e => {
+            if (e.UpVotes - e.DownVotes < 0) {
+                this.playlistEntryDatabaseService.removePlaylistEntryById(e.id);
+            }
+        });
+    }
+
     public upvoteSong(partyId: string, userId: string, playlistEntryId: string): void {
         const entry = this.playlistEntryDatabaseService.getPlaylistEntryById(playlistEntryId);
         const userVotes = this.playlistVoteDatabaseService.getVotesForUserOnEntry(userId, playlistEntryId);

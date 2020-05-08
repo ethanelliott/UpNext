@@ -1,104 +1,93 @@
 <template>
-    <v-dialog fullscreen hide-overlay transition="dialog-bottom-transition" v-model="dialog">
-        <template v-slot:activator="{ on }">
-            <v-btn color="primary" icon v-on="on">
+    <v-bottom-sheet inset overlay-opacity="0.9" v-model="dialog">
+        <template v-slot:activator="{}">
+            <v-btn @click="open" color="primary" icon>
                 <v-icon>mdi-cog</v-icon>
             </v-btn>
         </template>
-        <v-card>
-            <v-toolbar color="darker">
-                <v-toolbar-title>
-                    Admin
-                </v-toolbar-title>
-                <v-spacer></v-spacer>
-                <v-btn @click="dialog = false" icon>
-                    <v-icon>mdi-close</v-icon>
-                </v-btn>
-            </v-toolbar>
+        <v-sheet color="darker">
             <v-card color="transparent" flat>
-                <v-card-title>Media Controls</v-card-title>
-                <v-container class="ma-0 pa-0">
-                    <v-row align="center" class="ma-0 pa-0" justify="center">
-                        <v-col class="ma-0 pa-0">
-                            <v-btn @click="showMediaControls" block tile x-large>
-                                <v-icon left>mdi-music</v-icon>
-                                Show The Media Controls
-                            </v-btn>
-                        </v-col>
-                    </v-row>
+                <v-container class="ma-0 pa-0" fluid>
                     <v-row align="center" class="ma-0 pa-0" justify="center">
                         <v-col align="center" class="ma-0 pa-0" justify="center">
-                            <v-btn @click="togglePlayback" icon x-large>
-                                <v-icon>mdi-play-pause</v-icon>
+                            <v-btn @click="showMediaControls" block height="80" text tile x-large>
+                                <v-icon x-large>mdi-music</v-icon>
                             </v-btn>
                         </v-col>
                         <v-col align="center" class="ma-0 pa-0" justify="center">
-                            <v-btn @click="skipNextSong" icon x-large>
-                                <v-icon>mdi-skip-next</v-icon>
+                            <v-btn @click="togglePlayback" block height="80" text tile x-large>
+                                <v-icon x-large>mdi-play-pause</v-icon>
+                            </v-btn>
+                        </v-col>
+                        <v-col align="center" class="ma-0 pa-0" justify="center">
+                            <v-btn @click="skipNextSong" block height="80" text tile x-large>
+                                <v-icon x-large>mdi-skip-next</v-icon>
                             </v-btn>
                         </v-col>
                     </v-row>
                 </v-container>
             </v-card>
-            <v-list flat subheader two-line>
-                <v-subheader>Chrome Stop Error</v-subheader>
+            <v-divider/>
+            <v-list color="transparent" flat subheader two-line>
+                <v-subheader>Your Account</v-subheader>
                 <v-list-item-group multiple>
                     <v-list-item>
                         <v-list-item-content>
-                            <v-btn @click="fixChromeError" color="primary">Fix the Chrome Error</v-btn>
+                            <v-btn @click="leaveParty" color="purple">Logout</v-btn>
                         </v-list-item-content>
                     </v-list-item>
                 </v-list-item-group>
             </v-list>
             <v-divider/>
-            <v-list flat subheader two-line>
-                <v-subheader>Playback Settings</v-subheader>
+            <v-list color="transparent" flat subheader two-line>
+                <v-subheader>Playlist Settings</v-subheader>
                 <v-list-item-group multiple>
                     <v-list-item>
                         <v-list-item-content>
-                            <v-btn @click="cleanTheQueue" color="primary">Clean the Queue</v-btn>
+                            <v-btn @click="cleanTheQueue" color="green">Clean the Queue</v-btn>
+                            Remove all songs with a negative score
                         </v-list-item-content>
                     </v-list-item>
                 </v-list-item-group>
             </v-list>
             <v-divider/>
-            <v-list flat subheader two-line>
+            <v-list color="transparent" flat subheader two-line>
                 <v-subheader>Danger Zone</v-subheader>
                 <v-list-item-group multiple>
                     <v-list-item>
                         <v-list-item-content>
-                            <v-btn @click="emptyTheQueue" color="warning">Empty the Queue</v-btn>
+                            <v-btn @click="emptyTheQueue" color="orange">Empty the Queue</v-btn>
                         </v-list-item-content>
                     </v-list-item>
                     <v-list-item>
                         <v-list-item-content>
-                            <v-btn @click="deleteSafetyDialog=true" color="error">Delete the Party</v-btn>
+                            <v-btn @click="deleteSafetyDialog=true" color="red">Delete the Party</v-btn>
                         </v-list-item-content>
                     </v-list-item>
                 </v-list-item-group>
             </v-list>
-        </v-card>
-        <v-dialog dark v-model="deleteSafetyDialog" width="500">
-            <v-card>
-                <v-card-title>
-                    Delete the party!
-                </v-card-title>
-                <v-card-text>
-                    <span class="font-weight-bold">Are you sure you want to Delete the party?</span><br><br>
-                    This cannot be un-done... once it's gone, it's gone for good!
-                </v-card-text>
-                <v-card-actions>
-                    <v-spacer/>
-                    <v-btn @click="deleteTheParty" color="error" large>
-                        Delete
-                    </v-btn>
-                    <v-btn @click="deleteSafetyDialog=false" color="primary" large>
-                        Cancel
-                    </v-btn>
-                </v-card-actions>
-            </v-card>
-        </v-dialog>
-    </v-dialog>
+            <v-dialog dark v-model="deleteSafetyDialog" width="500">
+                <v-card>
+                    <v-card-title>
+                        Delete the party!
+                    </v-card-title>
+                    <v-card-text>
+                        <span class="font-weight-bold">Are you sure you want to Delete the party?</span><br><br>
+                        This cannot be un-done... once it's gone, it's gone for good!
+                    </v-card-text>
+                    <v-card-actions>
+                        <v-spacer/>
+                        <v-btn @click="deleteTheParty" color="error" large>
+                            Delete
+                        </v-btn>
+                        <v-btn @click="deleteSafetyDialog=false" color="primary" large>
+                            Cancel
+                        </v-btn>
+                    </v-card-actions>
+                </v-card>
+            </v-dialog>
+        </v-sheet>
+    </v-bottom-sheet>
 </template>
 
 <script>
@@ -122,9 +111,6 @@
             togglePlayback() {
                 this.emitEvent('party-playback-toggle', {});
             },
-            fixChromeError() {
-                this.emitEvent('party-fix-chrome', {});
-            },
             deleteTheParty() {
                 this.emitEvent('party-delete', {});
             },
@@ -133,7 +119,29 @@
             },
             cleanTheQueue() {
                 this.emitEvent('playlist-clean', {});
-            }
+            },
+            leaveParty() {
+                this.$emit('leave');
+            },
+            handleDialog(state) {
+                this.$emit('dialog', state)
+            },
+            open() {
+                window.scrollTo(0, 0);
+                this.dialog = true;
+                this.handleDialog({
+                    state: 'open',
+                    id: 'queue',
+                    close: this.close
+                });
+            },
+            close() {
+                this.dialog = false;
+                this.handleDialog({
+                    state: 'close',
+                    id: 'queue'
+                });
+            },
         }
     }
 </script>

@@ -17,8 +17,15 @@
                 </v-toolbar-title>
                 <v-spacer/>
                 <v-toolbar-items>
-                    <app-share-dialog v-bind:code="code"></app-share-dialog>
-                    <app-admin-dialog @event="handleEvent" @media="addMediaView" v-if="isAdmin"></app-admin-dialog>
+                    <app-share-dialog :code="code" @dialog="handleDialog"></app-share-dialog>
+                    <app-admin-dialog
+                            @dialog="handleDialog"
+                            @event="handleEvent"
+                            @leave="navigateAway"
+                            @media="addMediaView"
+                            v-if="isAdmin"
+                    >
+                    </app-admin-dialog>
                     <v-menu offset-y v-else>
                         <template v-slot:activator="{ on }">
                             <v-btn color="primary" dark icon v-on="on">
@@ -43,50 +50,12 @@
                     <v-row align="center" class="ma-0 pa-0" justify="center">
                         <v-card color="transparent" flat>
                             <v-skeleton-loader boilerplate height="300" type="image" width="300">
-                                <v-dialog overlay-opacity="0.95" v-model="albumArtworkDialog" width="400">
-                                    <template v-slot:activator="{ on }">
-                                        <v-img :src="albumArtwork" class="mx-5 elevation-20" max-width="600"
-                                               min-height="300"
-                                               v-on="on">
-                                        </v-img>
-                                    </template>
-                                    <v-card>
-                                        <v-toolbar color="darker">
-                                            <v-toolbar-title>
-                                                About
-                                            </v-toolbar-title>
-                                            <v-spacer></v-spacer>
-                                            <v-btn @click="albumArtworkDialog = false" icon>
-                                                <v-icon>mdi-close</v-icon>
-                                            </v-btn>
-                                        </v-toolbar>
-                                        <v-container class="ma-0 pa-0" fluid>
-                                            <v-col class="ma-0 pa-0">
-                                                <v-row :key="i" align="center" class="ma-0 pa-0 my-3 mx-3"
-                                                       justify="center" v-for="(e, i) in songStats">
-                                                    <v-col class="ma-0 pa-0" cols="5">
-                                                        <v-row class="ma-0 pa-0 text-left"
-                                                               style="text-transform: capitalize;">
-                                                            {{ e.name }}
-                                                        </v-row>
-                                                    </v-col>
-                                                    <v-col class="ma-0 pa-0" cols="7">
-                                                        <v-row align="center" class="ma-0 pa-0" justify="center">
-                                                            <v-progress-linear :value="e.value * 100" color="primary"
-                                                                               height="20"></v-progress-linear>
-                                                        </v-row>
-                                                    </v-col>
-                                                </v-row>
-                                                <v-row align="center" class="ma-0 pa-0 mt-5" justify="center">
-                                                    <v-btn @click="openSpotifyUri" block color="primary" tile x-large>
-                                                        <v-icon class="mr-5" large left>mdi-spotify</v-icon>
-                                                        View In Spotify
-                                                    </v-btn>
-                                                </v-row>
-                                            </v-col>
-                                        </v-container>
-                                    </v-card>
-                                </v-dialog>
+                                <app-current-artwork-dialog
+                                        :album-artwork="albumArtwork"
+                                        :song-stats="songStats"
+                                        :track-id="trackId"
+                                        @dialog="handleDialog"
+                                ></app-current-artwork-dialog>
                             </v-skeleton-loader>
                             <v-container class="ma-0 pa-0 px-5">
                                 <v-row class="ma-0 pa-0">
@@ -170,15 +139,20 @@
                         <v-row align="center" class="ma-0 pa-0" justify="center">
                             <v-col cols="6">
                                 <v-row align="center" class="ma-0 pa-0" justify="center">
-                                    <queue ref="queue" v-bind:playlist="playlist"
-                                           v-bind:playlistId="playlistId" v-on:dialog="handleDialog"
-                                           v-on:downvote="downvoteSong" v-on:upvote="upvoteSong"/>
+                                    <queue :playlist="playlist"
+                                           :playlistId="playlistId"
+                                           @dialog="handleDialog"
+                                           @downvote="downvoteSong"
+                                           @upvote="upvoteSong"
+                                           ref="queue"/>
                                 </v-row>
                             </v-col>
                             <v-col cols="6">
                                 <v-row align="center" class="ma-0 pa-0" justify="center">
-                                    <add ref="add" v-on:add="addItem" v-on:dialog="handleDialog"
-                                         v-on:search="search"/>
+                                    <add @add="addItem"
+                                         @dialog="handleDialog"
+                                         @search="search"
+                                         ref="add"/>
                                 </v-row>
                             </v-col>
                         </v-row>
@@ -196,6 +170,7 @@
     import AppShareDialog from "./ShareDialog";
     import * as dayjs from 'dayjs'
     import AppAdminDialog from "./AdminDialog";
+    import AppCurrentArtworkDialog from "./AlbumArtworkDialog";
 
     export default {
         name: "Home",
@@ -236,6 +211,7 @@
             mediaSessionLoop: null
         }),
         components: {
+            AppCurrentArtworkDialog,
             AppAdminDialog,
             AppShareDialog,
             'queue': Queue,
@@ -283,10 +259,6 @@
                 this.snackbarButton = button;
                 this.snackbarAction = action;
                 this.snackbarState = true;
-            },
-            openSpotifyUri: function () {
-                this.overlay = false;
-                window.open(`https://open.spotify.com/track/${this.trackId}`);
             },
             handleEvent(e) {
                 console.log(e);
