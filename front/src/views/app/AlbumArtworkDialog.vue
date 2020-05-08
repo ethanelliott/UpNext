@@ -94,12 +94,12 @@
     }
 
     .wipe-enter {
-        transform: translateX(-100%);
+        transform: translateX(100%);
         opacity: 0;
     }
 
     .wipe-leave-active {
-        transform: translateX(100%);
+        transform: translateX(-100%);
         opacity: 0;
     }
 </style>
