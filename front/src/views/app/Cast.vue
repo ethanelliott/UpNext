@@ -299,12 +299,12 @@
     }
 
     .change-enter {
-        transform: translateX(-50%);
+        transform: translateX(50%);
         opacity: 0;
     }
 
     .change-leave-active {
-        transform: translateX(50%);
+        transform: translateX(-50%);
         opacity: 0;
     }
 

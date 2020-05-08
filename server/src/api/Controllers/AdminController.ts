@@ -60,7 +60,7 @@ export class AdminController {
         return {
             party: await this.partyDatabaseService.getPartyById(id),
             playlist: await this.partyService.getPlaylistForPartyId(id),
-            state: await this.upNextService.getPartyDataForPartyId(id),
+            state: this.upNextService.getPartyDataForPartyId(id),
             users: await this.userDatabaseService.getUsersAtParty(id)
         };
     }
