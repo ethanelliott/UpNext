@@ -1,6 +1,5 @@
 import { Service } from "typedi";
 import { DatabaseService } from "./DatabaseService";
-import QueryFactory from "../../Factory/QueryFactory";
 import { PlaylistEntryDB } from "../../Types/DatabaseMaps/PlaylistEntryDB";
 import { playlistSort } from "../sorts";
 
@@ -142,7 +141,7 @@ export class PlaylistEntryDatabaseService {
     }
 
     private buildTable() {
-        this.databaseService.db.prepare(QueryFactory.buildCreateFrom({
+        this.databaseService.createTable({
             name: this.tableName,
             columns: [
                 {name: 'id', type: 'TEXT', unique: true, notNull: true, primaryKey: true},
@@ -156,7 +155,7 @@ export class PlaylistEntryDatabaseService {
                 {name: 'UpVotes', type: 'INTEGER', notNull: true},
                 {name: 'DownVotes', type: 'INTEGER', notNull: true},
             ]
-        })).run();
+        });
     }
 
     public removePlaylistEntryByUserId(userId: string) {

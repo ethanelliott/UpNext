@@ -200,7 +200,7 @@ export class PartyService {
                 playlistEntryId: playlistEntryId,
                 type: PlaylistVoteEnum.DOWNVOTE
             });
-            this.playlistEntryDatabaseService.addUpVote(playlistEntryId);
+            this.playlistEntryDatabaseService.addDownVote(playlistEntryId);
             this.userDatabaseService.updateUserScore(entry.addedBy, -1);
             this.emitPlaylistUpdate(partyId);
             this.emitUsersUpdate(partyId);

@@ -1,6 +1,5 @@
 import { Service } from "typedi";
 import { DatabaseService } from "./DatabaseService";
-import QueryFactory from "../../Factory/QueryFactory";
 import { PartyDB } from "../../Types/DatabaseMaps/PartyDB";
 import moment from "moment";
 
@@ -108,7 +107,7 @@ export class PartyDatabaseService {
     }
 
     private buildTable() {
-        this.databaseService.db.prepare(QueryFactory.buildCreateFrom({
+        this.databaseService.createTable({
             name: this.tableName,
             columns: [
                 {name: 'id', type: 'TEXT', unique: true, notNull: true, primaryKey: true},
@@ -121,6 +120,6 @@ export class PartyDatabaseService {
                 {name: 'spotifyUserId', type: 'TEXT', notNull: true},
                 {name: 'spotifyPlaylistId', type: 'TEXT', notNull: true}
             ]
-        })).run();
+        });
     }
 }

@@ -1,6 +1,5 @@
 import { Service } from "typedi";
 import { DatabaseService } from "./DatabaseService";
-import QueryFactory from "../../Factory/QueryFactory";
 import { PartyHistoryDB } from "../../Types/DatabaseMaps/PartyHistoryDB";
 
 @Service()
@@ -48,7 +47,7 @@ export class PartyHistoryDatabaseService {
     }
 
     private buildTable(): void {
-        this.databaseService.db.prepare(QueryFactory.buildCreateFrom({
+        this.databaseService.createTable({
             name: this.tableName,
             columns: [
                 {name: 'partyId', type: 'TEXT', notNull: true, foreignKey: {table: 'parties', name: 'id'}},
@@ -73,6 +72,6 @@ export class PartyHistoryDatabaseService {
                 {name: 'time_signature', type: 'INTEGER'},
                 {name: 'valance', type: 'INTEGER'},
             ]
-        })).run();
+        });
     }
 }

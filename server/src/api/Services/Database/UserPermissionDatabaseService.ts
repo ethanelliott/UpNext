@@ -1,6 +1,5 @@
 import { Service } from "typedi";
 import { DatabaseService } from "./DatabaseService";
-import QueryFactory from "../../Factory/QueryFactory";
 
 @Service()
 export class UserPermissionDatabaseService {
@@ -19,13 +18,13 @@ export class UserPermissionDatabaseService {
     }
 
     private buildTable() {
-        this.databaseService.db.prepare(QueryFactory.buildCreateFrom({
+        this.databaseService.createTable({
             name: this.tableName,
             columns: [
                 {name: 'id', type: 'INTEGER', unique: true, notNull: true, primaryKey: true},
                 {name: 'name', type: 'TEXT', notNull: true}
             ]
-        })).run();
+        });
     }
 
     private insetDefaultValues() {

@@ -1,6 +1,6 @@
 import { Service } from "typedi";
 import Database, { Statement } from 'better-sqlite3';
-import { Delete, Insert, Select, Update } from "../../Types/DatabaseMaps/Database";
+import { Create, Delete, Insert, Select, Update } from "../../Types/DatabaseMaps/Database";
 import QueryFactory from "../../Factory/QueryFactory";
 import { log } from "../../../util/Log";
 
@@ -25,16 +25,20 @@ export class DatabaseService {
             : this.query(params).all();
     }
 
-    public insert(params: Insert) {
+    public insert(params: Insert): void {
         this.db.prepare(QueryFactory.buildInsertFrom(params)).run(Object.values(params.insert) as any);
     }
 
-    public update(params: Update) {
+    public update(params: Update): void {
         this.db.prepare(QueryFactory.buildUpdateFrom(params)).run([...Object.values(params.set), ...params.where.map(e => e.value)] as any);
     }
 
-    public delete(params: Delete) {
+    public delete(params: Delete): void {
         this.db.prepare(QueryFactory.buildDeleteFrom(params)).run(params.where.map(e => e.value) as any);
+    }
+
+    public createTable(params: Create): void {
+        this.db.prepare(QueryFactory.buildCreateFrom(params)).run();
     }
 
     private query(params: Select): Statement {
