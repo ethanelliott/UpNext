@@ -45,10 +45,8 @@ export const ExpressLoader: MicroframeworkLoader = (settings: MicroframeworkSett
             }
         });
 
-        if (!env.isTest) {
-            const server = expressApp.listen(env.app.port, () => log.startup(`Server Listening ${env.app.port}`));
-            settings.setData('express_server', server);
-        }
+        const server = settings.getData('http').createServer(expressApp);
+        settings.setData('server', server);
         settings.setData('express_app', expressApp);
     }
 };
