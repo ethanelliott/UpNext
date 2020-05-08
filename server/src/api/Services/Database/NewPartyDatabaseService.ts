@@ -1,6 +1,5 @@
 import { Service } from "typedi";
 import { DatabaseService } from "./DatabaseService";
-import QueryFactory from "../../Factory/QueryFactory";
 import { NewPartyDB } from "../../Types/DatabaseMaps/NewPartyDB";
 
 @Service()
@@ -41,12 +40,12 @@ export class NewPartyDatabaseService {
     }
 
     private buildTable() {
-        this.databaseService.db.prepare(QueryFactory.buildCreateFrom({
+        this.databaseService.createTable({
             name: this.tableName,
             columns: [
                 {name: 'partyId', type: 'TEXT', notNull: true},
                 {name: 'token', type: 'TEXT', notNull: true}
             ]
-        })).run();
+        });
     }
 }

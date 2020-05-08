@@ -1,6 +1,5 @@
 import { Service } from "typedi";
 import { DatabaseService } from "./DatabaseService";
-import QueryFactory from "../../Factory/QueryFactory";
 import { PlaylistVotesDB } from "../../Types/DatabaseMaps/PlaylistVotesDB";
 import { PlaylistVoteEnum } from "../../Types/Enums/PlaylistVoteEnum";
 
@@ -84,7 +83,7 @@ export class PlaylistVoteDatabaseService {
     }
 
     private buildTable() {
-        this.databaseService.db.prepare(QueryFactory.buildCreateFrom({
+        this.databaseService.createTable({
             name: this.tableName,
             columns: [
                 {name: 'userId', type: 'TEXT', notNull: true, foreignKey: {table: 'users', name: 'id'}},
@@ -96,7 +95,7 @@ export class PlaylistVoteDatabaseService {
                 },
                 {name: 'type', type: 'INTEGER'}
             ]
-        })).run();
+        });
     }
 
     public deleteVotesForUser(userId: string) {

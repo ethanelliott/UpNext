@@ -1,6 +1,5 @@
 import { Service } from "typedi";
 import { DatabaseService } from "./DatabaseService";
-import QueryFactory from "../../Factory/QueryFactory";
 import { UserDB } from "../../Types/DatabaseMaps/UserDB";
 
 @Service()
@@ -96,7 +95,7 @@ export class UserDatabaseService {
     }
 
     private buildTable() {
-        this.databaseService.db.prepare(QueryFactory.buildCreateFrom({
+        this.databaseService.createTable({
             name: this.tableName,
             columns: [
                 {name: 'id', type: 'TEXT', unique: true, notNull: true, primaryKey: true},
@@ -116,7 +115,7 @@ export class UserDatabaseService {
                 },
                 {name: 'trackingId', type: 'TEXT', notNull: true, foreignKey: {name: 'id', table: 'userTracking'}},
             ]
-        })).run();
+        });
     }
 
     public setUserScore(userId: any, score: number) {

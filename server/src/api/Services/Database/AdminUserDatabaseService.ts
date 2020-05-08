@@ -1,6 +1,5 @@
 import { Service } from "typedi";
 import { DatabaseService } from "./DatabaseService";
-import QueryFactory from "../../Factory/QueryFactory";
 import { AdminUserDb } from "../../Types/DatabaseMaps/AdminUserDb";
 
 @Service()
@@ -43,13 +42,13 @@ export class AdminUserDatabaseService {
     }
 
     private buildTable() {
-        this.databaseService.db.prepare(QueryFactory.buildCreateFrom({
+        this.databaseService.createTable({
             name: this.tableName,
             columns: [
                 {name: 'id', type: 'TEXT', unique: true, notNull: true, primaryKey: true},
                 {name: 'username', type: 'TEXT', unique: true, notNull: true},
                 {name: 'password', type: 'TEXT', unique: false, notNull: true},
             ]
-        })).run();
+        });
     }
 }
