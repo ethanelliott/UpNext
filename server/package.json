@@ -5,7 +5,9 @@
   "private": true,
   "scripts": {
     "postinstall": "npm run generate-secret",
-    "build": "tsc",
+    "start": "node ./pack/server.js",
+    "build": "npm run typescript && npm run webpack",
+    "typescript": "tsc",
     "webpack": "webpack",
     "serve": "node ./dist/app.js",
     "dev": "concurrently \"npm:watch-ts\" \"npm:watch-pack\"\n",
