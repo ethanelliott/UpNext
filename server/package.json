@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "postinstall": "npm run generate-secret",
-    "start": "node ./pack/server.js",
+    "start": "npm run serve",
     "build": "npm run typescript && npm run webpack",
     "typescript": "tsc",
     "webpack": "webpack",
@@ -56,7 +56,7 @@
     "sha512": "0.0.1",
     "socket-controllers": "^0.0.5",
     "swagger-ui-express": "^4.1.2",
-    "typedi": "latest",
+    "typedi": "^0.8.0",
     "tz-offset": "0.0.2",
     "uuid": "^3.3.3",
     "uws": "^10.148.1",
