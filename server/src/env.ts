@@ -36,10 +36,6 @@ export const env = {
         route: getOsEnv('SWAGGER_ROUTE'),
         enabled: getOsEnv('SWAGGER_ENABLED')
     },
-    monitor: {
-        route: getOsEnv('MONITOR_ROUTE'),
-        enabled: getOsEnv('MONITOR_ENABLED')
-    },
     timber: {
         apiKey: getOsEnv('TIMBER_API_KEY'),
         sourceId: getOsEnv('TIMBER_SOURCE_ID')
