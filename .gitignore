@@ -1,2 +1,5 @@
 *.log
 *.env
+/lsp/conf/
+/server/server.cert
+/server/server.key
