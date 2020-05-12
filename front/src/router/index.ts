@@ -204,10 +204,6 @@ const routes = [
                 }
             }
         ]
-    },
-    {
-        path: '*',
-        redirect: '/'
     }
 ];
 
