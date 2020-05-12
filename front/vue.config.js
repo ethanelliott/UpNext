@@ -8,12 +8,7 @@ module.exports = {
         port: 8080,
     },
     pwa: {
-        appleMobileWebAppCapable: 'yes',
-        appleMobileWebAppStatusBarStyle: 'default',
-        manifestPath: '/assets/site.webmanifest',
-        workboxPluginMode: 'InjectManifest',
         workboxOptions: {
-            swSrc: 'sw.js',
             exclude: [/\.map$/, /_redirects/],
         }
     }
