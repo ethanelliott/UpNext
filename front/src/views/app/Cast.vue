@@ -118,7 +118,7 @@
                                             class="mr-5 text-left elevation-0"
                                             color="transparent"
                                             tile
-                                            v-for="(e, i) in playlist.slice(0, 6)"
+                                            v-for="(e, i) in playlist"
                                             width="150"
                                     >
                                         <v-img :src="e.albumArtwork" class="elevation-10 mb-1" height="100"
@@ -213,19 +213,17 @@
             this.socket.on('party-state', this.gotState);
             this.socket.on('state-change', this.gotState);
             this.socket.on('playlist-state', ({playlist}) => {
-                this.playlist = playlist;
+                this.playlist = playlist.slice(0, 6);
             });
             this.socket.on('playlist-update', ({playlist}) => {
-                this.playlist = playlist;
+                this.playlist = playlist.slice(0, 6);
             });
 
             this.socket.on('users-state', ({users}) => {
-                console.log(users);
                 this.users = users;
             });
 
             this.socket.on('users-update', ({users}) => {
-                console.log(users);
                 this.users = users;
             });
         },
