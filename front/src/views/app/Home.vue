@@ -213,6 +213,11 @@
             media: null,
             mediaSessionLoop: null
         }),
+        watch: {
+            playlist(newVal, oldVal) {
+                console.log({newVal, oldVal})
+            }
+        },
         components: {
             AppCurrentArtworkDialog,
             AppAdminDialog,
@@ -264,7 +269,6 @@
                 this.snackbarState = true;
             },
             handleEvent(e) {
-                console.log(e);
                 this.socket.emit(e.eventName, {
                     token: this.token,
                     data: e.data

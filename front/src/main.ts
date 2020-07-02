@@ -8,7 +8,7 @@ import LogRocket from 'logrocket';
 
 LogRocket.init('ayfxcp/upnext');
 
-const LOCAL_URI = `http://192.168.1.58`;
+const LOCAL_URI = `http://192.168.69.100`;
 const PROD = process.env.NODE_ENV !== 'development';
 const API_URL = (PROD ? 'https://upnext-api.herokuapp.com/api' : `${LOCAL_URI}:8884/api`);
 const SOCKET_URL = (PROD ? 'https://upnext-api.herokuapp.com' : `${LOCAL_URI}:8884`);

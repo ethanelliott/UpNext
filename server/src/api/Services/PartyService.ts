@@ -264,11 +264,12 @@ export class PartyService {
     }
 
     public async emitPlaylistUpdate(partyId) {
+        const playlist = await this.getPlaylistForPartyId(partyId);
         this.eventEmitterService.emitEventToParty(
             partyId,
             PartyEvent.PLAYLIST_UPDATE,
             {
-                playlist: await this.getPlaylistForPartyId(partyId)
+                playlist
             }
         );
     }

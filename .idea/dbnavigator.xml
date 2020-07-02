@@ -25,7 +25,7 @@
     <show-object-properties value="false" />
     <loaded-nodes>
       <connection connection-id="335378a6-b003-437f-9a23-9c790be1da95">
-        <schema name="public" object-types="view, table" />
+        <schema name="public" object-types="table, index, column, view, function, constraint, dataset trigger, sequence" />
       </connection>
     </loaded-nodes>
   </component>
@@ -83,7 +83,7 @@
           <description value="Prod Database for UpNext" />
           <database-type value="POSTGRES" />
           <config-type value="BASIC" />
-          <database-version value="12.2" />
+          <database-version value="12.3" />
           <driver-source value="BUILTIN" />
           <driver-library value="" />
           <driver value="" />

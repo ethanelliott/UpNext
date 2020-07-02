@@ -184,7 +184,7 @@ export class UpNextService {
     private async emitPlaylistUpdate(partyId: string) {
         const party = await this.partyDatabaseService.getPartyById(partyId);
         const entries = await this.playlistEntryDatabaseService.getAllPlaylistEntriesForParty(partyId);
-        const playlist = Promise.all(entries.map(async e => {
+        const playlist = await Promise.all(entries.map(async e => {
             const user = await this.getUserById(e.addedBy);
             e.addedBy = user.nickname;
             return e;
