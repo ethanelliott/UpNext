@@ -26,7 +26,7 @@
   "dependencies": {
     "@timberio/node": "^0.35.0",
     "@timberio/winston": "^0.35.0",
-    "axios": "^0.19.0",
+    "axios": "^0.21.1",
     "better-sqlite3": "^6.0.1",
     "body-parser": "^1.19.0",
     "chalk": "^4.0.0",
